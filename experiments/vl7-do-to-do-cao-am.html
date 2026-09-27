@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 13: Độ to và độ cao của âm — KHTN 7 (Kết nối tri thức)</title>
+<meta name="description" content="Thí nghiệm dao động của nguồn âm, đo biên độ sóng và tần số dao động trên màn hình dao động kí ảo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+    --osc-screen:#0a1912; --osc-grid:#133824; --osc-wave:#00ff88;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7b1fa2, #c2185b);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(123,31,162,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#1c2430; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .ctrl-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .ctrl-label{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .ctrl-row input[type="range"]{ width:100%; accent-color:var(--purple-1); cursor:pointer; }
+  
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:var(--purple-1); }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 7 &nbsp;›&nbsp; Bài 13</div>
+    <div class="status-pill">KHTN 7 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 13: Độ to và độ cao của âm</h1>
+    <p>Khảo sát mối quan hệ giữa biên độ dao động với độ to của âm (dB), và tần số dao động với độ cao của âm (Hz: bổng/trầm) qua máy dao động kí và âm thoa.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <!-- Bàn thí nghiệm âm học & dao động kí SVG 2.5D -->
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#b0bec5"/>
+            <stop offset="50%" stop-color="#eceff1"/>
+            <stop offset="100%" stop-color="#78909c"/>
+          </linearGradient>
+          <linearGradient id="woodGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#d7ccc8"/>
+            <stop offset="100%" stop-color="#8d6e63"/>
+          </linearGradient>
+          <filter id="glowWave" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
+          </filter>
+        </defs>
+
+        <!-- Nền bàn phòng thí nghiệm -->
+        <rect width="640" height="440" fill="#1e293b"/>
+        <line x1="20" y1="410" x2="620" y2="410" stroke="#334155" stroke-width="2"/>
+
+        <!-- KHỐI 1: ÂM THOA VÀ HỘP CỘNG HƯỞNG (Bên trái) -->
+        <g id="tuningForkGroup" transform="translate(60, 140)">
+          <!-- Hộp gỗ cộng âm -->
+          <rect x="20" y="190" width="120" height="50" fill="url(#woodGrad)" stroke="#5d4037" stroke-width="2" rx="4"/>
+          <ellipse cx="80" cy="240" rx="40" ry="6" fill="#3e2723" opacity="0.4"/>
+          <!-- Lỗ thoát âm -->
+          <ellipse cx="80" cy="215" rx="16" ry="10" fill="#3e2723"/>
+
+          <!-- Trục cắm âm thoa -->
+          <rect x="75" y="150" width="10" height="40" fill="url(#metalGrad)" stroke="#546e7a" stroke-width="1.5"/>
+
+          <!-- Hai nhánh âm thoa bằng thép -->
+          <path id="forkLeft" d="M 60 150 L 60 20 A 12 12 0 0 1 72 20 L 72 150 Z" fill="url(#metalGrad)" stroke="#546e7a" stroke-width="1.5"/>
+          <path id="forkRight" d="M 88 150 L 88 20 A 12 12 0 0 1 100 20 L 100 150 Z" fill="url(#metalGrad)" stroke="#546e7a" stroke-width="1.5"/>
+          <path d="M 60 150 C 60 170, 100 170, 100 150 Z" fill="url(#metalGrad)" stroke="#546e7a" stroke-width="1.5"/>
+
+          <!-- Sóng âm lan tỏa từ âm thoa -->
+          <g id="soundWaves" opacity="0.6">
+            <circle cx="80" cy="60" r="30" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4"/>
+            <circle cx="80" cy="60" r="50" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4"/>
+            <circle cx="80" cy="60" r="70" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4"/>
+          </g>
+
+          <!-- Búa cao su gõ âm thoa (Nhấp hoặc kéo để gõ) -->
+          <g id="hammerGroup" transform="translate(145, 10)" style="cursor:pointer;">
+            <rect x="0" y="20" width="6" height="70" fill="#8d6e63" rx="2" transform="rotate(-30 0 20)"/>
+            <ellipse cx="25" cy="18" rx="12" ry="8" fill="#d32f2f" stroke="#b71c1c" stroke-width="1.5"/>
+            <text x="35" y="10" fill="#ffcdd2" font-size="11" font-weight="700">Gõ búa</text>
+          </g>
+          <text x="36" y="260" fill="#94a3b8" font-size="12" font-weight="600">Âm thoa &amp; Hộp gỗ</text>
+        </g>
+
+        <!-- Micro thu âm trung gian -->
+        <g id="micGroup" transform="translate(260, 240)">
+          <!-- Đế micro -->
+          <ellipse cx="20" cy="140" rx="18" ry="6" fill="#0f172a"/>
+          <line x1="20" y1="140" x2="20" y2="80" stroke="#64748b" stroke-width="4"/>
+          <!-- Đầu micro hướng về âm thoa -->
+          <rect x="6" y="55" width="28" height="25" rx="6" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+          <ellipse cx="20" cy="55" rx="10" ry="4" fill="#64748b"/>
+          <text x="-5" y="160" fill="#94a3b8" font-size="11.5" font-weight="600">Micro thu âm</text>
+
+          <!-- Dây nối tín hiệu từ mic sang máy dao động kí -->
+          <path d="M 20 140 C 40 160, 60 150, 75 120" fill="none" stroke="#3b82f6" stroke-width="3"/>
+        </g>
+
+        <!-- KHỐI 2: MÁY DAO ĐỘNG KÍ ĐIỆN TỬ (Bên phải) -->
+        <g id="oscilloscope" transform="translate(330, 80)">
+          <!-- Vỏ máy dao động kí -->
+          <rect width="280" height="290" rx="16" fill="#0f172a" stroke="#334155" stroke-width="3"/>
+          <rect x="15" y="15" width="250" height="190" rx="10" fill="#022c22" stroke="#065f46" stroke-width="2"/>
+
+          <!-- Lưới tọa độ CRT (Oscilloscope grid) -->
+          <g stroke="#064e3b" stroke-width="1" stroke-dasharray="2,3">
+            <line x1="15" y1="40" x2="265" y2="40"/>
+            <line x1="15" y1="65" x2="265" y2="65"/>
+            <line x1="15" y1="90" x2="265" y2="90"/>
+            <line x1="15" y1="140" x2="265" y2="140"/>
+            <line x1="15" y1="165" x2="265" y2="165"/>
+            <line x1="15" y1="190" x2="265" y2="190"/>
+
+            <line x1="50" y1="15" x2="50" y2="205"/>
+            <line x1="85" y1="15" x2="85" y2="205"/>
+            <line x1="120" y1="15" x2="120" y2="205"/>
+            <line x1="155" y1="15" x2="155" y2="205"/>
+            <line x1="190" y1="15" x2="190" y2="205"/>
+            <line x1="225" y1="15" x2="225" y2="205"/>
+          </g>
+
+          <!-- Trục chuẩn x-y trung tâm -->
+          <line x1="15" y1="115" x2="265" y2="115" stroke="#10b981" stroke-width="1.5" opacity="0.6"/>
+          <line x1="140" y1="15" x2="140" y2="205" stroke="#10b981" stroke-width="1.5" opacity="0.6"/>
+          <text x="25" y="32" fill="#34d399" font-size="11" font-weight="700">OSCILLOSCOPE</text>
+          <text x="20" y="112" fill="#6ee7b7" font-size="10">x</text>
+          <text x="255" y="112" fill="#6ee7b7" font-size="10">y</text>
+
+          <!-- ĐƯỜNG ĐỒ THỊ SÓNG ÂM (DYNAMIC WAVE) -->
+          <path id="wavePathGlow" d="" fill="none" stroke="#10b981" stroke-width="5" opacity="0.4" filter="url(#glowWave)"/>
+          <path id="wavePath" d="" fill="none" stroke="#34d399" stroke-width="2.5"/>
+
+          <!-- Mũi tên chỉ biên độ A trên màn hình -->
+          <g id="ampIndicator">
+            <line id="ampLine" x1="140" y1="115" x2="140" y2="70" stroke="#f59e0b" stroke-width="1.5"/>
+            <text id="ampLabel" x="146" y="90" fill="#f59e0b" font-size="10.5" font-weight="700">Biên độ (A)</text>
+          </g>
+
+          <!-- Bảng núm vặn và jack cắm ở nửa dưới máy -->
+          <rect x="15" y="215" width="250" height="60" rx="8" fill="#1e293b"/>
+          <!-- Núm VOLTS/DIV (Độ to) -->
+          <g transform="translate(45, 245)">
+            <circle r="14" fill="#334155" stroke="#64748b" stroke-width="2"/>
+            <line id="knobAmp" x1="0" y1="0" x2="0" y2="-10" stroke="#f59e0b" stroke-width="2.5"/>
+            <text x="0" y="22" fill="#94a3b8" font-size="9" text-anchor="middle">BIÊN ĐỘ</text>
+          </g>
+
+          <!-- Núm TIME/DIV (Tần số) -->
+          <g transform="translate(115, 245)">
+            <circle r="14" fill="#334155" stroke="#64748b" stroke-width="2"/>
+            <line id="knobFreq" x1="0" y1="0" x2="0" y2="-10" stroke="#38bdf8" stroke-width="2.5"/>
+            <text x="0" y="22" fill="#94a3b8" font-size="9" text-anchor="middle">TẦN SỐ</text>
+          </g>
+
+          <!-- Đèn báo tín hiệu -->
+          <circle cx="185" cy="245" r="5" fill="#22c55e"/>
+          <text x="185" y="260" fill="#22c55e" font-size="9" text-anchor="middle">INPUT</text>
+
+          <!-- Nút phát loa thử âm thanh -->
+          <g id="btnSoundTrigger" transform="translate(230, 245)" style="cursor:pointer;">
+            <circle r="12" fill="#d97706" stroke="#fbbf24" stroke-width="1.5"/>
+            <text x="0" y="4" fill="#ffffff" font-size="11" text-anchor="middle">🔊</text>
+            <text x="0" y="22" fill="#fbbf24" font-size="8.5" text-anchor="middle">PHÁT ÂM</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bảng điều khiển -->
+    <div class="sidebar">
+      <div class="card">
+        <h3>⚙️ Tham số nguồn âm</h3>
+        
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Biên độ dao động (Độ to):</span>
+            <b id="valAmp">40 mm</b>
+          </div>
+          <input type="range" id="sliderAmp" min="10" max="75" value="40" step="1">
+          <small style="font-size:11px; color:var(--ink-faint);">Biên độ càng lớn ➜ Âm nghe càng TO</small>
+        </div>
+
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Tần số dao động (Độ cao):</span>
+            <b id="valFreq">440 Hz (Nốt La)</b>
+          </div>
+          <input type="range" id="sliderFreq" min="150" max="1000" value="440" step="10">
+          <small style="font-size:11px; color:var(--ink-faint);">Tần số càng lớn ➜ Âm càng CAO (BỔNG)</small>
+        </div>
+
+        <div class="btn-grid" style="margin-top:6px;">
+          <button class="btn" id="btnHitFork">🔨 Gõ mạnh âm thoa</button>
+          <button class="btn" id="btnToggleSound">🔊 Bật âm thanh mẫu</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Thông số dao động kí</h3>
+        <div class="data-box">
+          <div class="data-line">
+            <span>Độ to của âm:</span>
+            <span id="resLoudness">Trung bình (65 dB)</span>
+          </div>
+          <div class="data-line">
+            <span>Độ cao của âm:</span>
+            <span id="resPitch">Âm chuẩn (440 Hz)</span>
+          </div>
+          <div class="data-line">
+            <span>Số dao động trong 1s:</span>
+            <span id="resCycles">440 lần / giây</span>
+          </div>
+          <div class="data-line" style="border-top:1px dashed var(--panel-border); padding-top:6px; margin-top:6px;">
+            <span>Dạng sóng trên màn hình:</span>
+            <span id="resWaveDesc">Chu kì đều đặn</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Câu hỏi củng cố SGK -->
+  <div class="quiz-section">
+    <div class="card">
+      <h3>✍️ Câu hỏi củng cố (SGK KHTN 7)</h3>
+      
+      <div class="quiz-q" data-correct="2">
+        <p>1. Khi gảy mạnh một dây đàn ghita, âm phát ra to hơn vì:</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Dây đàn dao động nhanh hơn (tần số tăng)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Vận tốc truyền âm tăng lên</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Dây đàn lệch khỏi vị trí cân bằng nhiều hơn (biên độ dao động tăng)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Chiều dài dây đàn thay đổi</button>
+        </div>
+      </div>
+
+      <div class="quiz-q" data-correct="1">
+        <p>2. Một con muỗi khi bay vỗ cánh khoảng 3000 lần trong 5 giây. Tần số dao động của cánh muỗi là:</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. 3000 Hz</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. 600 Hz (lấy 3000 chia cho 5 giây)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. 1500 Hz</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. 15 000 Hz</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let amplitude = 40; // mm
+  let frequency = 440; // Hz
+  let wavePhase = 0;
+  let isPlayingSound = false;
+  let audioCtx = null;
+  let oscNode = null;
+  let gainNode = null;
+
+  const sliderAmp = document.getElementById('sliderAmp');
+  const sliderFreq = document.getElementById('sliderFreq');
+  const valAmp = document.getElementById('valAmp');
+  const valFreq = document.getElementById('valFreq');
+  const wavePath = document.getElementById('wavePath');
+  const wavePathGlow = document.getElementById('wavePathGlow');
+  const ampLine = document.getElementById('ampLine');
+  const ampLabel = document.getElementById('ampLabel');
+  const knobAmp = document.getElementById('knobAmp');
+  const knobFreq = document.getElementById('knobFreq');
+  const forkLeft = document.getElementById('forkLeft');
+  const forkRight = document.getElementById('forkRight');
+  const soundWaves = document.getElementById('soundWaves');
+  const resLoudness = document.getElementById('resLoudness');
+  const resPitch = document.getElementById('resPitch');
+  const resCycles = document.getElementById('resCycles');
+  const resWaveDesc = document.getElementById('resWaveDesc');
+
+  function updateUI(){
+    valAmp.textContent = amplitude + ' mm';
+    sliderAmp.value = amplitude;
+
+    let note = '';
+    if(frequency <= 200) note = ' (Rất trầm)';
+    else if(frequency <= 300) note = ' (Trầm)';
+    else if(frequency <= 500) note = ' (Nốt La chuẩn)';
+    else if(frequency <= 700) note = ' (Bổng)';
+    else note = ' (Rất cao/bổng)';
+    valFreq.textContent = frequency + ' Hz' + note;
+    sliderFreq.value = frequency;
+
+    // Núm vặn xoay theo giá trị
+    const rotAmp = ((amplitude - 10) / 65) * 270 - 135;
+    knobAmp.setAttribute('transform', `rotate(${rotAmp})`);
+
+    const rotFreq = ((frequency - 150) / 850) * 270 - 135;
+    knobFreq.setAttribute('transform', `rotate(${rotFreq})`);
+
+    // Độ to dB ước lượng
+    const db = Math.round(40 + (amplitude / 75) * 45);
+    resLoudness.textContent = `${amplitude > 55 ? 'Rất to' : (amplitude > 30 ? 'Vừa phải' : 'Nhỏ')} (${db} dB)`;
+    resPitch.textContent = `${frequency > 600 ? 'Âm bổng (cao)' : (frequency < 280 ? 'Âm trầm (thấp)' : 'Âm trung bình')} (${frequency} Hz)`;
+    resCycles.textContent = `${frequency} lần / giây`;
+
+    if (frequency > 600) {
+      resWaveDesc.textContent = 'Các gợn sóng mau sít lại gần nhau';
+    } else if (frequency < 280) {
+      resWaveDesc.textContent = 'Các gợn sóng dãn thưa rộng ra';
+    } else {
+      resWaveDesc.textContent = 'Chu kì sóng ổn định đều đặn';
+    }
+
+    // Cập nhật âm thanh nếu đang phát
+    if (oscNode && gainNode && isPlayingSound) {
+      oscNode.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(amplitude / 120, audioCtx.currentTime);
+    }
+  }
+
+  // Animation dao động sóng trên màn hình Oscilloscope
+  function renderOscilloscopeWave(){
+    wavePhase += 0.08;
+    const originX = 15;
+    const originY = 115;
+    const width = 250;
+    
+    // Tần số hiển thị số chu kỳ trên màn hình (2 đến 8 chu kì)
+    const cycles = 1.5 + (frequency / 1000) * 6;
+    // Chiều cao sóng từ biên độ (10 đến 70 px)
+    const waveAmpPx = (amplitude / 75) * 65;
+
+    let d = `M ${originX} ${originY}`;
+    for(let x = 0; x <= width; x += 3){
+      const t = x / width;
+      const y = originY - Math.sin(t * cycles * 2 * Math.PI - wavePhase) * waveAmpPx;
+      d += ` L ${originX + x} ${y}`;
+    }
+
+    wavePath.setAttribute('d', d);
+    wavePathGlow.setAttribute('d', d);
+
+    // Mũi tên biên độ tại đỉnh sóng gần giữa
+    ampLine.setAttribute('y2', originY - waveAmpPx);
+    ampLabel.setAttribute('y', originY - waveAmpPx - 4);
+
+    // Rung nhánh âm thoa theo biên độ
+    const forkVibe = Math.sin(wavePhase * 3) * (amplitude / 75) * 4;
+    forkLeft.setAttribute('transform', `translate(${-forkVibe}, 0)`);
+    forkRight.setAttribute('transform', `translate(${forkVibe}, 0)`);
+
+    requestAnimationFrame(renderOscilloscopeWave);
+  }
+  requestAnimationFrame(renderOscilloscopeWave);
+
+  sliderAmp.addEventListener('input', (e)=>{
+    amplitude = parseInt(e.target.value);
+    updateUI();
+  });
+
+  sliderFreq.addEventListener('input', (e)=>{
+    frequency = parseInt(e.target.value);
+    updateUI();
+  });
+
+  // Tương tác gõ búa vào âm thoa
+  const hammerGroup = document.getElementById('hammerGroup');
+  const btnHitFork = document.getElementById('btnHitFork');
+
+  function triggerHit(){
+    hammerGroup.style.transition = 'transform 0.1s ease-in';
+    hammerGroup.setAttribute('transform', 'translate(110, 25) rotate(-35)');
+    setTimeout(()=>{
+      hammerGroup.style.transition = 'transform 0.2s ease-out';
+      hammerGroup.setAttribute('transform', 'translate(145, 10)');
+      
+      // Tăng đột biến biên độ rồi giảm dần (damping)
+      amplitude = 75;
+      updateUI();
+      soundWaves.setAttribute('transform', 'scale(1.2)');
+      playBeep(frequency, 0.8, 0.4);
+
+      let step = 0;
+      const decay = setInterval(()=>{
+        step++;
+        if (amplitude > 30) {
+          amplitude -= 3;
+          updateUI();
+        } else {
+          clearInterval(decay);
+        }
+      }, 70);
+    }, 120);
+  }
+
+  let isDraggingHammer = false;
+  hammerGroup.addEventListener('pointerdown', (e)=>{
+    isDraggingHammer = true;
+    hammerGroup.setPointerCapture(e.pointerId);
+  });
+  hammerGroup.addEventListener('pointermove', (e)=>{
+    if (!isDraggingHammer) return;
+  });
+  hammerGroup.addEventListener('pointerup', (e)=>{
+    if (isDraggingHammer) {
+      isDraggingHammer = false;
+      triggerHit();
+    }
+  });
+  hammerGroup.addEventListener('click', triggerHit);
+  btnHitFork.addEventListener('click', triggerHit);
+
+  // Âm thanh Web Audio API
+  function initAudio(){
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  function playBeep(freq, duration, vol){
+    try {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol || 0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(err) {}
+  }
+
+  const btnToggleSound = document.getElementById('btnToggleSound');
+  const btnSoundTrigger = document.getElementById('btnSoundTrigger');
+
+  function toggleContinuousSound(){
+    try {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      if (isPlayingSound) {
+        if (oscNode) { oscNode.stop(); oscNode.disconnect(); oscNode = null; }
+        isPlayingSound = false;
+        btnToggleSound.textContent = '🔊 Bật âm thanh mẫu';
+        btnToggleSound.removeAttribute('data-active');
+      } else {
+        oscNode = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+        oscNode.type = 'sine';
+        oscNode.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(amplitude / 120, audioCtx.currentTime);
+        oscNode.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscNode.start();
+        isPlayingSound = true;
+        btnToggleSound.textContent = '🔇 Tắt âm thanh';
+        btnToggleSound.setAttribute('data-active', 'true');
+      }
+    } catch(e) {}
+  }
+
+  btnToggleSound.addEventListener('click', toggleContinuousSound);
+  btnSoundTrigger.addEventListener('click', toggleContinuousSound);
+
+  function checkAnswer(btn, optIdx){
+    const q = btn.closest('.quiz-q');
+    const correctIdx = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.classList.remove('correct', 'wrong'));
+    if (optIdx === correctIdx) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+    }
+  }
+
+  updateUI();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl7-do-to-do-cao-am",
+  "subject": "vat-ly",
+  "grade": 7,
+  "title": "Độ to và độ cao của âm",
+  "sgk_ref": "KHTN 7 — KNTT, Bài 13",
+  "objective": "Khảo sát sự phụ thuộc của độ to vào biên độ dao động và độ cao vào tần số dao động qua màn hình dao động kí ảo.",
+  "controls": [
+    {"name": "Biên độ", "type": "range", "range": [10, 75], "unit": "mm"},
+    {"name": "Tần số", "type": "range", "range": [150, 1000], "unit": "Hz"},
+    {"name": "Gõ âm thoa", "type": "button"}
+  ],
+  "outputs": [
+    {"name": "Độ to", "unit": "dB"},
+    {"name": "Độ cao", "unit": "Hz"}
+  ],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

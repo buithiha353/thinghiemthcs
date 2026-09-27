@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 17: Lực đẩy Archimedes — KHTN 8 (Kết nối tri thức)</title>
+<meta name="description" content="Thí nghiệm kiểm chứng Định luật Archimedes với bình tràn và lực kế: FA = P - F1 bằng đúng trọng lượng chất lỏng bị chiếm chỗ.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7b1fa2, #c2185b);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(123,31,162,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#16202e; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .ctrl-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .ctrl-label{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .ctrl-row input[type="range"]{ width:100%; accent-color:var(--purple-1); cursor:pointer; }
+  
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:var(--purple-1); }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 8 &nbsp;›&nbsp; Bài 17</div>
+    <div class="status-pill">KHTN 8 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 17: Lực đẩy Archimedes</h1>
+    <p>Thí nghiệm khảo sát độ lớn của lực đẩy Archimedes với bình tràn và lực kế lò xo (Hình 17.4 SGK KHTN 8): FA = P - F1 đúng bằng trọng lượng chất lỏng tràn ra.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="liquidGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#0284c7" stop-opacity="0.8"/>
+          </linearGradient>
+          <linearGradient id="weightGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#475569"/>
+            <stop offset="50%" stop-color="#94a3b8"/>
+            <stop offset="100%" stop-color="#334155"/>
+          </linearGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#0f172a"/>
+        <line x1="20" y1="410" x2="620" y2="410" stroke="#334155" stroke-width="2"/>
+
+        <!-- GIÁ ĐỠ THÍ NGHIỆM TREO LỰC KẾ -->
+        <g transform="translate(240, 20)">
+          <!-- Cột sắt đứng -->
+          <line x1="-120" y1="390" x2="-120" y2="20" stroke="#64748b" stroke-width="8"/>
+          <rect x="-160" y="390" width="80" height="12" rx="3" fill="#475569"/>
+          <!-- Thanh ngang treo -->
+          <line x1="-120" y1="30" x2="20" y2="30" stroke="#64748b" stroke-width="6"/>
+          <!-- Móc treo lực kế -->
+          <circle cx="0" cy="35" r="4" fill="#cbd5e1"/>
+        </g>
+
+        <!-- LỰC KẾ LÒ XO (ĐO LỰC P VÀ F1) -->
+        <g id="springBalance" transform="translate(240, 55)">
+          <!-- Vỏ lực kế -->
+          <rect x="-12" y="0" width="24" height="110" rx="4" fill="#1e293b" stroke="#cbd5e1" stroke-width="1.5"/>
+          <!-- Rãnh chia độ Niu-tơn -->
+          <line x1="0" y1="15" x2="0" y2="95" stroke="#475569" stroke-width="2"/>
+          <line x1="-6" y1="15" x2="6" y2="15" stroke="#ef4444" stroke-width="1.5"/>
+          <text x="16" y="20" fill="#94a3b8" font-size="9">0N</text>
+          <line x1="-6" y1="55" x2="6" y2="55" stroke="#94a3b8" stroke-width="1"/>
+          <text x="16" y="60" fill="#94a3b8" font-size="9">1N</text>
+          <line x1="-6" y1="95" x2="6" y2="95" stroke="#94a3b8" stroke-width="1"/>
+          <text x="16" y="100" fill="#94a3b8" font-size="9">2N</text>
+
+          <!-- Kim chỉ thị lực kế (di chuyển theo lực tác dụng) -->
+          <polygon id="balancePointer" points="-8,75 8,75 0,79" fill="#ef4444"/>
+          <text id="lblBalanceRead" x="-22" y="80" fill="#ef4444" font-size="12" font-weight="800" text-anchor="end">1.50 N</text>
+
+          <!-- Dây treo quả nặng kéo dài xuống -->
+          <line id="suspensionString" x1="0" y1="110" x2="0" y2="170" stroke="#cbd5e1" stroke-width="1.5"/>
+        </g>
+
+        <!-- BÌNH TRÀN ĐỰNG NƯỚC (Overflow Can) -->
+        <g id="overflowCanGroup" transform="translate(240, 220)">
+          <!-- Thân bình tràn -->
+          <rect x="-55" y="0" width="110" height="170" rx="4" fill="rgba(255,255,255,0.1)" stroke="#94a3b8" stroke-width="2"/>
+          <!-- Vòi tràn bên phải chúc xuống -->
+          <path d="M 55 25 L 85 55 L 85 65 L 55 35 Z" fill="#94a3b8" stroke="#64748b" stroke-width="1"/>
+          <!-- Mực nước ban đầu tới sát mép vòi tràn -->
+          <rect id="canWater" x="-53" y="25" width="106" height="143" fill="url(#liquidGrad)"/>
+
+          <text x="0" y="185" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">Bình tràn (Chứa nước)</text>
+        </g>
+
+        <!-- QUẢ NẶNG (VẬT NHÚNG CHÌM) - Có thể kéo thả -->
+        <g id="heavyObject" transform="translate(240, 225)" style="cursor:grab;">
+          <!-- Thân quả nặng hình trụ -->
+          <rect x="-24" y="0" width="48" height="60" rx="4" fill="url(#weightGrad)" stroke="#1e293b" stroke-width="2"/>
+          <!-- Móc trên đỉnh -->
+          <circle cx="0" cy="-6" r="6" fill="none" stroke="#cbd5e1" stroke-width="2"/>
+          <text x="0" y="35" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle">Vật nhúng</text>
+        </g>
+
+        <!-- ỐNG ĐONG HỨNG NƯỚC TRÀN (Bên phải dưới vòi tràn) -->
+        <g transform="translate(365, 270)">
+          <!-- Cốc/ống đong chia vạch ml -->
+          <rect x="-20" y="0" width="40" height="120" rx="3" fill="rgba(255,255,255,0.12)" stroke="#94a3b8" stroke-width="1.5"/>
+          <!-- Lượng nước tràn hứng được -->
+          <rect id="overflowLiquid" x="-18" y="70" width="36" height="48" fill="url(#liquidGrad)" rx="2"/>
+          <text x="0" y="135" fill="#fde047" font-size="11" font-weight="700" text-anchor="middle">Ống đong</text>
+          <text id="lblVOverflow" x="0" y="-8" fill="#fde047" font-size="12" font-weight="800" text-anchor="middle">V = 50 ml</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bảng điều khiển -->
+    <div class="sidebar">
+      <div class="card">
+        <h3>🎚️ Độ ngập của vật trong nước</h3>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Thể tích vật chìm (V):</span>
+            <b id="valSubmerged">50 ml (Chìm một nửa)</b>
+          </div>
+          <input type="range" id="sliderSubmerged" min="0" max="100" value="50" step="5">
+        </div>
+
+        <div class="ctrl-row" style="margin-top:8px;">
+          <div class="ctrl-label">
+            <span>Chất lỏng trong bình tràn:</span>
+          </div>
+          <div class="btn-grid">
+            <button class="btn" id="btnWater" data-active="true">Nước thường</button>
+            <button class="btn" id="btnSaltWater" data-active="false">Nước muối đặc</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Số liệu đo &amp; Lực đẩy FA</h3>
+        <div class="data-box">
+          <div class="data-line">
+            <span>Trọng lượng vật ngoài khí (P):</span>
+            <b>1.80 N</b>
+          </div>
+          <div class="data-line">
+            <span>Lực kế khi nhúng chìm (F1):</span>
+            <span id="resF1" style="font-weight:700; color:#ef4444;">1.30 N</span>
+          </div>
+          <div class="data-line">
+            <span>Lực đẩy Archimedes (FA = P - F1):</span>
+            <span id="resFA" style="font-weight:700; color:#38bdf8;">0.50 N</span>
+          </div>
+          <div class="data-line">
+            <span>Trọng lượng nước tràn (P_nước):</span>
+            <span id="resPWater" style="font-weight:700; color:#f59e0b;">0.50 N</span>
+          </div>
+          <div class="data-line" style="border-top:1px dashed var(--panel-border); padding-top:6px; margin-top:6px;">
+            <span>Định luật Archimedes:</span>
+            <span style="color:var(--purple-1); font-weight:700;">FA = d · V = P_nước tràn</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Câu hỏi củng cố SGK -->
+  <div class="quiz-section">
+    <div class="card">
+      <h3>✍️ Câu hỏi củng cố (SGK KHTN 8)</h3>
+      
+      <div class="quiz-q" data-correct="2">
+        <p>1. Lực đẩy Archimedes tác dụng lên một vật nhúng chìm trong chất lỏng có độ lớn bằng:</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Trọng lượng của chính vật đó</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Khối lượng riêng của vật nhân với thể tích chất lỏng</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Trọng lượng của phần chất lỏng bị vật chiếm chỗ (FA = d · V)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Áp suất khí quyển</button>
+        </div>
+      </div>
+
+      <div class="quiz-q" data-correct="1">
+        <p>2. Khi nhúng cùng một vật chìm hoàn toàn vào nước muối đặc so với nước nguyên chất, lực đẩy Archimedes trong nước muối sẽ:</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Nhỏ hơn vì nước muối nặng hơn</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Lớn hơn vì trọng lượng riêng d của nước muối lớn hơn nước nguyên chất</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Bằng nhau vì thể tích vật không đổi</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Giảm về bằng không</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let submergedPercent = 50; // 0% -> 100% (0ml -> 100ml)
+  let liquidDensity = 10000; // N/m3 (nước thường: 10000, nước muối: 12000)
+  const P_air = 1.80; // N
+
+  const sliderSubmerged = document.getElementById('sliderSubmerged');
+  const valSubmerged = document.getElementById('valSubmerged');
+  const heavyObject = document.getElementById('heavyObject');
+  const suspensionString = document.getElementById('suspensionString');
+  const balancePointer = document.getElementById('balancePointer');
+  const lblBalanceRead = document.getElementById('lblBalanceRead');
+  const overflowLiquid = document.getElementById('overflowLiquid');
+  const lblVOverflow = document.getElementById('lblVOverflow');
+  const resF1 = document.getElementById('resF1');
+  const resFA = document.getElementById('resFA');
+  const resPWater = document.getElementById('resPWater');
+
+  function updateArchimedes(){
+    const V_ml = submergedPercent; // ml = cm3 = 10^-6 m3
+    valSubmerged.textContent = `${V_ml} ml (${submergedPercent === 100 ? 'Chìm hoàn toàn' : (submergedPercent === 0 ? 'Ngoài không khí' : 'Chìm một phần')})`;
+    sliderSubmerged.value = submergedPercent;
+
+    // FA = d * V = liquidDensity * (V_ml * 10^-6)
+    const FA = (liquidDensity * V_ml * 1e-6);
+    const F1 = Math.max(0, P_air - FA);
+
+    // Di chuyển quả nặng theo độ chìm
+    // Y từ 170 (ngoài khí) đến 270 (chìm sâu trong bình)
+    const objY = 170 + (submergedPercent / 100) * 100;
+    heavyObject.setAttribute('transform', `translate(240, ${objY})`);
+    suspensionString.setAttribute('y2', objY - 55);
+
+    // Kim lực kế: 0N tại y=15, 2N tại y=95 (mỗi 1N = 40px)
+    const pointerY = 15 + F1 * 40;
+    balancePointer.setAttribute('points', `-8,${pointerY} 8,${pointerY} 0,${pointerY + 4}`);
+    lblBalanceRead.textContent = `${F1.toFixed(2)} N`;
+    lblBalanceRead.setAttribute('y', pointerY + 5);
+
+    // Mực nước tràn trong ống đong
+    const overflowHeight = (V_ml / 100) * 110;
+    overflowLiquid.setAttribute('y', 118 - overflowHeight);
+    overflowLiquid.setAttribute('height', overflowHeight);
+    lblVOverflow.textContent = `V = ${V_ml} ml`;
+
+    resF1.textContent = `${F1.toFixed(2)} N`;
+    resFA.textContent = `${FA.toFixed(2)} N`;
+    resPWater.textContent = `${FA.toFixed(2)} N`;
+  }
+
+  sliderSubmerged.addEventListener('input', (e)=>{
+    submergedPercent = parseInt(e.target.value);
+    updateArchimedes();
+  });
+
+  document.getElementById('btnWater').addEventListener('click', ()=>{
+    liquidDensity = 10000;
+    document.getElementById('btnWater').setAttribute('data-active', 'true');
+    document.getElementById('btnSaltWater').setAttribute('data-active', 'false');
+    updateArchimedes();
+  });
+
+  document.getElementById('btnSaltWater').addEventListener('click', ()=>{
+    liquidDensity = 12000;
+    document.getElementById('btnWater').setAttribute('data-active', 'false');
+    document.getElementById('btnSaltWater').setAttribute('data-active', 'true');
+    updateArchimedes();
+  });
+
+  // Tương tác kéo thả quả nặng bằng Pointer Events
+  let isDraggingWeight = false;
+  const svg = document.getElementById('scene');
+
+  heavyObject.addEventListener('pointerdown', (e)=>{
+    isDraggingWeight = true;
+    heavyObject.setPointerCapture(e.pointerId);
+  });
+
+  heavyObject.addEventListener('pointermove', (e)=>{
+    if (!isDraggingWeight) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleY = 440 / rect.height;
+    const py = (e.clientY - rect.top) * scaleY;
+    let pct = (py - 170) / 100 * 100;
+    if (pct < 0) pct = 0;
+    if (pct > 100) pct = 100;
+    submergedPercent = Math.round(pct);
+    updateArchimedes();
+  });
+
+  heavyObject.addEventListener('pointerup', ()=>{
+    isDraggingWeight = false;
+  });
+
+  function checkAnswer(btn, optIdx){
+    const q = btn.closest('.quiz-q');
+    const correctIdx = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.classList.remove('correct', 'wrong'));
+    if (optIdx === correctIdx) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+    }
+  }
+
+  updateArchimedes();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl8-luc-day-archimedes",
+  "subject": "vat-ly",
+  "grade": 8,
+  "title": "Lực đẩy Archimedes",
+  "sgk_ref": "KHTN 8 — KNTT, Bài 17",
+  "objective": "Kiểm chứng công thức tính lực đẩy Archimedes FA = d.V và mối quan hệ giữa độ giảm số chỉ lực kế với trọng lượng chất lỏng tràn ra.",
+  "controls": [
+    {"name": "Độ ngập của vật", "type": "range", "range": [0, 100], "unit": "%"},
+    {"name": "Loại chất lỏng", "type": "toggle"}
+  ],
+  "outputs": [
+    {"name": "Lực kế F1", "unit": "N"},
+    {"name": "Lực đẩy FA", "unit": "N"}
+  ],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

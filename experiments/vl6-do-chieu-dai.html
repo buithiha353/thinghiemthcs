@@ -67,8 +67,18 @@
     font-size:13.5px; color:var(--ink-soft);
   }
   .crumb b{ color:var(--ink); font-weight:600; }
-  .crumb a{ color:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:500; }
-  .crumb a:hover{ color:var(--purple-1); text-decoration:underline; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px; font-weight:600; font-size:12.5px;
+    text-decoration:none; transition: all .12s ease;
+    box-shadow: 0 2px 6px -2px var(--panel-shadow);
+  }
+  .home-btn:hover{
+    background:var(--purple-1); border-color:var(--purple-1); color:#fff;
+    transform:translateY(-1px); text-decoration:none;
+  }
   .status-pill{
     display:inline-flex; align-items:center; gap:6px;
     background: var(--warn-soft); color:#8a5c05;
@@ -253,7 +263,7 @@
 <div class="shell">
 
   <div class="topbar">
-    <div class="crumb"><a href="../index.html">📚 Thư viện thí nghiệm</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 6 &nbsp;›&nbsp; Bài 5</div>
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 6 &nbsp;›&nbsp; Bài 5</div>
     <div class="status-pill">KHTN 6 — KNTT</div>
   </div>
 

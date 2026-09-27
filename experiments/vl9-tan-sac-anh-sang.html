@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 8: Tán sắc ánh sáng qua lăng kính — KHTN 9 (Kết nối tri thức)</title>
+<meta name="description" content="Thí nghiệm tán sắc ánh sáng: chùm ánh sáng trắng đi qua lăng kính thuỷ tinh bị phân tách thành dải 7 màu từ Đỏ đến Tím trên màn chắn.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7c3aed, #a855f7);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(124,58,237,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#070d18; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:#7c3aed; color:#7c3aed; }
+  .btn[data-active="true"]{ background:#7c3aed; border-color:#7c3aed; color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:#7c3aed; font-size:14px; }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 9 &nbsp;›&nbsp; Bài 8</div>
+    <div class="status-pill">KHTN 9 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 8: Sự tán sắc ánh sáng qua lăng kính</h1>
+    <p>Chiếu chùm ánh sáng trắng hẹp qua lăng kính tam giác thuỷ tinh, phân tách thành dải quang phổ 7 màu liên tục: Đỏ, Da cam, Vàng, Lục, Lam, Chàm, Tím.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="prismGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
+            <stop offset="50%" stop-color="#e0f2fe" stop-opacity="0.15"/>
+            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.4"/>
+          </linearGradient>
+          <linearGradient id="spectrumGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ef4444"/>
+            <stop offset="17%" stop-color="#f97316"/>
+            <stop offset="33%" stop-color="#facc15"/>
+            <stop offset="50%" stop-color="#22c55e"/>
+            <stop offset="67%" stop-color="#06b6d4"/>
+            <stop offset="83%" stop-color="#3b82f6"/>
+            <stop offset="100%" stop-color="#8b5cf6"/>
+          </linearGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#070d18"/>
+        <!-- Mặt bàn tối trong phòng thí nghiệm quang học -->
+        <rect x="20" y="380" width="600" height="16" fill="#1e293b" rx="3"/>
+
+        <!-- NGUỒN SÁNG TRẮNG HẸP (ĐÈN PIN CHIẾU KHE) (Direct manipulation: Kéo lên/xuống) -->
+        <g id="lampSource" transform="translate(80, 190)" style="cursor:ns-resize;">
+          <!-- Thân đèn chiếu -->
+          <rect x="-40" y="-18" width="60" height="36" rx="6" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
+          <path d="M 20 -14 L 35 -24 L 35 24 L 20 14 Z" fill="#475569"/>
+          <!-- Khe chắn hẹp phát chùm sáng -->
+          <line x1="35" y1="-8" x2="35" y2="8" stroke="#f8fafc" stroke-width="3"/>
+          <text x="-10" y="5" fill="#f8fafc" font-size="11" font-weight="bold" text-anchor="middle">ĐÈN</text>
+          <text x="-10" y="30" fill="#facc15" font-size="10" text-anchor="middle">Nguồn sáng trắng</text>
+        </g>
+
+        <!-- CHÙM TIA SÁNG TRẮNG TỚI LĂNG KÍNH -->
+        <polygon id="whiteBeam" points="115,188 115,192 280,186 280,174" fill="#ffffff" opacity="0.9"/>
+
+        <!-- LĂNG KÍNH TAM GIÁC THỦY TINH (Prism) -->
+        <g id="prismGroup" transform="translate(300, 180)">
+          <!-- Khối lăng kính đều góc A=60° -->
+          <polygon points="0,-75 65,55 -65,55" fill="url(#prismGrad)" stroke="#7dd3fc" stroke-width="2.5"/>
+          <text x="0" y="-85" fill="#7dd3fc" font-size="13" font-weight="bold" text-anchor="middle">A = 60°</text>
+          <text x="0" y="30" fill="#94a3b8" font-size="11" text-anchor="middle">Lăng kính</text>
+        </g>
+
+        <!-- CÁC TIA KHÚC XẠ TRONG LĂNG KÍNH -->
+        <path id="internalRed" d="M 280 178 L 340 192" stroke="#ef4444" stroke-width="1.8" opacity="0.8"/>
+        <path id="internalViolet" d="M 280 182 L 342 208" stroke="#8b5cf6" stroke-width="1.8" opacity="0.8"/>
+
+        <!-- DẢI CHÙM TÁN SẮC PHÂN TÁCH SAU KHI QUA LĂNG KÍNH -->
+        <!-- Đỏ đến Tím tạo thành chùm quạt loang màu -->
+        <polygon id="spectrumFan" points="340,192 342,208 520,290 520,190" fill="url(#spectrumGrad)" opacity="0.85"/>
+
+        <!-- CÁC ĐƯỜNG BIÊN ĐƠN SẮC -->
+        <line id="lineRed" x1="340" y1="192" x2="520" y2="190" stroke="#ef4444" stroke-width="2"/>
+        <line id="lineOrange" x1="340" y1="195" x2="520" y2="207" stroke="#f97316" stroke-width="1.5" stroke-dasharray="2,2"/>
+        <line id="lineYellow" x1="341" y1="198" x2="520" y2="223" stroke="#facc15" stroke-width="1.5" stroke-dasharray="2,2"/>
+        <line id="lineGreen" x1="341" y1="201" x2="520" y2="240" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="2,2"/>
+        <line id="lineBlue" x1="341" y1="204" x2="520" y2="257" stroke="#06b6d4" stroke-width="1.5" stroke-dasharray="2,2"/>
+        <line id="lineIndigo" x1="342" y1="206" x2="520" y2="273" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="2,2"/>
+        <line id="lineViolet" x1="342" y1="208" x2="520" y2="290" stroke="#8b5cf6" stroke-width="2"/>
+
+        <!-- MÀN CHẮN HỨNG QUANG PHỔ (Screen) -->
+        <g id="screenBoard" transform="translate(520, 130)">
+          <!-- Tấm bảng hứng ảnh màu trắng -->
+          <rect x="0" y="40" width="16" height="180" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+          <text x="8" y="25" fill="#e2e8f0" font-size="11" font-weight="bold" text-anchor="middle">Màn chắn</text>
+          <!-- Dải quang phổ in trên màn hứng -->
+          <rect id="spectrumOnScreen" x="1" y="60" width="14" height="100" fill="url(#spectrumGrad)"/>
+          <!-- Nhãn các màu -->
+          <text x="25" y="66" fill="#ef4444" font-size="10" font-weight="bold">Đỏ (lệch ít nhất)</text>
+          <text x="25" y="82" fill="#f97316" font-size="9">Da cam</text>
+          <text x="25" y="98" fill="#facc15" font-size="9">Vàng</text>
+          <text x="25" y="115" fill="#22c55e" font-size="9">Lục</text>
+          <text x="25" y="132" fill="#06b6d4" font-size="9">Lam</text>
+          <text x="25" y="148" fill="#3b82f6" font-size="9">Chàm</text>
+          <text x="25" y="165" fill="#a855f7" font-size="10" font-weight="bold">Tím (lệch nhiều nhất)</text>
+        </g>
+
+        <!-- KÍNH LỌC MÀU THỬ NGHIỆM ĐẶT TRƯỚC MÀN -->
+        <g id="filterPlate" transform="translate(440, 160)" opacity="0">
+          <rect x="0" y="0" width="8" height="140" rx="3" fill="#ef4444" opacity="0.8" stroke="#f87171"/>
+          <text x="4" y="-10" fill="#ef4444" font-size="10" text-anchor="middle">Kính lọc đỏ</text>
+        </g>
+
+        <text id="guideMsg" x="320" y="420" fill="#facc15" font-size="13" font-weight="600" text-anchor="middle">👆 Kéo nguồn đèn lên xuống hoặc chọn tấm lọc màu để kiểm chứng</text>
+      </svg>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>🎨 Nguồn sáng &amp; Kính lọc sắc</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnWhite" data-active="true">⚪ Ánh sáng trắng</button>
+          <button class="btn" id="btnRedFilter" data-active="false">🔴 Kính lọc Đỏ</button>
+          <button class="btn" id="btnGreenFilter" data-active="false">🟢 Kính lọc Lục</button>
+          <button class="btn" id="btnBlueFilter" data-active="false">🔵 Kính lọc Lam</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Thông số chiết quang &amp; góc lệch</h3>
+        <div class="data-box">
+          <div class="data-line"><span>Góc chiết quang A:</span><b>60°</b></div>
+          <div class="data-line"><span>Chiết suất tia Đỏ:</span><b style="color:#ef4444;">n_đỏ = 1.514 (nhỏ nhất)</b></div>
+          <div class="data-line"><span>Chiết suất tia Tím:</span><b style="color:#a855f7;">n_tím = 1.532 (lớn nhất)</b></div>
+          <div class="data-line"><span>Góc lệch D:</span><b id="valDeviation">D_đỏ &lt; D_da cam &lt; ... &lt; D_tím</b></div>
+          <div class="data-line"><span>Hiện tượng:</span><b id="valPhenomenon">Tán sắc 7 màu cầu vồng</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📖 Bản chất hiện tượng tán sắc</h3>
+        <p style="font-size:12.5px; line-height:1.55; margin:0; color:var(--ink-soft);">
+          • <b>Ánh sáng trắng</b> là hỗn hợp của nhiều ánh sáng đơn sắc có màu biến thiên liên tục từ đỏ đến tím.<br>
+          • Thuỷ tinh lăng kính có chiết suất khác nhau với các màu khác nhau: <b>n_đỏ &lt; n_cam &lt; ... &lt; n_tím</b> nên tia đỏ bị lệch ít nhất, tia tím bị lệch nhiều nhất.<br>
+          • <b>Ánh sáng đơn sắc</b> khi qua lăng kính chỉ bị lệch mà <b>không bị đổi màu</b>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="quiz-section">
+    <div class="quiz-q">
+      <p>Câu 1: Khi cho chùm ánh sáng trắng đi qua lăng kính thuỷ tinh, vì sao tia màu đỏ bị lệch ít hơn tia màu tím?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">A. Vì chiết suất của thuỷ tinh đối với ánh sáng đỏ nhỏ hơn đối với ánh sáng tím (n_đỏ &lt; n_tím)</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">B. Vì ánh sáng đỏ có năng lượng lớn hơn ánh sáng tím</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. Vì ánh sáng tím không bị khúc xạ</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. Do lăng kính có khả năng nhuộm màu chùm sáng</button>
+      </div>
+    </div>
+    <div class="quiz-q">
+      <p>Câu 2: Nếu chiếu chùm ánh sáng đơn sắc màu đỏ qua lăng kính thì hiện tượng gì xảy ra?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">A. Chùm sáng bị phân tách thành 7 màu cầu vồng</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">B. Chùm sáng chỉ bị khúc xạ (lệch phương) mà vẫn giữ nguyên màu đỏ</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. Ánh sáng biến thành màu trắng</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. Ánh sáng bị lăng kính hấp thụ hoàn toàn</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl9-tan-sac-anh-sang",
+  "subject": "vat-ly",
+  "grade": 9,
+  "title": "Sự tán sắc ánh sáng qua lăng kính",
+  "sgk_ref": "KHTN 9 — KNTT, Bài 8",
+  "objective": "Khảo sát sự phân tách chùm ánh sáng trắng thành dải 7 màu khi qua lăng kính và tính chất của ánh sáng đơn sắc.",
+  "controls": ["Kéo đèn chiếu lên xuống", "Chọn tấm lọc màu đỏ/lục/lam"],
+  "outputs": ["Dải màu quang phổ trên màn", "Góc lệch tia đỏ và tím", "Chùm đơn sắc qua kính lọc"],
+  "status": "ready"
+}
+</script>
+
+<script>
+  let lampY = 190;
+  let activeFilter = 'none'; // 'none', 'red', 'green', 'blue'
+
+  const lampSource = document.getElementById('lampSource');
+  const whiteBeam = document.getElementById('whiteBeam');
+  const spectrumFan = document.getElementById('spectrumFan');
+  const spectrumOnScreen = document.getElementById('spectrumOnScreen');
+  const filterPlate = document.getElementById('filterPlate');
+  const valPhenomenon = document.getElementById('valPhenomenon');
+
+  const btnWhite = document.getElementById('btnWhite');
+  const btnRedFilter = document.getElementById('btnRedFilter');
+  const btnGreenFilter = document.getElementById('btnGreenFilter');
+  const btnBlueFilter = document.getElementById('btnBlueFilter');
+
+  function updateSpectrum() {
+    lampSource.setAttribute('transform', `translate(80, ${lampY})`);
+    whiteBeam.setAttribute('points', `115,${lampY - 2} 115,${lampY + 2} 280,186 280,174`);
+
+    if (activeFilter === 'none') {
+      filterPlate.setAttribute('opacity', '0');
+      spectrumFan.setAttribute('fill', 'url(#spectrumGrad)');
+      spectrumFan.setAttribute('opacity', '0.85');
+      spectrumOnScreen.setAttribute('fill', 'url(#spectrumGrad)');
+      valPhenomenon.textContent = 'Tán sắc 7 màu cầu vồng (Đỏ → Tím)';
+    } else if (activeFilter === 'red') {
+      filterPlate.setAttribute('opacity', '1');
+      filterPlate.querySelector('rect').setAttribute('fill', '#ef4444');
+      filterPlate.querySelector('text').textContent = 'Kính lọc Đỏ';
+      filterPlate.querySelector('text').setAttribute('fill', '#ef4444');
+
+      spectrumFan.setAttribute('fill', '#ef4444');
+      spectrumFan.setAttribute('opacity', '0.6');
+      spectrumOnScreen.setAttribute('fill', '#ef4444');
+      valPhenomenon.textContent = 'Chỉ cho tia ĐƠN SẮC ĐỎ đi qua màn chắn';
+    } else if (activeFilter === 'green') {
+      filterPlate.setAttribute('opacity', '1');
+      filterPlate.querySelector('rect').setAttribute('fill', '#22c55e');
+      filterPlate.querySelector('text').textContent = 'Kính lọc Lục';
+      filterPlate.querySelector('text').setAttribute('fill', '#22c55e');
+
+      spectrumFan.setAttribute('fill', '#22c55e');
+      spectrumFan.setAttribute('opacity', '0.6');
+      spectrumOnScreen.setAttribute('fill', '#22c55e');
+      valPhenomenon.textContent = 'Chỉ cho tia ĐƠN SẮC LỤC đi qua màn chắn';
+    } else if (activeFilter === 'blue') {
+      filterPlate.setAttribute('opacity', '1');
+      filterPlate.querySelector('rect').setAttribute('fill', '#3b82f6');
+      filterPlate.querySelector('text').textContent = 'Kính lọc Lam';
+      filterPlate.querySelector('text').setAttribute('fill', '#3b82f6');
+
+      spectrumFan.setAttribute('fill', '#3b82f6');
+      spectrumFan.setAttribute('opacity', '0.6');
+      spectrumOnScreen.setAttribute('fill', '#3b82f6');
+      valPhenomenon.textContent = 'Chỉ cho tia ĐƠN SẮC LAM đi qua màn chắn';
+    }
+  }
+
+  function setFilter(filterType, b1, b2, b3, b4) {
+    activeFilter = filterType;
+    btnWhite.setAttribute('data-active', b1);
+    btnRedFilter.setAttribute('data-active', b2);
+    btnGreenFilter.setAttribute('data-active', b3);
+    btnBlueFilter.setAttribute('data-active', b4);
+    updateSpectrum();
+  }
+
+  btnWhite.addEventListener('click', () => setFilter('none', true, false, false, false));
+  btnRedFilter.addEventListener('click', () => setFilter('red', false, true, false, false));
+  btnGreenFilter.addEventListener('click', () => setFilter('green', false, false, true, false));
+  btnBlueFilter.addEventListener('click', () => setFilter('blue', false, false, false, true));
+
+  // Pointer Events kéo đèn chiếu (Direct manipulation)
+  let isDraggingLamp = false;
+  lampSource.addEventListener('pointerdown', (e) => {
+    isDraggingLamp = true;
+    lampSource.setPointerCapture(e.pointerId);
+  });
+  lampSource.addEventListener('pointermove', (e) => {
+    if (!isDraggingLamp) return;
+    lampY = Math.max(140, Math.min(240, lampY + e.movementY));
+    updateSpectrum();
+  });
+  lampSource.addEventListener('pointerup', (e) => {
+    if (isDraggingLamp) {
+      isDraggingLamp = false;
+      lampSource.releasePointerCapture(e.pointerId);
+    }
+  });
+
+  function checkQuiz(btn, isCorrect) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.quiz-opt').forEach(b => {
+      b.disabled = true;
+      if (b === btn) {
+        b.classList.add(isCorrect ? 'correct' : 'wrong');
+      }
+    });
+  }
+
+  updateSpectrum();
+</script>
+</body>
+</html>

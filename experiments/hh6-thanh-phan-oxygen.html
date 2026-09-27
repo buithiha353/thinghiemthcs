@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 11: Thành phần phần trăm Oxygen — KHTN 6 (Kết nối tri thức)</title>
+<meta name="description" content="Mô phỏng 2.5D thí nghiệm xác định thành phần thể tích oxygen trong không khí theo SGK Khoa học tự nhiên 6, bộ Kết nối tri thức với cuộc sống.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1:#a9713f; --wood-2:#7a4c26; --wood-grain:#8f5c30;
+    --paper:#fffdf7; --paper-edge:#efe6d3; --paper-line:#e7ddc4;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --flame-outer:#ff7675; --flame-inner:#ffeaa7;
+    --accent:#1c8c6b; --accent-soft:#e4f4ee;
+    --warn:#c9820f; --warn-soft:#fbeed8;
+    --danger:#c94444; --danger-soft:#fbe7e5;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+      --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+    --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+    --body-bg:#1b1812;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    line-height:1.5;
+  }
+  h1,h2,h3, .display{ font-family:'Baloo 2', 'Inter', sans-serif; }
+  .shell{ max-width: 1120px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap; padding:10px 4px 14px; font-size:13.5px; color:var(--ink-soft);
+  }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px; font-weight:600; font-size:12.5px;
+    text-decoration:none; transition: all .12s ease;
+    box-shadow: 0 2px 6px -2px var(--panel-shadow);
+  }
+  .home-btn:hover{
+    background:var(--purple-1); border-color:var(--purple-1); color:#fff;
+    transform:translateY(-1px); text-decoration:none;
+  }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--warn-soft); color:#8a5c05;
+    border:1px solid rgba(201,130,15,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:600;
+  }
+  .status-pill::before{ content:"●"; font-size:9px; color:#c9820f; }
+
+  .banner{
+    position:relative; background: linear-gradient(120deg, var(--purple-1), var(--purple-2));
+    border-radius: 26px; padding: 26px 26px 40px; color:#fff; overflow:hidden;
+    box-shadow: 0 14px 30px -12px rgba(123,31,162,0.55);
+  }
+  .banner-row{ display:flex; align-items:center; gap:16px; position:relative; z-index:2; flex-wrap:wrap; }
+  .badge{
+    flex:0 0 auto; width:64px; height:64px; border-radius:50%;
+    background:#fff; color:var(--purple-1);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; text-align:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    border: 4px solid rgba(255,255,255,0.55);
+  }
+  .banner-title{ flex:1 1 260px; min-width:200px; }
+  .banner-title h1{ margin:0 0 4px; font-size: clamp(22px,4vw,30px); }
+  .banner-title p{ margin:0; font-size:14px; opacity:0.92; max-width:540px; }
+  .meta-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; position:relative; z-index:2; }
+  .chip{
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(2px);
+    border:1px solid rgba(255,255,255,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:500;
+  }
+
+  .grid{ display:grid; grid-template-columns: 1.55fr 1fr; gap:20px; margin-top:20px; }
+  @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:20px; padding:18px 18px 20px;
+    box-shadow: 0 10px 24px -14px var(--panel-shadow);
+  }
+  .panel h2{ font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  .panel h2 .num{
+    width:24px; height:24px; border-radius:50%; background:var(--purple-1); color:#fff;
+    font-size:12.5px; display:inline-flex; align-items:center; justify-content:center; font-family:'Inter'; font-weight:700;
+  }
+
+  .stage{
+    background:
+      repeating-linear-gradient(100deg, var(--wood-grain) 0px, var(--wood-grain) 2px, transparent 2px, transparent 26px),
+      linear-gradient(160deg, var(--wood-1), var(--wood-2));
+    border-radius:20px; padding:20px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.25), 0 10px 24px -14px var(--panel-shadow);
+  }
+  .worksheet{
+    background: var(--paper); border-radius:14px; padding:14px 10px 6px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.25), 0 2px 0 var(--paper-edge);
+    position:relative;
+  }
+  .worksheet svg{ width:100%; height:auto; display:block; user-select:none; }
+
+  .cup-draggable{ cursor: grab; touch-action: none; }
+  .cup-draggable.dragging{ cursor: grabbing; }
+
+  .steps-note{ font-size:12.5px; color:var(--ink-soft); text-align:center; margin-top:8px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13.5px; font-weight:600; margin-bottom:8px;
+  }
+  .field label .val{ font-family:'Baloo 2'; color:var(--purple-1); font-size:14px; }
+  .field .hint{ font-size:12px; color:var(--ink-faint); margin-top:5px; line-height:1.45; }
+
+  .readout{
+    background: var(--accent-soft); border-radius:14px; padding:14px 16px; margin-top:4px;
+    border:1px solid rgba(28,140,107,0.2);
+  }
+  .readout .big{
+    font-family:'Baloo 2'; font-size:28px; font-weight:700; color:var(--accent);
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .readout .big span{ font-size:14px; font-weight:600; color:var(--ink-soft); font-family:'Inter'; }
+  .readout .msg{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+
+  .kv{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .kv div{ background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px; padding:8px 10px; }
+  .kv .l{ font-size:11px; color:var(--ink-faint); }
+  .kv .v{ font-family:'Baloo 2'; font-size:16px; }
+
+  .checklist{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .checklist li{ display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--ink-soft); }
+  .checklist .box{
+    width:18px; height:18px; border-radius:6px; border:2px solid var(--panel-border);
+    flex:0 0 auto; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:transparent; transition: all .15s ease;
+  }
+  .checklist li.done .box{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .checklist li.done{ color:var(--ink); font-weight:500; }
+
+  .btn-action{
+    border:1.5px solid var(--panel-border); background:var(--panel-bg); color:var(--ink);
+    padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter'; transition: transform .12s ease;
+  }
+  .btn-action:hover{ transform: translateY(-1px); border-color:var(--purple-1); }
+
+  .quiz-q{ margin-bottom:16px; }
+  .quiz-q p.qtext{ font-weight:600; font-size:13.5px; margin:0 0 8px; }
+  .opt{
+    display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:10px;
+    border:1.5px solid var(--panel-border); margin-bottom:6px; cursor:pointer; font-size:13px;
+  }
+  .opt:hover{ border-color: var(--purple-1); }
+  .opt input{ accent-color: var(--purple-1); }
+  .feedback{ font-size:12.5px; margin-top:6px; padding:8px 10px; border-radius:10px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:var(--accent-soft); color:var(--accent); font-weight:500; }
+  .feedback.wrong{ background:var(--danger-soft); color:var(--danger); }
+
+  details.manifest{
+    margin-top:20px; background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:16px; padding:12px 16px;
+  }
+  details.manifest summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  details.manifest pre{
+    font-size:11.5px; overflow-x:auto; background: var(--body-bg); padding:12px; border-radius:10px;
+    margin-top:10px; color: var(--ink-soft); line-height:1.6;
+  }
+  .foot-note{ text-align:center; font-size:12px; color:var(--ink-faint); margin-top:22px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Hoá học</b> &nbsp;›&nbsp; Lớp 6 &nbsp;›&nbsp; Bài 11</div>
+    <div class="status-pill">KHTN 6 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-row">
+      <div class="badge">BÀI<br>11</div>
+      <div class="banner-title">
+        <h1>Thành phần phần trăm Oxygen trong không khí</h1>
+        <p>Mô phỏng 2.5D — thí nghiệm đốt nến cháy trong cốc thuỷ tinh úp ngược trên chậu nước vôi theo SGK KHTN 6 (Hình 11.5, tr.38).</p>
+      </div>
+    </div>
+    <div class="meta-chips">
+      <span class="chip">Môn: Hoá học</span>
+      <span class="chip">Lớp 6</span>
+      <span class="chip">SGK KHTN 6 – KNTT, Bài 11, tr.36–39</span>
+      <span class="chip">⏱ ~8 phút</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel" style="padding:16px;">
+        <h2><span class="num">1</span>Bàn thực hành</h2>
+        <div class="stage">
+          <div class="worksheet">
+            <svg id="scene" viewBox="0 0 640 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mô phỏng xác định thành phần phần trăm thể tích oxygen">
+              <defs>
+                <linearGradient id="basinGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#dfe6e9"/>
+                  <stop offset="100%" stop-color="#b2bec3"/>
+                </linearGradient>
+                <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#74b9ff"/>
+                  <stop offset="100%" stop-color="#0984e3"/>
+                </linearGradient>
+                <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="rgba(255,255,255,0.7)"/>
+                  <stop offset="50%" stop-color="rgba(200,230,255,0.2)"/>
+                  <stop offset="100%" stop-color="rgba(150,210,255,0.5)"/>
+                </linearGradient>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#fdcb6e" flood-opacity="0.8"/>
+                </filter>
+              </defs>
+
+              <!-- Basin (Chậu đựng nước vôi trong có pha màu xanh tím) -->
+              <ellipse cx="280" cy="270" rx="170" ry="32" fill="url(#basinGrad)" stroke="#636e72" stroke-width="2"/>
+              <ellipse cx="280" cy="265" rx="160" ry="26" fill="url(#waterGrad)" opacity="0.6"/>
+
+              <!-- Candle in Center of Basin (x: 280, y: 195) -->
+              <g id="candleGroup" transform="translate(280, 205)">
+                <!-- Candle floating cork base -->
+                <rect x="-24" y="50" width="48" height="12" rx="4" fill="#d35400"/>
+                <!-- Wax body -->
+                <rect x="-8" y="15" width="16" height="38" rx="2" fill="#fff" stroke="#f1c40f" stroke-width="1"/>
+                <!-- Wick -->
+                <line x1="0" y1="15" x2="0" y2="8" stroke="#2d3436" stroke-width="1.8"/>
+                <!-- Flame -->
+                <g id="candleFlame" filter="url(#glow)">
+                  <path d="M 0 8 C -6 2, -6 -10, 0 -16 C 6 -10, 6 2, 0 8 Z" fill="#e17055"/>
+                  <path d="M 0 6 C -3 2, -3 -6, 0 -11 C 3 -6, 3 2, 0 6 Z" fill="#ffeaa7"/>
+                </g>
+              </g>
+
+              <!-- Water level rising inside the cup after burning -->
+              <g id="waterInsideGroup" transform="translate(280, 270)" opacity="0">
+                <!-- Water fills 1/5 of cup (height = 36px) -->
+                <rect id="risenWater" x="-42" y="-36" width="84" height="36" rx="3" fill="#0984e3" opacity="0.85"/>
+                <text x="0" y="-14" font-size="10.5" font-family="'Baloo 2'" font-weight="700" fill="#fff" text-anchor="middle">Nước dâng 1/5 (~21%)</text>
+              </g>
+
+              <!-- Inverted Draggable Glass Cylinder with 5 level marks -->
+              <!-- Can be dragged from upper right (x: 480, y: 80) down over the candle (x: 280, y: 120) -->
+              <g id="glassCupDraggable" class="cup-draggable" transform="translate(480, 60)">
+                <!-- Cylinder outline (width: 90, height: 180) -->
+                <rect x="-45" y="0" width="90" height="180" rx="8" fill="url(#glassGrad)" stroke="#74b9ff" stroke-width="2"/>
+                <line x1="-45" y1="5" x2="45" y2="5" stroke="#74b9ff" stroke-width="3"/>
+                <!-- 5 Graduation lines dividing cup into 5 equal parts (each 36px) -->
+                <line x1="-40" y1="36" x2="-20" y2="36" stroke="#c0392b" stroke-width="1.8"/>
+                <text x="-12" y="40" font-size="9" font-family="Inter" font-weight="700" fill="#c0392b">4/5</text>
+                <line x1="-40" y1="72" x2="-20" y2="72" stroke="#c0392b" stroke-width="1.8"/>
+                <text x="-12" y="76" font-size="9" font-family="Inter" font-weight="700" fill="#c0392b">3/5</text>
+                <line x1="-40" y1="108" x2="-20" y2="108" stroke="#c0392b" stroke-width="1.8"/>
+                <text x="-12" y="112" font-size="9" font-family="Inter" font-weight="700" fill="#c0392b">2/5</text>
+                <line x1="-40" y1="144" x2="-20" y2="144" stroke="#c0392b" stroke-width="2.2"/>
+                <text x="-12" y="148" font-size="9.5" font-family="Inter" font-weight="700" fill="#e74c3c">1/5</text>
+                <text x="0" y="-12" font-size="11" font-family="'Baloo 2'" font-weight="700" fill="#2980b9" text-anchor="middle">Cốc thuỷ tinh (chia 5 phần)</text>
+              </g>
+
+            </svg>
+
+            <p class="steps-note">✋ Dùng chuột hoặc ngón tay kéo chiếc cốc thuỷ tinh bên phải úp chụp xuống ngọn nến đang cháy trong chậu nước!</p>
+          </div>
+        </div>
+      </div>
+
+      <details class="manifest">
+        <summary>ℹ️ Thông tin module (manifest.json)</summary>
+        <pre>{
+  "id": "hh6-thanh-phan-oxygen",
+  "subject": "hoa-hoc",
+  "grade": 6,
+  "title": "Thành phần phần trăm Oxygen trong không khí",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 11, tr.36-39",
+  "objective": "Tiến hành thí nghiệm xác định thành phần phần trăm thể tích của oxygen trong không khí xấp xỉ 21% (khoảng 1/5 thể tích).",
+  "controls": [
+    { "id": "drag_cup", "label": "Kéo cốc thuỷ tinh úp lên cây nến", "type": "drag_drop" }
+  ],
+  "outputs": ["the_tich_oxygen_chiem", "phan_tram_uoc_tinh", "hien_tuong"],
+  "status": "draft"
+}</pre>
+      </details>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div class="panel">
+        <h2><span class="num">2</span>Điều khiển & Kết quả</h2>
+
+        <div class="field">
+          <label>Trạng thái thí nghiệm: <span class="val" id="stateLabel">Chưa úp cốc</span></label>
+          <div class="hint">Thao tác: Kéo cốc thuỷ tinh sang trái úp lên ngọn nến. Quan sát ngọn nến cháy một lúc rồi tắt và nước dâng lên chiếm đúng 1/5 chiều cao cốc.</div>
+          <button type="button" id="btnResetCandle" class="btn-action" style="margin-top:10px;">🔄 Làm lại thí nghiệm</button>
+        </div>
+
+        <div class="readout" id="readoutBox">
+          <div class="big" id="readoutBig">~21 <span>% O₂</span></div>
+          <div class="msg" id="readoutMsg">Nến đang cháy ngoài không khí tự do. Hãy kéo úp cốc thuỷ tinh lên nến.</div>
+        </div>
+
+        <div class="kv">
+          <div><div class="l">Thể tích nước dâng</div><div class="v" id="valRise">0 / 5 phần</div></div>
+          <div><div class="l">Tỉ lệ Oxygen</div><div class="v" id="valRatio">~ 1/5 (21%)</div></div>
+        </div>
+
+        <ul class="checklist" id="checklist">
+          <li class="done"><span class="box">✓</span> Thắp nến nổi thăng bằng trên chậu nước vôi</li>
+          <li id="chkCover"><span class="box">✓</span> Úp ngược cốc thuỷ tinh chia vạch lên cây nến</li>
+          <li id="chkExtinguish"><span class="box">✓</span> Nến cháy hết oxygen rồi tắt; nước dâng 1/5 cốc</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2><span class="num">3</span>Kiểm tra nhanh</h2>
+
+        <div class="quiz-q" data-correct="b">
+          <p class="qtext">1. Khí oxygen chiếm khoảng bao nhiêu phần trăm thể tích không khí?</p>
+          <label class="opt"><input type="radio" name="q1" value="a"> Khoảng 78%</label>
+          <label class="opt"><input type="radio" name="q1" value="b"> Khoảng 21% (gần bằng 1/5)</label>
+          <label class="opt"><input type="radio" name="q1" value="c"> Khoảng 50%</label>
+          <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-q" data-correct="c">
+          <p class="qtext">2. Vì sao mực nước trong cốc dâng lên sau khi ngọn nến tắt?</p>
+          <label class="opt"><input type="radio" name="q2" value="a"> Do nước bị nến hút vào</label>
+          <label class="opt"><input type="radio" name="q2" value="b"> Do nhiệt độ làm nước nở ra</label>
+          <label class="opt"><input type="radio" name="q2" value="c"> Nước dâng lên chiếm chỗ phần khí oxygen đã tham gia phản ứng cháy</label>
+          <div class="feedback"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot-note">Chương II, Bài 11 · Phong cách 2.5D lấy cảm hứng từ SGK KHTN 6 (Kết nối tri thức với cuộc sống).</p>
+</div>
+
+<script>
+(function(){
+  const cup = document.getElementById('glassCupDraggable');
+  const flame = document.getElementById('candleFlame');
+  const waterInside = document.getElementById('waterInsideGroup');
+  const stateLabel = document.getElementById('stateLabel');
+  const readoutBig = document.getElementById('readoutBig');
+  const readoutMsg = document.getElementById('readoutMsg');
+  const valRise = document.getElementById('valRise');
+  const chkCover = document.getElementById('chkCover');
+  const chkExtinguish = document.getElementById('chkExtinguish');
+  const btnReset = document.getElementById('btnResetCandle');
+
+  const START_X = 480, START_Y = 60;
+  const TARGET_X = 280, TARGET_Y = 95; // Cup centered over candle (x:280, y:95 to 275)
+
+  let isCovered = false;
+  let isDragging = false;
+  let startX = 0, startY = 0;
+
+  function setCupPos(x, y){
+    cup.setAttribute('transform', `translate(${x}, ${y})`);
+  }
+
+  function runReaction(){
+    isCovered = true;
+    setCupPos(TARGET_X, TARGET_Y);
+    stateLabel.textContent = 'Đã úp cốc — đang cháy';
+    chkCover.classList.add('done');
+    readoutMsg.textContent = 'Cốc đã úp kín! Nến đang tiêu thụ dần lượng oxygen có trong cốc...';
+
+    // Candle burns for 1.2s, then dims and goes out
+    setTimeout(()=>{
+      flame.style.transition = 'opacity 0.6s ease';
+      flame.setAttribute('opacity', '0');
+
+      // Water rises up 1/5
+      setTimeout(()=>{
+        waterInside.setAttribute('opacity', '1');
+        chkExtinguish.classList.add('done');
+        valRise.textContent = '1/5 phần cốc';
+        stateLabel.textContent = 'Nến tắt — hoàn tất';
+        readoutBig.innerHTML = '1/5 <span>(≈21% O₂)</span>';
+        readoutMsg.textContent = '🎉 Nến tắt hẳn do hết oxygen! Chất lỏng dâng lên đúng 1/5 thể tích cốc → Khí oxygen chiếm khoảng 21% thể tích không khí.';
+      }, 700);
+    }, 1200);
+  }
+
+  cup.addEventListener('pointerdown', (e)=>{
+    cup.setPointerCapture(e.pointerId);
+    cup.classList.add('dragging');
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+  });
+
+  cup.addEventListener('pointermove', (e)=>{
+    if(!isDragging || isCovered) return;
+    const curX = START_X + (e.clientX - startX);
+    const curY = START_Y + (e.clientY - startY);
+    setCupPos(curX, curY);
+
+    // If dragged near candle (around x <= 340)
+    if(curX <= 340){
+      isDragging = false;
+      cup.classList.remove('dragging');
+      runReaction();
+    }
+  });
+
+  function onEnd(){
+    if(!isDragging) return;
+    isDragging = false;
+    cup.classList.remove('dragging');
+    if(!isCovered){
+      setCupPos(START_X, START_Y);
+    }
+  }
+
+  cup.addEventListener('pointerup', onEnd);
+  cup.addEventListener('pointercancel', onEnd);
+
+  btnReset.addEventListener('click', ()=>{
+    isCovered = false;
+    setCupPos(START_X, START_Y);
+    flame.setAttribute('opacity', '1');
+    waterInside.setAttribute('opacity', '0');
+    stateLabel.textContent = 'Chưa úp cốc';
+    valRise.textContent = '0 / 5 phần';
+    chkCover.classList.remove('done');
+    chkExtinguish.classList.remove('done');
+    readoutBig.innerHTML = '~21 <span>% O₂</span>';
+    readoutMsg.textContent = 'Nến đang cháy ngoài không khí tự do. Hãy kéo úp cốc thuỷ tinh lên nến.';
+  });
+
+  // Quiz
+  document.querySelectorAll('.quiz-q').forEach(q=>{
+    const correct = q.dataset.correct;
+    const fb = q.querySelector('.feedback');
+    q.querySelectorAll('input[type=radio]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        fb.classList.remove('correct','wrong');
+        if(r.value === correct){
+          fb.textContent = '✅ Rất chính xác!';
+          fb.classList.add('correct');
+        } else {
+          fb.textContent = '❌ Chưa đúng, hãy nhớ lại kiến thức về thành phần không khí trong SGK.';
+          fb.classList.add('wrong');
+        }
+        fb.classList.add('show');
+      });
+    });
+  });
+})();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "hh6-thanh-phan-oxygen",
+  "subject": "hoa-hoc",
+  "grade": 6,
+  "title": "Thành phần phần trăm Oxygen trong không khí",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 11, tr.36-39",
+  "objective": "Tiến hành thí nghiệm xác định thành phần phần trăm thể tích của oxygen trong không khí xấp xỉ 21% (khoảng 1/5 thể tích).",
+  "controls": [
+    { "id": "drag_cup", "label": "Kéo cốc thuỷ tinh úp lên cây nến", "type": "drag_drop" }
+  ],
+  "outputs": ["the_tich_oxygen_chiem", "phan_tram_uoc_tinh", "hien_tuong"],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

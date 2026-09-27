@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 21: Quan sát tế bào vảy hành bằng kính hiển vi — KHTN 6 (Kết nối tri thức)</title>
+<meta name="description" content="Mô phỏng 2.5D thực hành sử dụng kính hiển vi quang học quan sát tế bào biểu bì vảy hành tây theo SGK Khoa học tự nhiên 6, bộ Kết nối tri thức với cuộc sống.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1:#a9713f; --wood-2:#7a4c26; --wood-grain:#8f5c30;
+    --paper:#fffdf7; --paper-edge:#efe6d3; --paper-line:#e7ddc4;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --scope-body:#2d3436; --scope-metal:#b2bec3;
+    --cell-wall:#16a085; --cell-cytoplasm:#a3cb38; --cell-nucleus:#2c3e50;
+    --accent:#1c8c6b; --accent-soft:#e4f4ee;
+    --warn:#c9820f; --warn-soft:#fbeed8;
+    --danger:#c94444; --danger-soft:#fbe7e5;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+      --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+    --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+    --body-bg:#1b1812;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    line-height:1.5;
+  }
+  h1,h2,h3, .display{ font-family:'Baloo 2', 'Inter', sans-serif; }
+  .shell{ max-width: 1120px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap; padding:10px 4px 14px; font-size:13.5px; color:var(--ink-soft);
+  }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px; font-weight:600; font-size:12.5px;
+    text-decoration:none; transition: all .12s ease;
+    box-shadow: 0 2px 6px -2px var(--panel-shadow);
+  }
+  .home-btn:hover{
+    background:var(--purple-1); border-color:var(--purple-1); color:#fff;
+    transform:translateY(-1px); text-decoration:none;
+  }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--warn-soft); color:#8a5c05;
+    border:1px solid rgba(201,130,15,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:600;
+  }
+  .status-pill::before{ content:"●"; font-size:9px; color:#c9820f; }
+
+  .banner{
+    position:relative; background: linear-gradient(120deg, var(--purple-1), var(--purple-2));
+    border-radius: 26px; padding: 26px 26px 40px; color:#fff; overflow:hidden;
+    box-shadow: 0 14px 30px -12px rgba(123,31,162,0.55);
+  }
+  .banner-row{ display:flex; align-items:center; gap:16px; position:relative; z-index:2; flex-wrap:wrap; }
+  .badge{
+    flex:0 0 auto; width:64px; height:64px; border-radius:50%;
+    background:#fff; color:var(--purple-1);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; text-align:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    border: 4px solid rgba(255,255,255,0.55);
+  }
+  .banner-title{ flex:1 1 260px; min-width:200px; }
+  .banner-title h1{ margin:0 0 4px; font-size: clamp(22px,4vw,30px); }
+  .banner-title p{ margin:0; font-size:14px; opacity:0.92; max-width:540px; }
+  .meta-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; position:relative; z-index:2; }
+  .chip{
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(2px);
+    border:1px solid rgba(255,255,255,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:500;
+  }
+
+  .grid{ display:grid; grid-template-columns: 1.55fr 1fr; gap:20px; margin-top:20px; }
+  @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:20px; padding:18px 18px 20px;
+    box-shadow: 0 10px 24px -14px var(--panel-shadow);
+  }
+  .panel h2{ font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  .panel h2 .num{
+    width:24px; height:24px; border-radius:50%; background:var(--purple-1); color:#fff;
+    font-size:12.5px; display:inline-flex; align-items:center; justify-content:center; font-family:'Inter'; font-weight:700;
+  }
+
+  .stage{
+    background:
+      repeating-linear-gradient(100deg, var(--wood-grain) 0px, var(--wood-grain) 2px, transparent 2px, transparent 26px),
+      linear-gradient(160deg, var(--wood-1), var(--wood-2));
+    border-radius:20px; padding:20px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.25), 0 10px 24px -14px var(--panel-shadow);
+  }
+  .worksheet{
+    background: var(--paper); border-radius:14px; padding:14px 10px 6px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.25), 0 2px 0 var(--paper-edge);
+    position:relative;
+  }
+  .worksheet svg{ width:100%; height:auto; display:block; user-select:none; }
+
+  .slide-draggable{ cursor: grab; touch-action: none; }
+  .slide-draggable.dragging{ cursor: grabbing; }
+
+  .steps-note{ font-size:12.5px; color:var(--ink-soft); text-align:center; margin-top:8px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13.5px; font-weight:600; margin-bottom:8px;
+  }
+  .field label .val{ font-family:'Baloo 2'; color:var(--purple-1); font-size:14px; }
+  .field .hint{ font-size:12px; color:var(--ink-faint); margin-top:5px; line-height:1.45; }
+
+  .readout{
+    background: var(--accent-soft); border-radius:14px; padding:14px 16px; margin-top:4px;
+    border:1px solid rgba(28,140,107,0.2);
+  }
+  .readout.warn{ background:var(--warn-soft); border-color: rgba(201,130,15,0.3); }
+  .readout .big{
+    font-family:'Baloo 2'; font-size:28px; font-weight:700; color:var(--accent);
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .readout .msg{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+
+  .kv{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .kv div{ background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px; padding:8px 10px; }
+  .kv .l{ font-size:11px; color:var(--ink-faint); }
+  .kv .v{ font-family:'Baloo 2'; font-size:16px; }
+
+  .checklist{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .checklist li{ display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--ink-soft); }
+  .checklist .box{
+    width:18px; height:18px; border-radius:6px; border:2px solid var(--panel-border);
+    flex:0 0 auto; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:transparent; transition: all .15s ease;
+  }
+  .checklist li.done .box{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .checklist li.done{ color:var(--ink); font-weight:500; }
+
+  .btn-action{
+    border:1.5px solid var(--panel-border); background:var(--panel-bg); color:var(--ink);
+    padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter'; transition: transform .12s ease;
+  }
+  .btn-action:hover{ transform: translateY(-1px); border-color:var(--purple-1); }
+
+  .quiz-q{ margin-bottom:16px; }
+  .quiz-q p.qtext{ font-weight:600; font-size:13.5px; margin:0 0 8px; }
+  .opt{
+    display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:10px;
+    border:1.5px solid var(--panel-border); margin-bottom:6px; cursor:pointer; font-size:13px;
+  }
+  .opt:hover{ border-color: var(--purple-1); }
+  .opt input{ accent-color: var(--purple-1); }
+  .feedback{ font-size:12.5px; margin-top:6px; padding:8px 10px; border-radius:10px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:var(--accent-soft); color:var(--accent); font-weight:500; }
+  .feedback.wrong{ background:var(--danger-soft); color:var(--danger); }
+
+  details.manifest{
+    margin-top:20px; background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:16px; padding:12px 16px;
+  }
+  details.manifest summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  details.manifest pre{
+    font-size:11.5px; overflow-x:auto; background: var(--body-bg); padding:12px; border-radius:10px;
+    margin-top:10px; color: var(--ink-soft); line-height:1.6;
+  }
+  .foot-note{ text-align:center; font-size:12px; color:var(--ink-faint); margin-top:22px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Sinh học</b> &nbsp;›&nbsp; Lớp 6 &nbsp;›&nbsp; Bài 21</div>
+    <div class="status-pill">KHTN 6 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-row">
+      <div class="badge">BÀI<br>21</div>
+      <div class="banner-title">
+        <h1>Quan sát tế bào vảy hành bằng kính hiển vi</h1>
+        <p>Mô phỏng 2.5D — thực hành điều chỉnh kính hiển vi quang học quan sát tiêu bản tế bào biểu bì vảy hành tây theo SGK KHTN 6 (tr.73–74).</p>
+      </div>
+    </div>
+    <div class="meta-chips">
+      <span class="chip">Môn: Sinh học</span>
+      <span class="chip">Lớp 6</span>
+      <span class="chip">SGK KHTN 6 – KNTT, Bài 21, tr.73–75</span>
+      <span class="chip">⏱ ~10 phút</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel" style="padding:16px;">
+        <h2><span class="num">1</span>Bàn thực hành & Thị kính</h2>
+        <div class="stage">
+          <div class="worksheet">
+            <svg id="scene" viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mô phỏng kính hiển vi quang học quan sát tế bào hành tây">
+              <defs>
+                <clipPath id="eyepieceClip">
+                  <circle cx="480" cy="165" r="95"/>
+                </clipPath>
+                <filter id="focusBlur">
+                  <feGaussianBlur id="blurFilter" stdDeviation="6"/>
+                </filter>
+              </defs>
+
+              <!-- Microscope on Left (x: 50 to 320) -->
+              <!-- Base and Pillar -->
+              <rect x="70" y="270" width="160" height="24" rx="6" fill="#2d3436" stroke="#636e72" stroke-width="2"/>
+              <path d="M 120 270 Q 110 160 170 110 L 195 110 Q 140 160 145 270 Z" fill="#34495e"/>
+
+              <!-- Stage (Bàn kính x: 90, y: 195) -->
+              <rect x="80" y="195" width="130" height="14" rx="3" fill="#2d3436" stroke="#636e72" stroke-width="1.5"/>
+              <ellipse cx="145" cy="202" rx="10" ry="3" fill="#f1c40f" opacity="0.7"/>
+
+              <!-- Coarse / Fine Focus Knobs (Ốc to & Ốc nhỏ) -->
+              <circle cx="120" cy="235" r="14" fill="#7f8c8d" stroke="#2d3436" stroke-width="2"/>
+              <circle cx="120" cy="235" r="6" fill="#bdc3c7" stroke="#2d3436" stroke-width="1.5"/>
+              <text x="120" y="260" font-size="9" font-family="Inter" font-weight="700" fill="#7f8c8d" text-anchor="middle">Ốc lấy nét</text>
+
+              <!-- Eyepiece Tube & Revolving Nosepiece -->
+              <rect x="180" y="45" width="22" height="70" rx="4" fill="#7f8c8d" stroke="#2d3436" stroke-width="1.5"/>
+              <!-- Objective Lenses -->
+              <rect x="170" y="145" width="14" height="35" rx="3" fill="#e67e22" stroke="#2d3436" stroke-width="1.5"/>
+              <rect x="195" y="145" width="12" height="28" rx="2" fill="#3498db" stroke="#2d3436" stroke-width="1.5"/>
+
+              <!-- Mirror / Light source under stage -->
+              <ellipse cx="145" cy="255" rx="16" ry="6" fill="#f1c40f" opacity="0.8"/>
+
+              <!-- Draggable Glass Slide in Tray (Lam kính mẫu tế bào hành tây) -->
+              <g id="slideDraggable" class="slide-draggable" transform="translate(60, 40)">
+                <rect x="0" y="0" width="80" height="28" rx="3" fill="rgba(220,240,255,0.7)" stroke="#3498db" stroke-width="1.8"/>
+                <rect x="25" y="4" width="30" height="20" rx="2" fill="#2ecc71" opacity="0.6"/>
+                <text x="40" y="18" font-size="9.5" font-family="'Baloo 2'" font-weight="700" fill="#2c3e50" text-anchor="middle">Vảy hành tây</text>
+              </g>
+
+              <!-- Microscope Eyepiece Field of View Circle on Right (x: 480, y: 165, R: 95) -->
+              <circle cx="480" cy="165" r="102" fill="#2d3436" stroke="#636e72" stroke-width="4"/>
+              <circle cx="480" cy="165" r="95" fill="#f8f9fa"/>
+
+              <!-- Onion Cells inside Eyepiece Viewport -->
+              <g clip-path="url(#eyepieceClip)">
+                <g id="cellsView" filter="url(#focusBlur)" opacity="0.15">
+                  <!-- Row 1 Cells -->
+                  <path d="M 370 90 Q 420 85 470 90 Q 470 125 470 140 Q 420 145 370 140 Z" fill="#e8f8f5" stroke="#16a085" stroke-width="3"/>
+                  <circle cx="420" cy="115" r="6" fill="#2c3e50"/>
+                  <path d="M 470 90 Q 530 85 590 90 Q 590 125 590 140 Q 530 145 470 140 Z" fill="#e8f8f5" stroke="#16a085" stroke-width="3"/>
+                  <circle cx="530" cy="115" r="6" fill="#2c3e50"/>
+
+                  <!-- Row 2 Cells -->
+                  <path d="M 350 140 Q 410 145 480 140 Q 480 195 480 200 Q 410 195 350 200 Z" fill="#e8f8f5" stroke="#16a085" stroke-width="3"/>
+                  <circle cx="415" cy="170" r="7" fill="#2c3e50"/>
+                  <path d="M 480 140 Q 545 145 610 140 Q 610 195 610 200 Q 545 195 480 200 Z" fill="#e8f8f5" stroke="#16a085" stroke-width="3"/>
+                  <circle cx="545" cy="170" r="7" fill="#2c3e50"/>
+
+                  <!-- Row 3 Cells -->
+                  <path d="M 380 200 Q 440 205 500 200 Q 500 255 500 260 Q 440 255 380 260 Z" fill="#e8f8f5" stroke="#16a085" stroke-width="3"/>
+                  <circle cx="440" cy="230" r="6.5" fill="#2c3e50"/>
+                  <path d="M 500 200 Q 560 205 620 200 Q 620 255 620 260 Q 560 255 500 260 Z" fill="#e8f8f5" stroke="#16a085" stroke-width="3"/>
+                  <circle cx="560" cy="230" r="6.5" fill="#2c3e50"/>
+                </g>
+              </g>
+
+              <text x="480" y="45" font-size="12" font-family="'Baloo 2'" font-weight="700" fill="#2c3e50" text-anchor="middle">Thị kính quan sát (Độ phóng đại 100x)</text>
+
+            </svg>
+
+            <p class="steps-note">✋ Kéo trực tiếp tiêu bản lam kính đặt lên bàn kính hiển vi, sau đó kéo thanh trượt ốc nhỏ bên phải để lấy nét!</p>
+          </div>
+        </div>
+      </div>
+
+      <details class="manifest">
+        <summary>ℹ️ Thông tin module (manifest.json)</summary>
+        <pre>{
+  "id": "sh6-kinh-hien-vi-te-bao",
+  "subject": "sinh-hoc",
+  "grade": 6,
+  "title": "Quan sát tế bào vảy hành bằng kính hiển vi",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 21, tr.73-75",
+  "objective": "Thực hành sử dụng kính hiển vi quang học, kẹp tiêu bản tế bào vảy hành và điều chỉnh ốc vi cấp để quan sát rõ màng tế bào, tế bào chất và nhân.",
+  "controls": [
+    { "id": "slide_drag", "label": "Kéo tiêu bản lên bàn kính", "type": "drag_drop" },
+    { "id": "focus_slider", "label": "Điều chỉnh ốc lấy nét vi cấp", "type": "slider", "min": 0, "max": 100, "step": 1 }
+  ],
+  "outputs": ["do_net_anh", "thanh_phan_te_bao_nhin_thay"],
+  "status": "draft"
+}</pre>
+      </details>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div class="panel">
+        <h2><span class="num">2</span>Điều khiển & Lấy nét</h2>
+
+        <div class="field">
+          <label>Tiêu bản: <span class="val" id="slideStatus">Chưa đặt lên kính</span></label>
+          <div class="hint">Thao tác 1: Kéo tiêu bản vảy hành lên bàn kính hiển vi. Thao tác 2: Chỉnh ốc lấy nét bên dưới đến khi ảnh sắc nét hoàn toàn.</div>
+        </div>
+
+        <div class="field">
+          <label>Ốc lấy nét vi cấp (Fine Focus): <span class="val" id="focusVal">0%</span></label>
+          <input type="range" id="focusSlider" min="0" max="100" value="0">
+          <div class="hint">Xoay ốc vi cấp để di chuyển vật kính đến tiêu cự tối ưu (khoảng 70% – 85%).</div>
+        </div>
+
+        <div class="readout" id="readoutBox">
+          <div class="big" id="readoutBig">MỜ <span>(Chưa nét)</span></div>
+          <div class="msg" id="readoutMsg">Chưa đặt tiêu bản lên bàn kính.</div>
+        </div>
+
+        <div class="kv">
+          <div><div class="l">Độ phóng đại</div><div class="v">100x (10x × 10x)</div></div>
+          <div><div class="l">Chi tiết nhìn thấy</div><div class="v" id="valDetails">Chưa quan sát</div></div>
+        </div>
+
+        <ul class="checklist" id="checklist">
+          <li id="chkPlace"><span class="box">✓</span> Đặt tiêu bản lên bàn kính và kẹp giữ</li>
+          <li id="chkFocus"><span class="box">✓</span> Vặn ốc vi cấp lấy nét rõ ranh giới tế bào</li>
+          <li id="chkObserve"><span class="box">✓</span> Nhận biết màng, tế bào chất và nhân tế bào</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2><span class="num">3</span>Kiểm tra nhanh</h2>
+
+        <div class="quiz-q" data-correct="b">
+          <p class="qtext">1. Các thành phần chính quan sát được của tế bào biểu bì vảy hành tây là:</p>
+          <label class="opt"><input type="radio" name="q1" value="a"> Chỉ có nhân và lông bơi</label>
+          <label class="opt"><input type="radio" name="q1" value="b"> Thành tế bào, màng tế bào, tế bào chất và nhân tế bào</label>
+          <label class="opt"><input type="radio" name="q1" value="c"> Khung xương bằng đá vôi</label>
+          <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-q" data-correct="a">
+          <p class="qtext">2. Bộ phận nào của kính hiển vi dùng để điều chỉnh độ sắc nét thật chi tiết cho hình ảnh?</p>
+          <label class="opt"><input type="radio" name="q2" value="a"> Ốc nhỏ (ốc vi cấp)</label>
+          <label class="opt"><input type="radio" name="q2" value="b"> Chân đế</label>
+          <label class="opt"><input type="radio" name="q2" value="c"> Kẹp tiêu bản</label>
+          <div class="feedback"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot-note">Chương V, Bài 21 · Phong cách 2.5D lấy cảm hứng từ SGK KHTN 6 (Kết nối tri thức với cuộc sống).</p>
+</div>
+
+<script>
+(function(){
+  const slide = document.getElementById('slideDraggable');
+  const cellsView = document.getElementById('cellsView');
+  const blurFilter = document.getElementById('blurFilter');
+  const focusSlider = document.getElementById('focusSlider');
+  const focusVal = document.getElementById('focusVal');
+  const slideStatus = document.getElementById('slideStatus');
+  const readoutBig = document.getElementById('readoutBig');
+  const readoutMsg = document.getElementById('readoutMsg');
+  const valDetails = document.getElementById('valDetails');
+  const chkPlace = document.getElementById('chkPlace');
+  const chkFocus = document.getElementById('chkFocus');
+  const chkObserve = document.getElementById('chkObserve');
+
+  const INIT_X = 60, INIT_Y = 40;
+  const STAGE_X = 105, STAGE_Y = 188;
+
+  let isPlaced = false;
+  let isDragging = false;
+  let startX = 0, startY = 0;
+
+  function updateView(){
+    const focus = parseInt(focusSlider.value, 10);
+    focusVal.textContent = focus + '%';
+
+    if(!isPlaced){
+      cellsView.setAttribute('opacity', '0.05');
+      blurFilter.setAttribute('stdDeviation', '10');
+      readoutBig.innerHTML = 'MỜ <span>(Trống)</span>';
+      readoutMsg.textContent = 'Chưa đặt tiêu bản lên bàn kính hiển vi.';
+      valDetails.textContent = 'Chưa quan sát';
+      chkPlace.classList.remove('done');
+      chkFocus.classList.remove('done');
+      chkObserve.classList.remove('done');
+      return;
+    }
+
+    chkPlace.classList.add('done');
+    cellsView.setAttribute('opacity', '1');
+
+    // Optimal focus around 75%
+    const dist = Math.abs(focus - 75);
+    const blur = (dist / 10).toFixed(1);
+    blurFilter.setAttribute('stdDeviation', blur);
+
+    if(dist <= 6){
+      // Crisp clear focus
+      readoutBig.innerHTML = 'RÕ NÉT <span>(Chuẩn)</span>';
+      readoutMsg.textContent = '🎉 Tuyệt vời! Hình ảnh tế bào biểu bì vảy hành tây hiển thị sắc nét: nhìn rõ thành tế bào, tế bào chất và nhân tròn sẫm màu.';
+      valDetails.textContent = 'Thành, tế bào chất, nhân';
+      chkFocus.classList.add('done');
+      chkObserve.classList.add('done');
+    } else if(dist <= 25){
+      readoutBig.innerHTML = 'HƠI MỜ <span>(Gần nét)</span>';
+      readoutMsg.textContent = 'Ảnh tế bào bắt đầu xuất hiện mờ mờ. Hãy vặn ốc vi cấp chậm rãi lại gần 75% để đạt độ nét cao nhất.';
+      valDetails.textContent = 'Thấy mờ ranh giới';
+      chkFocus.classList.remove('done');
+      chkObserve.classList.remove('done');
+    } else {
+      readoutBig.innerHTML = 'MỜ NHOÈ <span>(Chưa tiêu cự)</span>';
+      readoutMsg.textContent = 'Hình ảnh bị nhoè ngoài tiêu cự. Hãy kéo thanh trượt ốc nhỏ để lấy nét.';
+      valDetails.textContent = 'Chưa nét';
+      chkFocus.classList.remove('done');
+      chkObserve.classList.remove('done');
+    }
+  }
+
+  slide.addEventListener('pointerdown', (e)=>{
+    slide.setPointerCapture(e.pointerId);
+    slide.classList.add('dragging');
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+  });
+
+  slide.addEventListener('pointermove', (e)=>{
+    if(!isDragging) return;
+    const curX = (isPlaced ? STAGE_X : INIT_X) + (e.clientX - startX);
+    const curY = (isPlaced ? STAGE_Y : INIT_Y) + (e.clientY - startY);
+    slide.setAttribute('transform', `translate(${curX}, ${curY})`);
+  });
+
+  function onEnd(e){
+    if(!isDragging) return;
+    isDragging = false;
+    slide.classList.remove('dragging');
+
+    const svg = document.getElementById('scene').getBoundingClientRect();
+    const relY = e.clientY - svg.top;
+
+    // If dropped near stage (relY > 150)
+    if(relY > 140){
+      isPlaced = true;
+      slide.setAttribute('transform', `translate(${STAGE_X}, ${STAGE_Y})`);
+      slideStatus.textContent = 'Đã đặt lên bàn kính';
+    } else {
+      isPlaced = false;
+      slide.setAttribute('transform', `translate(${INIT_X}, ${INIT_Y})`);
+      slideStatus.textContent = 'Chưa đặt lên kính';
+    }
+    updateView();
+  }
+
+  slide.addEventListener('pointerup', onEnd);
+  slide.addEventListener('pointercancel', onEnd);
+
+  focusSlider.addEventListener('input', updateView);
+
+  updateView();
+
+  // Quiz
+  document.querySelectorAll('.quiz-q').forEach(q=>{
+    const correct = q.dataset.correct;
+    const fb = q.querySelector('.feedback');
+    q.querySelectorAll('input[type=radio]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        fb.classList.remove('correct','wrong');
+        if(r.value === correct){
+          fb.textContent = '✅ Chính xác!';
+          fb.classList.add('correct');
+        } else {
+          fb.textContent = '❌ Chưa đúng, hãy xem lại cấu tạo tế bào trong SGK KHTN 6.';
+          fb.classList.add('wrong');
+        }
+        fb.classList.add('show');
+      });
+    });
+  });
+})();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "sh6-kinh-hien-vi-te-bao",
+  "subject": "sinh-hoc",
+  "grade": 6,
+  "title": "Quan sát tế bào vảy hành bằng kính hiển vi",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 21, tr.73-75",
+  "objective": "Thực hành sử dụng kính hiển vi quang học, kẹp tiêu bản tế bào vảy hành và điều chỉnh ốc vi cấp để quan sát rõ màng tế bào, tế bào chất và nhân.",
+  "controls": [
+    { "id": "slide_drag", "label": "Kéo tiêu bản lên bàn kính", "type": "drag_drop" },
+    { "id": "focus_slider", "label": "Điều chỉnh ốc lấy nét vi cấp", "type": "slider", "min": 0, "max": 100, "step": 1 }
+  ],
+  "outputs": ["do_net_anh", "thanh_phan_te_bao_nhin_thay"],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

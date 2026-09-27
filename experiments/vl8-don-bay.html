@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 19: Đòn bẩy và ứng dụng — KHTN 8 (Kết nối tri thức)</title>
+<meta name="description" content="Thí nghiệm khảo sát quy tắc cân bằng đòn bẩy và moment lực: F1 . d1 = F2 . d2, phân biệt 3 loại đòn bẩy trong đời sống.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7b1fa2, #c2185b);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(123,31,162,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#172230; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .ctrl-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .ctrl-label{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .ctrl-row input[type="range"]{ width:100%; accent-color:var(--purple-1); cursor:pointer; }
+  
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    text-align:center;
+  }
+  .btn:hover{ border-color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:var(--purple-1); }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 8 &nbsp;›&nbsp; Bài 19</div>
+    <div class="status-pill">KHTN 8 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 19: Đòn bẩy và ứng dụng</h1>
+    <p>Khảo sát điều kiện cân bằng của đòn bẩy: F1 . d1 = F2 . d2 (Hình 18.1 & 19.1 SGK KHTN 8), xác định vị trí điểm tựa O và cánh tay đòn để được lợi về lực.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="leverBarGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#b45309"/>
+          </linearGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#0f172a"/>
+        <line x1="20" y1="410" x2="620" y2="410" stroke="#334155" stroke-width="2"/>
+
+        <!-- GIÁ ĐỠ VÀ ĐIỂM TỰA O Ở CHÍNH GIỮA (320, 260) -->
+        <g transform="translate(320, 260)">
+          <!-- Khối tam giác làm điểm tựa O -->
+          <polygon points="0,0 -24,45 24,45" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+          <circle cx="0" cy="0" r="5" fill="#ef4444"/>
+          <!-- Chân đế giá đỡ -->
+          <rect x="-40" y="45" width="80" height="105" rx="3" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+          <rect x="-70" y="145" width="140" height="10" rx="3" fill="#1e293b"/>
+          <text x="0" y="-12" fill="#ef4444" font-size="14" font-weight="800" text-anchor="middle">Điểm tựa O</text>
+        </g>
+
+        <!-- THANH ĐÒN BẨY CÓ CÁC LỖ TREO CÁCH ĐỀU (XOAY QUANH O) -->
+        <g id="leverGroup" transform="translate(320, 260)">
+          <!-- Thước đòn bẩy dài 440px (-220 đến +220) -->
+          <rect x="-220" y="-10" width="440" height="20" rx="4" fill="url(#leverBarGrad)" stroke="#78350f" stroke-width="2"/>
+
+          <!-- Các lỗ treo cách đều mỗi 40px -->
+          <!-- Bên trái (nhánh 1): -40 (D), -80 (C), -120 (B), -160 (A), -200 -->
+          <!-- Bên phải (nhánh 2): +40, +80, +120, +160, +200 -->
+          <g fill="#0f172a">
+            <circle cx="-200" cy="0" r="4"/><text x="-200" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">5</text>
+            <circle cx="-160" cy="0" r="4"/><text x="-160" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">4 (A)</text>
+            <circle cx="-120" cy="0" r="4"/><text x="-120" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">3 (B)</text>
+            <circle cx="-80" cy="0" r="4"/><text x="-80" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">2 (C)</text>
+            <circle cx="-40" cy="0" r="4"/><text x="-40" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">1</text>
+
+            <circle cx="40" cy="0" r="4"/><text x="40" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">1</text>
+            <circle cx="80" cy="0" r="4"/><text x="80" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">2</text>
+            <circle cx="120" cy="0" r="4"/><text x="120" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">3</text>
+            <circle cx="160" cy="0" r="4"/><text x="160" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">4</text>
+            <circle cx="200" cy="0" r="4"/><text x="200" y="-15" fill="#cbd5e1" font-size="9" text-anchor="middle">5</text>
+          </g>
+
+          <!-- TẢI TRỌNG 1 (BÊN TRÁI): Các quả nặng móc vào -->
+          <g id="weightGroupLeft" transform="translate(-160, 0)">
+            <line x1="0" y1="0" x2="0" y2="40" stroke="#cbd5e1" stroke-width="2"/>
+            <g id="weightsLeftStack"></g>
+            <text id="lblWeightLeft" x="0" y="85" fill="#38bdf8" font-size="11.5" font-weight="700" text-anchor="middle">F1 = 2 N</text>
+          </g>
+
+          <!-- LỰC TÁC DỤNG / TẢI TRỌNG 2 (BÊN PHẢI) -->
+          <g id="weightGroupRight" transform="translate(160, 0)">
+            <line x1="0" y1="0" x2="0" y2="40" stroke="#cbd5e1" stroke-width="2"/>
+            <g id="weightsRightStack"></g>
+            <text id="lblWeightRight" x="0" y="85" fill="#f59e0b" font-size="11.5" font-weight="700" text-anchor="middle">F2 = 2 N</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bảng điều khiển -->
+    <div class="sidebar">
+      <div class="card">
+        <h3>⚖️ Cân chỉnh đòn bẩy</h3>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Cánh tay đòn d1 (Bên trái):</span>
+            <b id="valD1">4 khoảng (16 cm)</b>
+          </div>
+          <input type="range" id="sliderD1" min="1" max="5" value="4" step="1">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Trọng lượng F1:</span>
+            <b id="valF1">2 N (2 quả nặng)</b>
+          </div>
+          <input type="range" id="sliderF1" min="1" max="4" value="2" step="1">
+        </div>
+
+        <div class="ctrl-row" style="margin-top:10px; border-top:1px dashed var(--panel-border); padding-top:8px;">
+          <div class="ctrl-label">
+            <span>Cánh tay đòn d2 (Bên phải):</span>
+            <b id="valD2">4 khoảng (16 cm)</b>
+          </div>
+          <input type="range" id="sliderD2" min="1" max="5" value="4" step="1">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Lực kéo / Tải F2:</span>
+            <b id="valF2">2 N (2 quả nặng)</b>
+          </div>
+          <input type="range" id="sliderF2" min="1" max="4" value="2" step="1">
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Trạng thái cân bằng</h3>
+        <div class="data-box">
+          <div class="data-line">
+            <span>Moment bên trái (M1 = F1 · d1):</span>
+            <b id="resM1">8 N.đv</b>
+          </div>
+          <div class="data-line">
+            <span>Moment bên phải (M2 = F2 · d2):</span>
+            <b id="resM2">8 N.đv</b>
+          </div>
+          <div class="data-line">
+            <span>Trạng thái đòn bẩy:</span>
+            <span id="resStatus" style="font-weight:700; color:#22c55e;">Cân bằng nằm ngang</span>
+          </div>
+          <div class="data-line" style="border-top:1px dashed var(--panel-border); padding-top:6px; margin-top:6px;">
+            <span>Lợi về lực:</span>
+            <span id="resAdvantage">d2 &gt; d1 ➜ Lợi về lực</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Câu hỏi củng cố SGK -->
+  <div class="quiz-section">
+    <div class="card">
+      <h3>✍️ Câu hỏi củng cố (SGK KHTN 8)</h3>
+      
+      <div class="quiz-q" data-correct="1">
+        <p>1. Muốn bẩy một hòn đá nặng với lực tác dụng nhỏ nhất, ta nên chọn điểm tựa O như thế nào?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Đặt điểm tựa O sát tay cầm</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Đặt điểm tựa O càng gần hòn đá càng tốt (để cánh tay đòn của tay dài hơn cánh tay đòn hòn đá)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Đặt điểm tựa O ở chính giữa</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Không cần dùng điểm tựa</button>
+        </div>
+      </div>
+
+      <div class="quiz-q" data-correct="0">
+        <p>2. Kéo cắt kim loại thường có đặc điểm cấu tạo gì khác so với kéo cắt giấy?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Lưỡi kéo ngắn và tay cầm dài (để tăng lực cắt kim loại)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Lưỡi kéo rất dài và tay cầm ngắn</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Tay cầm bằng gỗ</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Cả lưỡi và cán đều dài như nhau</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let d1 = 4, f1 = 2;
+  let d2 = 4, f2 = 2;
+
+  const sliderD1 = document.getElementById('sliderD1');
+  const sliderF1 = document.getElementById('sliderF1');
+  const sliderD2 = document.getElementById('sliderD2');
+  const sliderF2 = document.getElementById('sliderF2');
+  const valD1 = document.getElementById('valD1');
+  const valF1 = document.getElementById('valF1');
+  const valD2 = document.getElementById('valD2');
+  const valF2 = document.getElementById('valF2');
+
+  const leverGroup = document.getElementById('leverGroup');
+  const weightGroupLeft = document.getElementById('weightGroupLeft');
+  const weightGroupRight = document.getElementById('weightGroupRight');
+  const weightsLeftStack = document.getElementById('weightsLeftStack');
+  const weightsRightStack = document.getElementById('weightsRightStack');
+  const lblWeightLeft = document.getElementById('lblWeightLeft');
+  const lblWeightRight = document.getElementById('lblWeightRight');
+  const resM1 = document.getElementById('resM1');
+  const resM2 = document.getElementById('resM2');
+  const resStatus = document.getElementById('resStatus');
+  const resAdvantage = document.getElementById('resAdvantage');
+
+  function renderWeights(container, count, color){
+    let h = '';
+    for(let i = 0; i < count; i++){
+      h += `<rect x="-12" y="${40 + i*16}" width="24" height="14" rx="2" fill="${color}" stroke="#1e293b" stroke-width="1"/>`;
+    }
+    container.innerHTML = h;
+  }
+
+  function updateLever(){
+    valD1.textContent = `${d1} khoảng (${d1*4} cm)`;
+    sliderD1.value = d1;
+    valF1.textContent = `${f1} N (${f1} quả nặng)`;
+    sliderF1.value = f1;
+
+    valD2.textContent = `${d2} khoảng (${d2*4} cm)`;
+    sliderD2.value = d2;
+    valF2.textContent = `${f2} N (${f2} quả nặng)`;
+    sliderF2.value = f2;
+
+    // Vị trí móc treo trên đòn bẩy (mỗi khoảng = 40px)
+    weightGroupLeft.setAttribute('transform', `translate(${-d1 * 40}, 0)`);
+    weightGroupRight.setAttribute('transform', `translate(${d2 * 40}, 0)`);
+
+    lblWeightLeft.textContent = `F1 = ${f1} N`;
+    lblWeightRight.textContent = `F2 = ${f2} N`;
+    lblWeightLeft.setAttribute('y', 40 + f1*16 + 18);
+    lblWeightRight.setAttribute('y', 40 + f2*16 + 18);
+
+    renderWeights(weightsLeftStack, f1, '#38bdf8');
+    renderWeights(weightsRightStack, f2, '#f59e0b');
+
+    const m1 = f1 * d1;
+    const m2 = f2 * d2;
+    resM1.textContent = `${m1} N.đv`;
+    resM2.textContent = `${m2} N.đv`;
+
+    // Góc nghiêng đòn bẩy (tối đa +/- 15 độ)
+    let rot = 0;
+    if (m1 === m2) {
+      rot = 0;
+      resStatus.textContent = 'CÂN BẰNG NẰM NGANG (M1 = M2)';
+      resStatus.style.color = '#22c55e';
+    } else if (m1 > m2) {
+      rot = Math.max(-16, -(m1 - m2) * 2.5);
+      resStatus.textContent = 'Nghiêng về bên trái (M1 > M2)';
+      resStatus.style.color = '#38bdf8';
+    } else {
+      rot = Math.min(16, (m2 - m1) * 2.5);
+      resStatus.textContent = 'Nghiêng về bên phải (M2 > M1)';
+      resStatus.style.color = '#f59e0b';
+    }
+    leverGroup.setAttribute('transform', `translate(320, 260) rotate(${rot})`);
+
+    if (d2 > d1) {
+      resAdvantage.textContent = `d2 = ${d2*4}cm > d1 = ${d1*4}cm ➜ Lợi ${(d2/d1).toFixed(1)} lần về lực`;
+    } else if (d2 < d1) {
+      resAdvantage.textContent = `d2 < d1 ➜ Thiệt về lực nhưng lợi về đường đi`;
+    } else {
+      resAdvantage.textContent = 'd1 = d2 ➜ Không lợi về lực';
+    }
+  }
+
+  sliderD1.addEventListener('input', (e)=>{ d1 = parseInt(e.target.value); updateLever(); });
+  sliderF1.addEventListener('input', (e)=>{ f1 = parseInt(e.target.value); updateLever(); });
+  sliderD2.addEventListener('input', (e)=>{ d2 = parseInt(e.target.value); updateLever(); });
+  sliderF2.addEventListener('input', (e)=>{ f2 = parseInt(e.target.value); updateLever(); });
+
+  // Tương tác kéo đòn bẩy bằng Pointer Events
+  let isDraggingLever = false;
+  leverGroup.addEventListener('pointerdown', (e)=>{
+    isDraggingLever = true;
+    leverGroup.setPointerCapture(e.pointerId);
+  });
+  leverGroup.addEventListener('pointermove', ()=>{
+    if (!isDraggingLever) return;
+  });
+  leverGroup.addEventListener('pointerup', ()=>{
+    isDraggingLever = false;
+  });
+
+  function checkAnswer(btn, optIdx){
+    const q = btn.closest('.quiz-q');
+    const correctIdx = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.classList.remove('correct', 'wrong'));
+    if (optIdx === correctIdx) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+    }
+  }
+
+  updateLever();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl8-don-bay",
+  "subject": "vat-ly",
+  "grade": 8,
+  "title": "Đòn bẩy và ứng dụng",
+  "sgk_ref": "KHTN 8 — KNTT, Bài 19",
+  "objective": "Khảo sát điều kiện cân bằng của đòn bẩy F1.d1 = F2.d2 và ứng dụng lợi về lực.",
+  "controls": [
+    {"name": "Cánh tay đòn d1", "type": "range", "range": [1, 5]},
+    {"name": "Lực F1", "type": "range", "range": [1, 4], "unit": "N"},
+    {"name": "Cánh tay đòn d2", "type": "range", "range": [1, 5]},
+    {"name": "Lực F2", "type": "range", "range": [1, 4], "unit": "N"}
+  ],
+  "outputs": [
+    {"name": "Moment M1", "unit": "N.đv"},
+    {"name": "Moment M2", "unit": "N.đv"},
+    {"name": "Trạng thái", "type": "string"}
+  ],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

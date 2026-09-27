@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 10: Khả năng chịu nén của chất Rắn, Lỏng, Khí — KHTN 6 (Kết nối tri thức)</title>
+<meta name="description" content="Mô phỏng 2.5D thí nghiệm so sánh khả năng chịu nén của chất rắn, lỏng và khí qua xi-lanh và miếng gỗ theo SGK KHTN 6, bộ Kết nối tri thức với cuộc sống.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1:#a9713f; --wood-2:#7a4c26; --wood-grain:#8f5c30;
+    --paper:#fffdf7; --paper-edge:#efe6d3; --paper-line:#e7ddc4;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --accent:#1c8c6b; --accent-soft:#e4f4ee;
+    --warn:#c9820f; --warn-soft:#fbeed8;
+    --danger:#c94444; --danger-soft:#fbe7e5;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+      --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+    --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+    --body-bg:#1b1812;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    line-height:1.5;
+  }
+  h1,h2,h3, .display{ font-family:'Baloo 2', 'Inter', sans-serif; }
+  .shell{ max-width: 1120px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap; padding:10px 4px 14px; font-size:13.5px; color:var(--ink-soft);
+  }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px; font-weight:600; font-size:12.5px;
+    text-decoration:none; transition: all .12s ease;
+    box-shadow: 0 2px 6px -2px var(--panel-shadow);
+  }
+  .home-btn:hover{
+    background:var(--purple-1); border-color:var(--purple-1); color:#fff;
+    transform:translateY(-1px); text-decoration:none;
+  }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--warn-soft); color:#8a5c05;
+    border:1px solid rgba(201,130,15,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:600;
+  }
+  .status-pill::before{ content:"●"; font-size:9px; color:#c9820f; }
+
+  .banner{
+    position:relative; background: linear-gradient(120deg, var(--purple-1), var(--purple-2));
+    border-radius: 26px; padding: 26px 26px 40px; color:#fff; overflow:hidden;
+    box-shadow: 0 14px 30px -12px rgba(123,31,162,0.55);
+  }
+  .banner-row{ display:flex; align-items:center; gap:16px; position:relative; z-index:2; flex-wrap:wrap; }
+  .badge{
+    flex:0 0 auto; width:64px; height:64px; border-radius:50%;
+    background:#fff; color:var(--purple-1);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; text-align:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    border: 4px solid rgba(255,255,255,0.55);
+  }
+  .banner-title{ flex:1 1 260px; min-width:200px; }
+  .banner-title h1{ margin:0 0 4px; font-size: clamp(22px,4vw,30px); }
+  .banner-title p{ margin:0; font-size:14px; opacity:0.92; max-width:540px; }
+  .meta-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; position:relative; z-index:2; }
+  .chip{
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(2px);
+    border:1px solid rgba(255,255,255,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:500;
+  }
+
+  .grid{ display:grid; grid-template-columns: 1.55fr 1fr; gap:20px; margin-top:20px; }
+  @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:20px; padding:18px 18px 20px;
+    box-shadow: 0 10px 24px -14px var(--panel-shadow);
+  }
+  .panel h2{ font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  .panel h2 .num{
+    width:24px; height:24px; border-radius:50%; background:var(--purple-1); color:#fff;
+    font-size:12.5px; display:inline-flex; align-items:center; justify-content:center; font-family:'Inter'; font-weight:700;
+  }
+
+  .stage{
+    background:
+      repeating-linear-gradient(100deg, var(--wood-grain) 0px, var(--wood-grain) 2px, transparent 2px, transparent 26px),
+      linear-gradient(160deg, var(--wood-1), var(--wood-2));
+    border-radius:20px; padding:20px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.25), 0 10px 24px -14px var(--panel-shadow);
+  }
+  .worksheet{
+    background: var(--paper); border-radius:14px; padding:14px 10px 6px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.25), 0 2px 0 var(--paper-edge);
+    position:relative;
+  }
+  .worksheet svg{ width:100%; height:auto; display:block; user-select:none; }
+
+  .piston-draggable{ cursor: grab; touch-action: none; }
+  .piston-draggable.dragging{ cursor: grabbing; }
+
+  .steps-note{ font-size:12.5px; color:var(--ink-soft); text-align:center; margin-top:8px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13.5px; font-weight:600; margin-bottom:8px;
+  }
+  .field label .val{ font-family:'Baloo 2'; color:var(--purple-1); font-size:14px; }
+  .field .hint{ font-size:12px; color:var(--ink-faint); margin-top:5px; line-height:1.45; }
+
+  .readout{
+    background: var(--accent-soft); border-radius:14px; padding:14px 16px; margin-top:4px;
+    border:1px solid rgba(28,140,107,0.2);
+  }
+  .readout.warn{ background:var(--warn-soft); border-color: rgba(201,130,15,0.3); }
+  .readout .big{
+    font-family:'Baloo 2'; font-size:26px; font-weight:700; color:var(--accent);
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .readout.warn .big{ color:#8a5c05; }
+  .readout .msg{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+
+  .kv{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .kv div{ background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px; padding:8px 10px; }
+  .kv .l{ font-size:11px; color:var(--ink-faint); }
+  .kv .v{ font-family:'Baloo 2'; font-size:16px; }
+
+  .checklist{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .checklist li{ display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--ink-soft); }
+  .checklist .box{
+    width:18px; height:18px; border-radius:6px; border:2px solid var(--panel-border);
+    flex:0 0 auto; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:transparent; transition: all .15s ease;
+  }
+  .checklist li.done .box{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .checklist li.done{ color:var(--ink); font-weight:500; }
+
+  .toggle-group{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .btn-t{
+    border:1.5px solid var(--panel-border); background:var(--panel-bg); color:var(--ink);
+    padding:6px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter'; transition: all .12s ease;
+  }
+  .btn-t[aria-pressed="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .quiz-q{ margin-bottom:16px; }
+  .quiz-q p.qtext{ font-weight:600; font-size:13.5px; margin:0 0 8px; }
+  .opt{
+    display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:10px;
+    border:1.5px solid var(--panel-border); margin-bottom:6px; cursor:pointer; font-size:13px;
+  }
+  .opt:hover{ border-color: var(--purple-1); }
+  .opt input{ accent-color: var(--purple-1); }
+  .feedback{ font-size:12.5px; margin-top:6px; padding:8px 10px; border-radius:10px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:var(--accent-soft); color:var(--accent); font-weight:500; }
+  .feedback.wrong{ background:var(--danger-soft); color:var(--danger); }
+
+  details.manifest{
+    margin-top:20px; background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:16px; padding:12px 16px;
+  }
+  details.manifest summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  details.manifest pre{
+    font-size:11.5px; overflow-x:auto; background: var(--body-bg); padding:12px; border-radius:10px;
+    margin-top:10px; color: var(--ink-soft); line-height:1.6;
+  }
+  .foot-note{ text-align:center; font-size:12px; color:var(--ink-faint); margin-top:22px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Hoá học</b> &nbsp;›&nbsp; Lớp 6 &nbsp;›&nbsp; Bài 10</div>
+    <div class="status-pill">KHTN 6 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-row">
+      <div class="badge">BÀI<br>10</div>
+      <div class="banner-title">
+        <h1>Khả năng chịu nén của chất Rắn, Lỏng, Khí</h1>
+        <p>Mô phỏng 2.5D — thí nghiệm so sánh độ chịu nén của chất rắn (miếng gỗ), chất lỏng (nước màu) và chất khí (không khí) qua xi-lanh theo SGK KHTN 6 (tr.30–31).</p>
+      </div>
+    </div>
+    <div class="meta-chips">
+      <span class="chip">Môn: Hoá học</span>
+      <span class="chip">Lớp 6</span>
+      <span class="chip">SGK KHTN 6 – KNTT, Bài 10, tr.30–32</span>
+      <span class="chip">⏱ ~8 phút</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel" style="padding:16px;">
+        <h2><span class="num">1</span>Bàn thực hành</h2>
+        <div class="stage">
+          <div class="worksheet">
+            <svg id="scene" viewBox="0 0 640 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mô phỏng thí nghiệm nén chất qua xi-lanh">
+              <defs>
+                <linearGradient id="syringeGlass" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(255,255,255,0.7)"/>
+                  <stop offset="50%" stop-color="rgba(220,240,255,0.2)"/>
+                  <stop offset="100%" stop-color="rgba(180,220,255,0.5)"/>
+                </linearGradient>
+                <linearGradient id="pistonGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#2d3436"/>
+                  <stop offset="100%" stop-color="#636e72"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Bench board -->
+              <rect x="20" y="280" width="600" height="15" rx="3" fill="#2d3436"/>
+
+              <!-- Syringe (Xi-lanh nằm ngang cố định đầu trái x: 120, y: 140) -->
+              <!-- Blocked tip on left (Đầu bịt kín bằng ngón tay / nắp cao su) -->
+              <rect x="90" y="152" width="30" height="16" rx="3" fill="#e74c3c"/>
+              <text x="105" y="145" font-size="9.5" font-family="Inter" font-weight="700" fill="#e74c3c" text-anchor="middle">Bịt kín đầu</text>
+
+              <!-- Syringe Barrel Body (width: 320, height: 60) -->
+              <rect x="120" y="130" width="320" height="60" rx="4" fill="url(#syringeGlass)" stroke="#74b9ff" stroke-width="2"/>
+              <!-- Flange collar at right -->
+              <rect x="438" y="115" width="10" height="90" rx="3" fill="#74b9ff"/>
+
+              <!-- Graduation marks on Syringe (0 to 50 ml) -->
+              <line x1="150" y1="130" x2="150" y2="145" stroke="#2d3436" stroke-width="1.5"/>
+              <text x="150" y="125" font-size="9" font-family="Inter" fill="#2d3436" text-anchor="middle">10</text>
+              <line x1="210" y1="130" x2="210" y2="145" stroke="#2d3436" stroke-width="1.5"/>
+              <text x="210" y="125" font-size="9" font-family="Inter" fill="#2d3436" text-anchor="middle">20</text>
+              <line x1="270" y1="130" x2="270" y2="145" stroke="#2d3436" stroke-width="1.5"/>
+              <text x="270" y="125" font-size="9" font-family="Inter" fill="#2d3436" text-anchor="middle">30</text>
+              <line x1="330" y1="130" x2="330" y2="145" stroke="#2d3436" stroke-width="1.5"/>
+              <text x="330" y="125" font-size="9" font-family="Inter" fill="#2d3436" text-anchor="middle">40</text>
+              <line x1="390" y1="130" x2="390" y2="145" stroke="#2d3436" stroke-width="1.5"/>
+              <text x="390" y="125" font-size="9" font-family="Inter" fill="#2d3436" text-anchor="middle">50 ml</text>
+
+              <!-- Medium inside Syringe (Air / Water / Solid block) -->
+              <rect id="syringeContent" x="122" y="132" width="268" height="56" rx="2" fill="#dfe6e9" opacity="0.3"/>
+
+              <!-- Draggable Piston Plunger (Pít-tông trượt vào trong) -->
+              <!-- Base position at 390 (50 ml mark) -->
+              <g id="pistonDraggable" class="piston-draggable" transform="translate(390, 130)">
+                <!-- Rubber plunger head -->
+                <rect x="0" y="2" width="22" height="56" rx="3" fill="url(#pistonGrad)" stroke="#1e272e" stroke-width="1.5"/>
+                <!-- Shaft rod extending out to right -->
+                <rect x="22" y="23" width="140" height="14" rx="2" fill="#bdc3c7" stroke="#7f8c8d" stroke-width="1.5"/>
+                <!-- Push thumb rest pad -->
+                <rect x="162" y="8" width="12" height="44" rx="4" fill="#0984e3"/>
+                <text x="195" y="34" font-size="10.5" font-family="'Baloo 2'" font-weight="700" fill="#0984e3">ẤN PÍT-TÔNG ◀</text>
+              </g>
+
+              <!-- Hand press helper indicator -->
+              <g transform="translate(200, 240)">
+                <text id="mediumStateNote" x="120" y="10" font-size="12" font-family="'Baloo 2'" font-weight="700" fill="#2c2419" text-anchor="middle">Đang chứa: Không khí (Chất khí)</text>
+              </g>
+
+            </svg>
+
+            <p class="steps-note">✋ Dùng chuột hoặc ngón tay kéo đẩy thanh pít-tông màu xanh sang trái để thử nén các thể chất khác nhau!</p>
+          </div>
+        </div>
+      </div>
+
+      <details class="manifest">
+        <summary>ℹ️ Thông tin module (manifest.json)</summary>
+        <pre>{
+  "id": "hh6-chuyen-the-va-nen",
+  "subject": "hoa-hoc",
+  "grade": 6,
+  "title": "Khả năng chịu nén của chất Rắn, Lỏng, Khí",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 10, tr.30-32",
+  "objective": "Thực hành so sánh và rút ra nhận xét: Chất khí rất dễ bị nén, chất lỏng và chất rắn rất khó bị nén.",
+  "controls": [
+    { "id": "piston_drag", "label": "Đẩy nén pít-tông xi-lanh", "type": "drag_drop" },
+    { "id": "medium_select", "label": "Chọn thể chất", "type": "toggle", "values": ["khi", "long", "ran"] }
+  ],
+  "outputs": ["the_tich_con_lai", "do_chiu_nen", "nhan_xet"],
+  "status": "draft"
+}</pre>
+      </details>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div class="panel">
+        <h2><span class="num">2</span>Chọn thể chất & Nén</h2>
+
+        <div class="field">
+          <label>Chất chứa trong xi-lanh:</label>
+          <div class="toggle-group" id="mediumSelectGroup">
+            <button type="button" class="btn-t" data-med="khi" aria-pressed="true">💨 Không khí (Khí)</button>
+            <button type="button" class="btn-t" data-med="long" aria-pressed="false">💧 Nước màu (Lỏng)</button>
+            <button type="button" class="btn-t" data-med="ran" aria-pressed="false">🪵 Miếng gỗ (Rắn)</button>
+          </div>
+          <div class="hint">Thao tác: Kéo thanh pít-tông sang trái để ép nén chất chứa trong xi-lanh.</div>
+        </div>
+
+        <div class="readout" id="readoutBox">
+          <div class="big" id="readoutBig">DỄ NÉN <span>(Chất khí)</span></div>
+          <div class="msg" id="readoutMsg">Không khí gồm các hạt ở rất xa nhau → pít-tông ép vào sâu dễ dàng, thể tích giảm mạnh.</div>
+        </div>
+
+        <div class="kv">
+          <div><div class="l">Thể tích hiện tại</div><div class="v" id="valVol">50 ml</div></div>
+          <div><div class="l">Khả năng nén</div><div class="v" id="valCompress">Rất dễ bị nén</div></div>
+        </div>
+
+        <ul class="checklist" id="checklist">
+          <li id="chkGas" class="done"><span class="box">✓</span> Thử nghiệm nén chất khí (dễ nén)</li>
+          <li id="chkLiquid"><span class="box">✓</span> Thử nghiệm nén chất lỏng (rất khó nén)</li>
+          <li id="chkSolid"><span class="box">✓</span> Thử nghiệm chất rắn (hình dạng cố định)</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2><span class="num">3</span>Kiểm tra nhanh</h2>
+
+        <div class="quiz-q" data-correct="c">
+          <p class="qtext">1. Thể nào của chất có khả năng dễ bị nén nhất?</p>
+          <label class="opt"><input type="radio" name="q1" value="a"> Thể rắn</label>
+          <label class="opt"><input type="radio" name="q1" value="b"> Thể lỏng</label>
+          <label class="opt"><input type="radio" name="q1" value="c"> Thể khí (hơi)</label>
+          <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-q" data-correct="b">
+          <p class="qtext">2. Vì sao chất rắn và chất lỏng rất khó bị nén?</p>
+          <label class="opt"><input type="radio" name="q2" value="a"> Vì chúng không có khối lượng</label>
+          <label class="opt"><input type="radio" name="q2" value="b"> Vì các hạt phân tử cấu tạo xếp sát nhau, khoảng cách rất nhỏ</label>
+          <label class="opt"><input type="radio" name="q2" value="c"> Vì chúng luôn chuyển động tự do</label>
+          <div class="feedback"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot-note">Chương II, Bài 10 · Phong cách 2.5D lấy cảm hứng từ SGK KHTN 6 (Kết nối tri thức với cuộc sống).</p>
+</div>
+
+<script>
+(function(){
+  const piston = document.getElementById('pistonDraggable');
+  const syringeContent = document.getElementById('syringeContent');
+  const mediumNote = document.getElementById('mediumStateNote');
+  const readoutBig = document.getElementById('readoutBig');
+  const readoutMsg = document.getElementById('readoutMsg');
+  const readoutBox = document.getElementById('readoutBox');
+  const valVol = document.getElementById('valVol');
+  const valCompress = document.getElementById('valCompress');
+  const chkGas = document.getElementById('chkGas');
+  const chkLiquid = document.getElementById('chkLiquid');
+  const chkSolid = document.getElementById('chkSolid');
+
+  let currentMedium = 'khi'; // 'khi', 'long', 'ran'
+  const MIN_X_LIMITS = {
+    khi: 180,   // Compresses all the way from 390 down to 180 (15 ml)
+    long: 375,  // Barely moves at all (compresses 15px max)
+    ran: 390    // Cannot compress at all
+  };
+
+  let currentPistonX = 390;
+  let isDragging = false;
+  let startX = 0;
+
+  function updateDisplay(){
+    piston.setAttribute('transform', `translate(${currentPistonX}, 130)`);
+    // Adjust width of content inside
+    const width = Math.max(10, currentPistonX - 120);
+    syringeContent.setAttribute('width', width);
+
+    // Approximate volume from x (150 = 10ml, 390 = 50ml => 6px per ml)
+    const volMl = Math.round(10 + (currentPistonX - 150) / 6);
+    valVol.textContent = `${Math.max(10, Math.min(50, volMl))} ml`;
+
+    if(currentMedium === 'khi'){
+      readoutBox.classList.remove('warn');
+      valCompress.textContent = 'Rất dễ bị nén';
+      chkGas.classList.add('done');
+      if(currentPistonX < 300){
+        readoutBig.innerHTML = 'ĐÃ NÉN <span>(Thể tích giảm mạnh)</span>';
+        readoutMsg.textContent = '🎉 Các hạt phân tử khí bị dồn sát lại gần nhau → Chất khí rất dễ bị nén!';
+      } else {
+        readoutBig.innerHTML = 'DỄ NÉN <span>(Chất khí)</span>';
+        readoutMsg.textContent = 'Không khí gồm các hạt ở rất xa nhau → pít-tông ép vào sâu dễ dàng, thể tích giảm mạnh.';
+      }
+    } else if(currentMedium === 'long'){
+      readoutBox.classList.add('warn');
+      valCompress.textContent = 'Rất khó nén';
+      chkLiquid.classList.add('done');
+      readoutBig.innerHTML = 'KHÓ NÉN <span>(Chất lỏng)</span>';
+      readoutMsg.textContent = 'Các hạt trong chất lỏng đã ở sát nhau → Pít-tông hầu như không thể di chuyển vào trong!';
+    } else {
+      readoutBox.classList.add('warn');
+      valCompress.textContent = 'Không nén được';
+      chkSolid.classList.add('done');
+      readoutBig.innerHTML = 'KHÔNG NÉN ĐƯỢC <span>(Chất rắn)</span>';
+      readoutMsg.textContent = 'Khối gỗ có thể tích và hình dạng cố định xác định → Hoàn toàn không thể nén!';
+    }
+  }
+
+  function setMedium(med){
+    currentMedium = med;
+    currentPistonX = 390;
+    if(med === 'khi'){
+      syringeContent.setAttribute('fill', '#dfe6e9');
+      syringeContent.setAttribute('opacity', '0.35');
+      mediumNote.textContent = 'Đang chứa: Không khí (Chất khí - Dễ nén)';
+    } else if(med === 'long'){
+      syringeContent.setAttribute('fill', '#0984e3');
+      syringeContent.setAttribute('opacity', '0.7');
+      mediumNote.textContent = 'Đang chứa: Nước màu (Chất lỏng - Rất khó nén)';
+    } else {
+      syringeContent.setAttribute('fill', '#a9713f');
+      syringeContent.setAttribute('opacity', '0.9');
+      mediumNote.textContent = 'Đang chứa: Miếng gỗ (Chất rắn - Không nén được)';
+    }
+    updateDisplay();
+  }
+
+  piston.addEventListener('pointerdown', (e)=>{
+    piston.setPointerCapture(e.pointerId);
+    piston.classList.add('dragging');
+    isDragging = true;
+    startX = e.clientX;
+  });
+
+  piston.addEventListener('pointermove', (e)=>{
+    if(!isDragging) return;
+    const dx = e.clientX - startX;
+    const minLimit = MIN_X_LIMITS[currentMedium];
+    currentPistonX = Math.max(minLimit, Math.min(390, 390 + dx));
+    updateDisplay();
+  });
+
+  function onEnd(){
+    if(!isDragging) return;
+    isDragging = false;
+    piston.classList.remove('dragging');
+  }
+
+  piston.addEventListener('pointerup', onEnd);
+  piston.addEventListener('pointercancel', onEnd);
+
+  // Toggle medium
+  document.getElementById('mediumSelectGroup').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.btn-t');
+    if(!btn) return;
+    document.querySelectorAll('.btn-t').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    btn.setAttribute('aria-pressed', 'true');
+    setMedium(btn.dataset.med);
+  });
+
+  setMedium('khi');
+
+  // Quiz
+  document.querySelectorAll('.quiz-q').forEach(q=>{
+    const correct = q.dataset.correct;
+    const fb = q.querySelector('.feedback');
+    q.querySelectorAll('input[type=radio]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        fb.classList.remove('correct','wrong');
+        if(r.value === correct){
+          fb.textContent = '✅ Rất chính xác!';
+          fb.classList.add('correct');
+        } else {
+          fb.textContent = '❌ Chưa đúng, xem lại tính chất các thể của chất trong SGK KHTN 6.';
+          fb.classList.add('wrong');
+        }
+        fb.classList.add('show');
+      });
+    });
+  });
+})();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "hh6-chuyen-the-va-nen",
+  "subject": "hoa-hoc",
+  "grade": 6,
+  "title": "Khả năng chịu nén của chất Rắn, Lỏng, Khí",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 10, tr.30-32",
+  "objective": "Thực hành so sánh và rút ra nhận xét: Chất khí rất dễ bị nén, chất lỏng và chất rắn rất khó bị nén.",
+  "controls": [
+    { "id": "piston_drag", "label": "Đẩy nén pít-tông xi-lanh", "type": "drag_drop" },
+    { "id": "medium_select", "label": "Chọn thể chất", "type": "toggle", "values": ["khi", "long", "ran"] }
+  ],
+  "outputs": ["the_tich_con_lai", "do_chiu_nen", "nhan_xet"],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

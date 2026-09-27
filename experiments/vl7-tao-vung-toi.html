@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 15: Tia sáng, Vùng tối và Nhật thực — KHTN 7 (Kết nối tri thức)</title>
+<meta name="description" content="Thí nghiệm tạo chùm sáng, khảo sát vùng tối và vùng nửa tối khi chiếu nguồn sáng hẹp và rộng lên vật cản, giải thích hiện tượng Nhật thực.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7b1fa2, #c2185b);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(123,31,162,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#0a0f18; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .ctrl-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .ctrl-label{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .ctrl-row input[type="range"]{ width:100%; accent-color:var(--purple-1); cursor:pointer; }
+  
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:var(--purple-1); }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 7 &nbsp;›&nbsp; Bài 15</div>
+    <div class="status-pill">KHTN 7 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 15: Tia sáng, Vùng tối và Hiện tượng Nhật thực</h1>
+    <p>Khảo sát vùng tối (umbra) và vùng nửa tối (penumbra) khi chiếu nguồn sáng hẹp hoặc nguồn sáng rộng lên vật cản, giải thích hiện tượng Nhật thực toàn phần và một phần.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <!-- Bàn thí nghiệm vùng tối SVG 2.5D -->
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fffb8f" stop-opacity="1"/>
+            <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#090d16"/>
+        <line x1="20" y1="410" x2="620" y2="410" stroke="#1f2937" stroke-width="2"/>
+
+        <!-- CHÙM SÁNG PHÁT RA TỪ NGUỒN (Chiếu sang phải) -->
+        <!-- Vùng sáng tổng thể -->
+        <polygon id="lightBeamPolygon" points="70,180 540,20 540,400 70,240" fill="rgba(253,224,71,0.18)"/>
+
+        <!-- VÙNG NỬA TỐI (PENUMBRA) - Khi nguồn sáng rộng -->
+        <polygon id="penumbraPolygon" points="260,185 540,75 540,345 260,235" fill="rgba(0,0,0,0.45)"/>
+
+        <!-- VÙNG TỐI HOÀN TOÀN (UMBRA) -->
+        <polygon id="umbraPolygon" points="260,185 540,140 540,280 260,235" fill="rgba(0,0,0,0.92)"/>
+
+        <!-- NGUỒN SÁNG (ĐÈN PIN / BÓNG ĐÈN LED) (x = 70, y = 210) -->
+        <g id="lightSourceGroup" transform="translate(70, 210)">
+          <!-- Thân đèn -->
+          <rect x="-40" y="-18" width="40" height="36" rx="4" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+          <!-- Chóa đèn hình nón -->
+          <polygon points="0,-24 0,24 -15,16 -15,-16" fill="#475569"/>
+          
+          <!-- Nguồn phát sáng (hẹp hoặc rộng) -->
+          <circle id="lightBulb" cx="5" cy="0" r="10" fill="#fef08a" stroke="#f59e0b" stroke-width="2"/>
+          <circle cx="5" cy="0" r="28" fill="url(#lampGlow)"/>
+
+          <text id="lblSource" x="0" y="48" fill="#fde047" font-size="11.5" font-weight="700" text-anchor="middle">Nguồn sáng hẹp</text>
+        </g>
+
+        <!-- VẬT CẢN SÁNG (QUẢ BÓNG / MẶT TRĂNG) (Có thể kéo thả) -->
+        <g id="obstacleGroup" transform="translate(260, 210)" style="cursor:grab;">
+          <!-- Bóng đổ trên sàn -->
+          <ellipse cx="0" cy="190" rx="30" ry="6" fill="#030712" opacity="0.6"/>
+          <!-- Giá đỡ quả bóng -->
+          <line x1="0" y1="25" x2="0" y2="190" stroke="#64748b" stroke-width="3"/>
+          <ellipse cx="0" cy="190" rx="14" ry="5" fill="#475569"/>
+
+          <!-- Quả bóng cản sáng -->
+          <circle r="25" fill="#374151" stroke="#1f2937" stroke-width="2"/>
+          <circle cx="-6" cy="-6" r="23" fill="#4b5563" opacity="0.5"/>
+          <text id="lblObstacle" x="0" y="-35" fill="#e5e7eb" font-size="12" font-weight="700" text-anchor="middle">Vật cản sáng (Quả bóng)</text>
+          <text x="0" y="4" fill="#9ca3af" font-size="10" text-anchor="middle">Kéo thả</text>
+        </g>
+
+        <!-- MÀN CHẮN HỨNG BÓNG (SCREEN) (x = 540) -->
+        <g id="screenGroup" transform="translate(540, 210)">
+          <!-- Khung màn chắn -->
+          <rect x="-6" y="-170" width="16" height="340" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+
+          <!-- Vùng bóng in trên màn chắn -->
+          <!-- Vùng nửa tối trên màn (Penumbra mark) -->
+          <rect id="screenPenumbra" x="-4" y="-80" width="12" height="160" fill="#64748b" opacity="0.7"/>
+          <!-- Vùng tối hoàn toàn trên màn (Umbra mark) -->
+          <rect id="screenUmbra" x="-4" y="-45" width="12" height="90" fill="#090d16"/>
+
+          <text x="25" y="-140" fill="#e2e8f0" font-size="12.5" font-weight="700">Màn chắn</text>
+          <text id="lblScreenUmbra" x="25" y="5" fill="#f87171" font-size="11" font-weight="700">Vùng tối</text>
+          <text id="lblScreenPenumbra" x="25" y="-55" fill="#fbbf24" font-size="11" font-weight="700">Vùng nửa tối</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bảng điều khiển -->
+    <div class="sidebar">
+      <div class="card">
+        <h3>💡 Loại nguồn sáng (SGK)</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnNarrow" data-active="true">Nguồn sáng hẹp</button>
+          <button class="btn" id="btnBroad" data-active="false">Nguồn sáng rộng</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📏 Vị trí vật cản sáng</h3>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Khoảng cách vật cản:</span>
+            <b id="valObsDist">x = 260 px</b>
+          </div>
+          <input type="range" id="sliderObs" min="150" max="420" value="260" step="5">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Kích thước vật cản (R):</span>
+            <b id="valObsSize">25 px</b>
+          </div>
+          <input type="range" id="sliderSize" min="15" max="45" value="25" step="1">
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Hiện tượng trên màn chắn</h3>
+        <div class="data-box">
+          <div class="data-line">
+            <span>Vùng tối (Umbra):</span>
+            <span id="resUmbra" style="font-weight:700; color:#ef4444;">Rõ nét, ranh giới rõ</span>
+          </div>
+          <div class="data-line">
+            <span>Vùng nửa tối (Penumbra):</span>
+            <span id="resPenumbra">Không có</span>
+          </div>
+          <div class="data-line" style="border-top:1px dashed var(--panel-border); padding-top:6px; margin-top:6px;">
+            <span>Ứng dụng thiên văn:</span>
+            <span style="color:var(--purple-1); font-weight:700;">Nhật thực toàn phần / một phần</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Câu hỏi củng cố SGK -->
+  <div class="quiz-section">
+    <div class="card">
+      <h3>✍️ Câu hỏi củng cố (SGK KHTN 7)</h3>
+      
+      <div class="quiz-q" data-correct="0">
+        <p>1. Vùng tối phía sau vật cản sáng có đặc điểm là:</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Hoàn toàn không nhận được ánh sáng từ nguồn sáng truyền tới</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Nhận được một phần ánh sáng từ nguồn sáng</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Sáng hơn các vùng xung quanh</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Luôn có hình dạng tam giác</button>
+        </div>
+      </div>
+
+      <div class="quiz-q" data-correct="1">
+        <p>2. Khi Mặt Trời, Mặt Trăng và Trái Đất thẳng hàng, người đứng ở vùng bóng tối hoàn toàn của Mặt Trăng trên Trái Đất sẽ quan sát được:</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Nhật thực một phần</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Nhật thực toàn phần (Mặt Trời bị che khuất hoàn toàn)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Nguyệt thực toàn phần</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Cầu vồng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let isBroadSource = false;
+  let obsX = 260;
+  let obsR = 25;
+
+  const lightBulb = document.getElementById('lightBulb');
+  const lblSource = document.getElementById('lblSource');
+  const obstacleGroup = document.getElementById('obstacleGroup');
+  const penumbraPolygon = document.getElementById('penumbraPolygon');
+  const umbraPolygon = document.getElementById('umbraPolygon');
+  const screenPenumbra = document.getElementById('screenPenumbra');
+  const screenUmbra = document.getElementById('screenUmbra');
+  const lblScreenPenumbra = document.getElementById('lblScreenPenumbra');
+  const sliderObs = document.getElementById('sliderObs');
+  const sliderSize = document.getElementById('sliderSize');
+  const valObsDist = document.getElementById('valObsDist');
+  const valObsSize = document.getElementById('valObsSize');
+  const resUmbra = document.getElementById('resUmbra');
+  const resPenumbra = document.getElementById('resPenumbra');
+
+  function updateShadows(){
+    valObsDist.textContent = `x = ${obsX} px`;
+    sliderObs.value = obsX;
+    valObsSize.textContent = `${obsR} px`;
+    sliderSize.value = obsR;
+
+    obstacleGroup.setAttribute('transform', `translate(${obsX}, 210)`);
+    obstacleGroup.querySelector('circle').setAttribute('r', obsR);
+
+    const srcX = 75;
+    const srcY = 210;
+    const screenX = 540;
+
+    if (!isBroadSource) {
+      // NGUỒN SÁNG HẸP (Point/Narrow Source)
+      lightBulb.setAttribute('r', '8');
+      lblSource.textContent = 'Nguồn sáng hẹp';
+
+      // Bóng tối kéo dài từ điểm nguồn qua mép trên và dưới quả bóng
+      // dy / dx = obsR / (obsX - srcX)
+      const slope = obsR / (obsX - srcX);
+      const yTopScreen = srcY - (screenX - srcX) * slope;
+      const yBottomScreen = srcY + (screenX - srcX) * slope;
+
+      umbraPolygon.setAttribute('points', `${obsX},${srcY - obsR} ${screenX},${yTopScreen} ${screenX},${yBottomScreen} ${obsX},${srcY + obsR}`);
+      penumbraPolygon.style.display = 'none';
+
+      // Màn chắn
+      const hUmbra = Math.abs(yBottomScreen - yTopScreen);
+      screenUmbra.setAttribute('y', yTopScreen - srcY);
+      screenUmbra.setAttribute('height', hUmbra);
+      screenPenumbra.style.display = 'none';
+      lblScreenPenumbra.style.display = 'none';
+
+      resUmbra.textContent = `Rõ rệt (cao ${Math.round(hUmbra)} px)`;
+      resPenumbra.textContent = 'Không có (Ranh giới sắc nét)';
+    } else {
+      // NGUỒN SÁNG RỘNG (Broad Source: R_src = 24)
+      const srcR = 24;
+      lightBulb.setAttribute('r', '22');
+      lblSource.textContent = 'Nguồn sáng rộng';
+
+      // Tia tiếp tuyến trong tạo Umbra
+      const slopeUmbra = (srcR - obsR) / (obsX - srcX);
+      const yTopUmbra = srcY - (obsR - slopeUmbra * (screenX - obsX));
+      const yBottomUmbra = srcY + (obsR - slopeUmbra * (screenX - obsX));
+
+      // Tia tiếp tuyến ngoài tạo Penumbra
+      const slopePenumbra = (srcR + obsR) / (obsX - srcX);
+      const yTopPenumbra = srcY - (obsR + slopePenumbra * (screenX - obsX));
+      const yBottomPenumbra = srcY + (obsR + slopePenumbra * (screenX - obsX));
+
+      umbraPolygon.setAttribute('points', `${obsX},${srcY - obsR} ${screenX},${yTopUmbra} ${screenX},${yBottomUmbra} ${obsX},${srcY + obsR}`);
+      penumbraPolygon.style.display = 'block';
+      penumbraPolygon.setAttribute('points', `${obsX},${srcY - obsR} ${screenX},${yTopPenumbra} ${screenX},${yBottomPenumbra} ${obsX},${srcY + obsR}`);
+
+      // Màn chắn
+      const hUmbra = Math.max(10, Math.abs(yBottomUmbra - yTopUmbra));
+      screenUmbra.setAttribute('y', yTopUmbra - srcY);
+      screenUmbra.setAttribute('height', hUmbra);
+
+      const hPenumbra = Math.abs(yBottomPenumbra - yTopPenumbra);
+      screenPenumbra.style.display = 'block';
+      screenPenumbra.setAttribute('y', yTopPenumbra - srcY);
+      screenPenumbra.setAttribute('height', hPenumbra);
+      lblScreenPenumbra.style.display = 'block';
+
+      resUmbra.textContent = `Vùng tối ở giữa (${Math.round(hUmbra)} px)`;
+      resPenumbra.textContent = `Vùng nửa tối bao quanh (${Math.round(hPenumbra)} px)`;
+    }
+  }
+
+  document.getElementById('btnNarrow').addEventListener('click', ()=>{
+    isBroadSource = false;
+    document.getElementById('btnNarrow').setAttribute('data-active', 'true');
+    document.getElementById('btnBroad').setAttribute('data-active', 'false');
+    updateShadows();
+  });
+
+  document.getElementById('btnBroad').addEventListener('click', ()=>{
+    isBroadSource = true;
+    document.getElementById('btnNarrow').setAttribute('data-active', 'false');
+    document.getElementById('btnBroad').setAttribute('data-active', 'true');
+    updateShadows();
+  });
+
+  sliderObs.addEventListener('input', (e)=>{
+    obsX = parseInt(e.target.value);
+    updateShadows();
+  });
+
+  sliderSize.addEventListener('input', (e)=>{
+    obsR = parseInt(e.target.value);
+    updateShadows();
+  });
+
+  // Tương tác kéo thả quả bóng bằng Pointer Events
+  let isDraggingObs = false;
+  const svg = document.getElementById('scene');
+
+  obstacleGroup.addEventListener('pointerdown', (e)=>{
+    isDraggingObs = true;
+    obstacleGroup.setPointerCapture(e.pointerId);
+  });
+
+  obstacleGroup.addEventListener('pointermove', (e)=>{
+    if (!isDraggingObs) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = 640 / rect.width;
+    let px = (e.clientX - rect.left) * scaleX;
+    if (px < 150) px = 150;
+    if (px > 420) px = 420;
+    obsX = Math.round(px);
+    updateShadows();
+  });
+
+  obstacleGroup.addEventListener('pointerup', ()=>{
+    isDraggingObs = false;
+  });
+
+  function checkAnswer(btn, optIdx){
+    const q = btn.closest('.quiz-q');
+    const correctIdx = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.classList.remove('correct', 'wrong'));
+    if (optIdx === correctIdx) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+    }
+  }
+
+  updateShadows();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl7-tao-vung-toi",
+  "subject": "vat-ly",
+  "grade": 7,
+  "title": "Tia sáng, Vùng tối và Nhật thực",
+  "sgk_ref": "KHTN 7 — KNTT, Bài 15",
+  "objective": "Khảo sát sự tạo thành vùng tối khi chiếu nguồn sáng hẹp và vùng nửa tối khi chiếu nguồn sáng rộng lên vật cản.",
+  "controls": [
+    {"name": "Loại nguồn sáng", "type": "toggle"},
+    {"name": "Vị trí vật cản", "type": "range", "range": [150, 420], "unit": "px"},
+    {"name": "Bán kính vật cản", "type": "range", "range": [15, 45], "unit": "px"}
+  ],
+  "outputs": [
+    {"name": "Vùng tối (Umbra)", "type": "string"},
+    {"name": "Vùng nửa tối (Penumbra)", "type": "string"}
+  ],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

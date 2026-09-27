@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 6: Liên kết hoá học (Ion &amp; Cộng hoá trị) — KHTN 7 (Kết nối tri thức)</title>
+<meta name="description" content="Mô phỏng sự hình thành liên kết ion (cho nhận electron) và liên kết cộng hoá trị (góp chung electron) theo SGK KHTN 7.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+    --e-color:#38bdf8;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7b1fa2, #c2185b);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(123,31,162,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#0b1320; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:var(--purple-1); }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Hoá học</b> &nbsp;›&nbsp; Lớp 7 &nbsp;›&nbsp; Bài 6</div>
+    <div class="status-pill">KHTN 7 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 6: Liên kết hoá học (Liên kết ion &amp; Cộng hoá trị)</h1>
+    <p>Khám phá bản chất hình thành liên kết ion (chuyển giao electron giữa kim loại và phi kim) và liên kết cộng hoá trị (dùng chung các cặp electron giữa phi kim với phi kim).</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <!-- Mô hình liên kết SVG 2.5D -->
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glowE" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2"/>
+          </filter>
+        </defs>
+
+        <rect width="640" height="440" fill="#0b1320"/>
+
+        <!-- CHẾ ĐỘ 1: LIÊN KẾT ION (NaCl: Na + Cl -> Na+ + Cl-) -->
+        <g id="ionicModeGroup">
+          <!-- Nguyên tử / Ion Na (Bên trái: cx = 200, cy = 210) -->
+          <g transform="translate(200, 210)">
+            <!-- Các lớp electron Na (Lớp 1: r=35, Lớp 2: r=65, Lớp 3: r=95) -->
+            <circle r="35" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="3,3"/>
+            <circle r="65" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="3,3"/>
+            <circle id="naShell3" r="95" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+            <!-- Hạt nhân Na (+11) -->
+            <circle r="22" fill="#ea580c" stroke="#fed7aa" stroke-width="2"/>
+            <text x="0" y="5" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle">+11</text>
+
+            <text id="lblNaState" x="0" y="-115" fill="#fb923c" font-size="14" font-weight="700" text-anchor="middle">Nguyên tử Na (2, 8, 1)</text>
+
+            <!-- Lớp 1: 2e -->
+            <circle cx="0" cy="-35" r="4.5" fill="#38bdf8"/>
+            <circle cx="0" cy="35" r="4.5" fill="#38bdf8"/>
+
+            <!-- Lớp 2: 8e -->
+            <circle cx="-65" cy="0" r="4.5" fill="#38bdf8"/>
+            <circle cx="65" cy="0" r="4.5" fill="#38bdf8"/>
+            <circle cx="0" cy="-65" r="4.5" fill="#38bdf8"/>
+            <circle cx="0" cy="65" r="4.5" fill="#38bdf8"/>
+            <circle cx="-46" cy="-46" r="4.5" fill="#38bdf8"/>
+            <circle cx="46" cy="-46" r="4.5" fill="#38bdf8"/>
+            <circle cx="-46" cy="46" r="4.5" fill="#38bdf8"/>
+            <circle cx="46" cy="46" r="4.5" fill="#38bdf8"/>
+
+            <!-- Electron hóa trị lớp ngoài cùng (sẽ chuyển sang Cl) -->
+            <g id="transferElectron" transform="translate(95, 0)" style="cursor:pointer;">
+              <circle r="8" fill="#facc15" filter="url(#glowE)"/>
+              <circle r="5" fill="#ffffff" stroke="#f59e0b" stroke-width="1.5"/>
+              <text x="0" y="18" fill="#fde047" font-size="10" font-weight="700" text-anchor="middle">1e nhường</text>
+            </g>
+          </g>
+
+          <!-- Dấu mũi tên truyền e -->
+          <g id="arrowTransfer" transform="translate(320, 210)">
+            <path d="M -20 -15 Q 0 -35 20 -15" fill="none" stroke="#facc15" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+            <text x="0" y="-45" fill="#facc15" font-size="12" font-weight="700" text-anchor="middle">Nhường 1e ➜</text>
+          </g>
+
+          <!-- Nguyên tử / Ion Cl (Bên phải: cx = 440, cy = 210) -->
+          <g transform="translate(440, 210)">
+            <!-- Các lớp electron Cl (+17) (Lớp 1: r=35, Lớp 2: r=65, Lớp 3: r=95) -->
+            <circle r="35" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="3,3"/>
+            <circle r="65" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="3,3"/>
+            <circle r="95" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+            <!-- Hạt nhân Cl (+17) -->
+            <circle r="22" fill="#16a34a" stroke="#bbf7d0" stroke-width="2"/>
+            <text x="0" y="5" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle">+17</text>
+
+            <text id="lblClState" x="0" y="-115" fill="#4ade80" font-size="14" font-weight="700" text-anchor="middle">Nguyên tử Cl (2, 8, 7)</text>
+
+            <!-- Lớp 1: 2e -->
+            <circle cx="0" cy="-35" r="4.5" fill="#38bdf8"/>
+            <circle cx="0" cy="35" r="4.5" fill="#38bdf8"/>
+
+            <!-- Lớp 2: 8e -->
+            <circle cx="-65" cy="0" r="4.5" fill="#38bdf8"/>
+            <circle cx="65" cy="0" r="4.5" fill="#38bdf8"/>
+            <circle cx="0" cy="-65" r="4.5" fill="#38bdf8"/>
+            <circle cx="0" cy="65" r="4.5" fill="#38bdf8"/>
+            <circle cx="-46" cy="-46" r="4.5" fill="#38bdf8"/>
+            <circle cx="46" cy="-46" r="4.5" fill="#38bdf8"/>
+            <circle cx="-46" cy="46" r="4.5" fill="#38bdf8"/>
+            <circle cx="46" cy="46" r="4.5" fill="#38bdf8"/>
+
+            <!-- Lớp 3: 7e có sẵn -->
+            <circle cx="95" cy="0" r="4.5" fill="#38bdf8"/>
+            <circle cx="0" cy="-95" r="4.5" fill="#38bdf8"/>
+            <circle cx="0" cy="95" r="4.5" fill="#38bdf8"/>
+            <circle cx="-67" cy="-67" r="4.5" fill="#38bdf8"/>
+            <circle cx="67" cy="-67" r="4.5" fill="#38bdf8"/>
+            <circle cx="-67" cy="67" r="4.5" fill="#38bdf8"/>
+            <circle cx="67" cy="67" r="4.5" fill="#38bdf8"/>
+
+            <!-- Vị trí nhận e (trống hoặc đã nhận) -->
+            <circle id="receivedElectron" cx="-95" cy="0" r="5" fill="#facc15" stroke="#ffffff" stroke-width="1.5" opacity="0"/>
+          </g>
+
+          <!-- Chú thích lực hút tĩnh điện giữa 2 ion -->
+          <text id="lblAttraction" x="320" y="360" fill="#f43f5e" font-size="14" font-weight="700" text-anchor="middle" style="display:none;">Lực hút tĩnh điện: Na⁺ và Cl⁻ hút nhau tạo liên kết ion</text>
+        </g>
+
+        <!-- CHẾ ĐỘ 2: LIÊN KẾT CỘNG HOÁ TRỊ (H2O: H - O - H DÙNG CHUNG E) -->
+        <g id="covalentModeGroup" style="display:none;">
+          <g transform="translate(320, 210)">
+            <!-- Nguyên tử Oxi ở giữa -->
+            <circle r="75" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="3,3"/>
+            <circle r="26" fill="#dc2626" stroke="#fecaca" stroke-width="2"/>
+            <text x="0" y="6" fill="#ffffff" font-size="14" font-weight="800" text-anchor="middle">+8 (O)</text>
+
+            <!-- Hai nguyên tử Hydro hai bên xen phủ -->
+            <!-- H bên trái -->
+            <circle cx="-75" cy="0" r="45" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+            <circle cx="-75" cy="0" r="16" fill="#0284c7" stroke="#bae6fd" stroke-width="1.5"/>
+            <text x="-75" y="4" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle">+1 (H)</text>
+
+            <!-- Cặp e dùng chung giữa H trái và O -->
+            <g fill="#facc15">
+              <circle cx="-38" cy="-8" r="5"/>
+              <circle cx="-38" cy="8" r="5"/>
+            </g>
+            <text x="-38" y="-18" fill="#fde047" font-size="10" font-weight="700" text-anchor="middle">1 cặp e chung</text>
+
+            <!-- H bên phải -->
+            <circle cx="75" cy="0" r="45" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+            <circle cx="75" cy="0" r="16" fill="#0284c7" stroke="#bae6fd" stroke-width="1.5"/>
+            <text x="75" y="4" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle">+1 (H)</text>
+
+            <!-- Cặp e dùng chung giữa H phải và O -->
+            <g fill="#facc15">
+              <circle cx="38" cy="-8" r="5"/>
+              <circle cx="38" cy="8" r="5"/>
+            </g>
+            <text x="38" y="-18" fill="#fde047" font-size="10" font-weight="700" text-anchor="middle">1 cặp e chung</text>
+
+            <!-- Các e riêng của O -->
+            <circle cx="0" cy="-75" r="4.5" fill="#ef4444"/>
+            <circle cx="0" cy="75" r="4.5" fill="#ef4444"/>
+            <circle cx="-25" cy="-70" r="4.5" fill="#ef4444"/>
+            <circle cx="25" cy="-70" r="4.5" fill="#ef4444"/>
+
+            <text x="0" y="140" fill="#38bdf8" font-size="14" font-weight="700" text-anchor="middle">Phân tử nước (H₂O) — Liên kết cộng hoá trị</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bảng điều khiển -->
+    <div class="sidebar">
+      <div class="card">
+        <h3>🔗 Loại liên kết hoá học</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnIonic" data-active="true">Liên kết ion (NaCl)</button>
+          <button class="btn" id="btnCovalent" data-active="false">Cộng hoá trị (H2O)</button>
+        </div>
+      </div>
+
+      <div class="card" id="ionicCard">
+        <h3>⚛️ Chuyển giao electron</h3>
+        <button class="btn" id="btnTransfer" style="width:100%;">⚡ Kích hoạt cho - nhận electron</button>
+      </div>
+
+      <div class="card">
+        <h3>📊 Bản chất liên kết</h3>
+        <div class="data-box">
+          <div class="data-line">
+            <span>Loại liên kết:</span>
+            <span id="resBondType" style="font-weight:700; color:var(--purple-1);">Liên kết Ion</span>
+          </div>
+          <div class="data-line">
+            <span>Đối tượng tham gia:</span>
+            <span id="resParticipants">Kim loại (Na) &amp; Phi kim (Cl)</span>
+          </div>
+          <div class="data-line">
+            <span>Bản chất:</span>
+            <span id="resMechanism">Cho nhận e ➜ Hút tĩnh điện</span>
+          </div>
+          <div class="data-line" style="border-top:1px dashed var(--panel-border); padding-top:6px; margin-top:6px;">
+            <span>Đặc điểm hợp chất:</span>
+            <span id="resProperties">Khó bay hơi, nhiệt độ nóng chảy cao</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Câu hỏi củng cố SGK -->
+  <div class="quiz-section">
+    <div class="card">
+      <h3>✍️ Câu hỏi củng cố (SGK KHTN 7)</h3>
+      
+      <div class="quiz-q" data-correct="0">
+        <p>1. Liên kết ion được tạo thành bởi lực hút nào?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Lực hút tĩnh điện giữa các ion mang điện tích trái dấu</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Lực hút từ trường giữa các cực</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Lực ma sát giữa các phân tử</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Lực hấp dẫn của hạt nhân</button>
+        </div>
+      </div>
+
+      <div class="quiz-q" data-correct="2">
+        <p>2. Liên kết cộng hoá trị trong phân tử nước (H2O) được hình thành bằng cách:</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Nguyên tử Oxi nhường electron cho Hydro</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Nguyên tử Hydro nhường electron cho Oxi</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Nguyên tử Oxi dùng chung các cặp electron với mỗi nguyên tử Hydro</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Các hạt nhân hợp nhất lại với nhau</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let isTransferred = false;
+  let mode = 'ionic';
+
+  const btnIonic = document.getElementById('btnIonic');
+  const btnCovalent = document.getElementById('btnCovalent');
+  const ionicModeGroup = document.getElementById('ionicModeGroup');
+  const covalentModeGroup = document.getElementById('covalentModeGroup');
+  const ionicCard = document.getElementById('ionicCard');
+  const transferElectron = document.getElementById('transferElectron');
+  const receivedElectron = document.getElementById('receivedElectron');
+  const naShell3 = document.getElementById('naShell3');
+  const lblNaState = document.getElementById('lblNaState');
+  const lblClState = document.getElementById('lblClState');
+  const lblAttraction = document.getElementById('lblAttraction');
+  const btnTransfer = document.getElementById('btnTransfer');
+  const resBondType = document.getElementById('resBondType');
+  const resParticipants = document.getElementById('resParticipants');
+  const resMechanism = document.getElementById('resMechanism');
+  const resProperties = document.getElementById('resProperties');
+
+  function updateIonicState(){
+    if (isTransferred) {
+      transferElectron.style.display = 'none';
+      receivedElectron.style.opacity = '1';
+      naShell3.style.display = 'none';
+      lblNaState.textContent = 'Ion Na⁺ (2, 8) bền vững như Ne';
+      lblNaState.setAttribute('fill', '#ef4444');
+      lblClState.textContent = 'Ion Cl⁻ (2, 8, 8) bền vững như Ar';
+      lblClState.setAttribute('fill', '#3b82f6');
+      lblAttraction.style.display = 'block';
+      btnTransfer.textContent = '🔄 Đặt lại nguyên tử trung hoà';
+    } else {
+      transferElectron.style.display = 'block';
+      receivedElectron.style.opacity = '0';
+      naShell3.style.display = 'block';
+      lblNaState.textContent = 'Nguyên tử Na (2, 8, 1)';
+      lblNaState.setAttribute('fill', '#fb923c');
+      lblClState.textContent = 'Nguyên tử Cl (2, 8, 7)';
+      lblClState.setAttribute('fill', '#4ade80');
+      lblAttraction.style.display = 'none';
+      btnTransfer.textContent = '⚡ Kích hoạt cho - nhận electron';
+    }
+  }
+
+  btnTransfer.addEventListener('click', ()=>{
+    isTransferred = !isTransferred;
+    updateIonicState();
+  });
+
+  let isDraggingTransfer = false;
+  transferElectron.addEventListener('pointerdown', (e)=>{
+    isDraggingTransfer = true;
+    transferElectron.setPointerCapture(e.pointerId);
+  });
+  transferElectron.addEventListener('pointermove', ()=>{
+    if (!isDraggingTransfer) return;
+  });
+  transferElectron.addEventListener('pointerup', ()=>{
+    if (isDraggingTransfer) {
+      isDraggingTransfer = false;
+      isTransferred = true;
+      updateIonicState();
+    }
+  });
+  transferElectron.addEventListener('click', ()=>{
+    isTransferred = true;
+    updateIonicState();
+  });
+
+  btnIonic.addEventListener('click', ()=>{
+    mode = 'ionic';
+    btnIonic.setAttribute('data-active', 'true');
+    btnCovalent.setAttribute('data-active', 'false');
+    ionicModeGroup.style.display = 'block';
+    covalentModeGroup.style.display = 'none';
+    ionicCard.style.display = 'block';
+
+    resBondType.textContent = 'Liên kết Ion';
+    resParticipants.textContent = 'Kim loại (Na) & Phi kim (Cl)';
+    resMechanism.textContent = 'Cho nhận e ➜ Hút tĩnh điện';
+    resProperties.textContent = 'Khó bay hơi, nhiệt độ nóng chảy cao';
+  });
+
+  btnCovalent.addEventListener('click', ()=>{
+    mode = 'covalent';
+    btnIonic.setAttribute('data-active', 'false');
+    btnCovalent.setAttribute('data-active', 'true');
+    ionicModeGroup.style.display = 'none';
+    covalentModeGroup.style.display = 'block';
+    ionicCard.style.display = 'none';
+
+    resBondType.textContent = 'Liên kết Cộng hoá trị';
+    resParticipants.textContent = 'Phi kim (H) & Phi kim (O)';
+    resMechanism.textContent = 'Dùng chung các cặp electron';
+    resProperties.textContent = 'Dễ bay hơi, nhiệt độ nóng chảy thấp hơn';
+  });
+
+  function checkAnswer(btn, optIdx){
+    const q = btn.closest('.quiz-q');
+    const correctIdx = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.classList.remove('correct', 'wrong'));
+    if (optIdx === correctIdx) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+    }
+  }
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "hh7-lien-ket-hoa-hoc",
+  "subject": "hoa-hoc",
+  "grade": 7,
+  "title": "Liên kết hoá học (Ion & Cộng hoá trị)",
+  "sgk_ref": "KHTN 7 — KNTT, Bài 6",
+  "objective": "Mô phỏng sự hình thành liên kết ion và liên kết cộng hoá trị theo quy tắc lớp vỏ electron bền vững của khí hiếm.",
+  "controls": [
+    {"name": "Loại liên kết", "type": "toggle"},
+    {"name": "Cho - nhận electron", "type": "button"}
+  ],
+  "outputs": [
+    {"name": "Trạng thái ion hình thành", "type": "string"},
+    {"name": "Số cặp electron dùng chung", "type": "number"}
+  ],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

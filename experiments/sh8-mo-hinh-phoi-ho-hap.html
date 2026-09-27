@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 31: Mô hình cơ chế hoạt động của phổi — KHTN 8 (Kết nối tri thức)</title>
+<meta name="description" content="Mô hình bình chuông và bóng bay giải thích cơ chế cử động hô hấp: Hít vào (cơ hoành hạ, phổi dãn) và Thở ra (cơ hoành nâng, phổi xẹp).">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #059669, #10b981);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(5,150,105,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#0f172a; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .ctrl-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .ctrl-label{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .ctrl-row input[type="range"]{ width:100%; accent-color:#10b981; cursor:pointer; }
+
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:#059669; color:#059669; }
+  .btn[data-active="true"]{ background:#059669; border-color:#059669; color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:#059669; font-size:14px; }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Sinh học</b> &nbsp;›&nbsp; Lớp 8 &nbsp;›&nbsp; Bài 31</div>
+    <div class="status-pill">KHTN 8 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 31: Thực hành: Mô hình cơ chế hoạt động của phổi</h1>
+    <p>Khám phá cơ chế hít vào và thở ra qua mô hình bình chuông: Kéo màng cao su (cơ hoành) lên xuống để quan sát sự dãn và xẹp của 2 lá phổi.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lungGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f87171"/>
+            <stop offset="60%" stop-color="#ef4444"/>
+            <stop offset="100%" stop-color="#b91c1c"/>
+          </linearGradient>
+          <linearGradient id="jarGlass" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#bae6fd" stop-opacity="0.25"/>
+            <stop offset="50%" stop-color="#f0f9ff" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#bae6fd" stop-opacity="0.25"/>
+          </linearGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#0f172a"/>
+
+        <!-- GIÁ ĐỠ VÀ ĐẾ TREO BÌNH CHUÔNG -->
+        <rect x="120" y="390" width="400" height="16" fill="#334155" rx="3"/>
+        <rect x="150" y="40" width="16" height="350" fill="#475569" rx="3"/>
+        <rect x="150" y="40" width="180" height="12" fill="#475569" rx="2"/>
+
+        <!-- MÔ HÌNH BÌNH CHUÔNG (LỒNG NGỰC) -->
+        <g id="bellModel" transform="translate(320, 50)">
+          <!-- Nút cao su cổ bình -->
+          <rect x="-24" y="0" width="48" height="24" rx="4" fill="#78350f" stroke="#451a03" stroke-width="1.5"/>
+          <!-- Ống khí quản chính (Thủy tinh trong suốt) -->
+          <rect x="-6" y="-30" width="12" height="65" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+          <!-- Ống nhánh phế quản chữ Y -->
+          <line x1="0" y1="35" x2="-35" y2="70" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+          <line x1="0" y1="35" x2="35" y2="70" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+
+          <!-- 2 QUẢ BÓNG BAY (MÔ PHỎNG 2 LÁ PHỔI) -->
+          <!-- Phổi trái -->
+          <ellipse id="lungLeft" cx="-45" cy="115" rx="25" ry="35" fill="url(#lungGrad)" stroke="#fecaca" stroke-width="1.5" transform="rotate(10 -45 115)"/>
+          <!-- Phổi phải -->
+          <ellipse id="lungRight" cx="45" cy="115" rx="25" ry="35" fill="url(#lungGrad)" stroke="#fecaca" stroke-width="1.5" transform="rotate(-10 45 115)"/>
+
+          <!-- THÀNH BÌNH CHUÔNG THỦY TINH (Lồng ngực) -->
+          <path d="M -24 24 C -30 60 -110 120 -110 260 L 110 260 C 110 120 30 60 24 24 Z" fill="url(#jarGlass)" stroke="#38bdf8" stroke-width="2.5"/>
+
+          <!-- MÀNG CAO SU ĐÁY (CƠ HOÀNH) - BIẾN DẠNG CONG (Direct manipulation) -->
+          <path id="diaphragmPath" d="M -110 260 Q 0 260 110 260 L 110 270 Q 0 270 -110 270 Z" fill="#f59e0b" stroke="#d97706" stroke-width="2"/>
+
+          <!-- TAY KÉO MÀNG CAO SU (Núm kéo cơ hoành) -->
+          <g id="handleGroup" transform="translate(0, 265)" style="cursor:ns-resize;">
+            <line x1="0" y1="0" x2="0" y2="25" stroke="#f59e0b" stroke-width="4"/>
+            <circle cx="0" cy="30" r="10" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+            <polygon points="-4,27 4,27 0,22" fill="#fff"/>
+            <polygon points="-4,33 4,33 0,38" fill="#fff"/>
+          </g>
+
+          <!-- Mũi tên luồng không khí hít vào / thở ra -->
+          <g id="airFlowArrows" opacity="0">
+            <line id="arrowLine" x1="0" y1="-25" x2="0" y2="10" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+            <polygon id="arrowHead" points="-6,10 6,10 0,20" fill="#38bdf8"/>
+          </g>
+        </g>
+
+        <!-- CHỈ DẪN CÁC BỘ PHẬN -->
+        <g font-size="11" fill="#94a3b8">
+          <text x="320" y="20" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">Khí quản (Ống dẫn khí)</text>
+          <line x1="430" y1="165" x2="380" y2="165" stroke="#94a3b8" stroke-dasharray="3,3"/>
+          <text x="435" y="169" fill="#f87171" font-weight="600">Phổi (Bóng bay)</text>
+          <line x1="200" y1="210" x2="230" y2="210" stroke="#94a3b8" stroke-dasharray="3,3"/>
+          <text x="130" y="214" fill="#38bdf8" font-weight="600">Lồng ngực (Bình chuông)</text>
+          <line x1="440" y1="315" x2="390" y2="315" stroke="#94a3b8" stroke-dasharray="3,3"/>
+          <text x="445" y="319" fill="#f59e0b" font-weight="600">Cơ hoành (Màng cao su)</text>
+        </g>
+
+        <text id="guidePrompt" x="320" y="420" fill="#facc15" font-size="13" font-weight="600" text-anchor="middle">👆 Kéo núm màng cao su xuống dưới để HÍT VÀO, đẩy lên trên để THỞ RA</text>
+      </svg>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>🫁 Điều khiển nhịp hô hấp</h3>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Vị trí cơ hoành:</span><b id="lblDiaphragm">Bình thường (Cân bằng)</b></div>
+          <input type="range" id="sliderDiaphragm" min="-40" max="50" value="0" step="1">
+        </div>
+        <div class="btn-grid">
+          <button class="btn" id="btnInhale" data-active="false">💨 Hít vào (Cơ hoành hạ)</button>
+          <button class="btn" id="btnExhale" data-active="false">😮‍💨 Thở ra (Cơ hoành nâng)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Thông số sinh lí hô hấp</h3>
+        <div class="data-box">
+          <div class="data-line"><span>Cử động hô hấp:</span><b id="valAction">Nghỉ ngơi</b></div>
+          <div class="data-line"><span>Thể tích lồng ngực:</span><b id="valChestVol">Trung bình</b></div>
+          <div class="data-line"><span>Áp suất trong khoang:</span><b id="valPressure">Bằng khí quyển</b></div>
+          <div class="data-line"><span>Thể tích 2 lá phổi:</span><b id="valLungVol">Bình thường</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📖 Cơ chế hoạt động của phổi</h3>
+        <p style="font-size:12.5px; line-height:1.55; margin:0; color:var(--ink-soft);">
+          • <b>Hít vào</b>: Cơ liên sườn và cơ hoành co → cơ hoành hạ thấp → thể tích lồng ngực tăng → áp suất giảm thấp hơn khí quyển → không khí tràn vào làm phổi căng phồng.<br>
+          • <b>Thở ra</b>: Cơ hoành dãn nâng lên hình vòm → thể tích lồng ngực giảm → áp suất tăng cao hơn khí quyển → đẩy khí trong phổi ra ngoài.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="quiz-section">
+    <div class="quiz-q">
+      <p>Câu 1: Trong mô hình cơ học hoạt động của phổi, bộ phận nào đóng vai trò tương ứng với cơ hoành của cơ thể người?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">A. Ống thuỷ tinh chữ Y</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">B. Thân bình chuông</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">C. Màng cao su ở đáy bình chuông</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. Hai quả bóng bay nhỏ</button>
+      </div>
+    </div>
+    <div class="quiz-q">
+      <p>Câu 2: Khi cơ hoành co (hạ thấp xuống), sự biến đổi thể tích lồng ngực và áp suất không khí trong phổi diễn ra như thế nào?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">A. Thể tích lồng ngực tăng lên, áp suất trong phổi giảm xuống giúp hít khí vào</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">B. Thể tích lồng ngực giảm, áp suất tăng giúp đẩy khí ra</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. Cả thể tích và áp suất đều không thay đổi</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. Phổi xẹp lại hoàn toàn</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="manifest">
+{
+  "id": "sh8-mo-hinh-phoi-ho-hap",
+  "subject": "sinh-hoc",
+  "grade": 8,
+  "title": "Mô hình cơ chế hoạt động của phổi",
+  "sgk_ref": "KHTN 8 — KNTT, Bài 31",
+  "objective": "Mô phỏng cơ chế cử động hô hấp (hít vào - thở ra) qua sự co dãn của cơ hoành và biến thiên thể tích lồng ngực.",
+  "controls": ["Kéo thả màng cao su cơ hoành", "Thanh trượt độ võng cơ hoành", "Nút bấm Hít vào / Thở ra"],
+  "outputs": ["Hình dạng màng cơ hoành", "Độ phồng của 2 lá phổi", "Trạng thái áp suất và cử động hô hấp"],
+  "status": "ready"
+}
+</script>
+
+<script>
+  let diaphragmOffset = 0; // -40 (vòm lên cao -> thở ra) đến +50 (hạ thấp xuống -> hít vào)
+  const diaphragmPath = document.getElementById('diaphragmPath');
+  const handleGroup = document.getElementById('handleGroup');
+  const lungLeft = document.getElementById('lungLeft');
+  const lungRight = document.getElementById('lungRight');
+  const airFlowArrows = document.getElementById('airFlowArrows');
+  const arrowHead = document.getElementById('arrowHead');
+  const arrowLine = document.getElementById('arrowLine');
+  const guidePrompt = document.getElementById('guidePrompt');
+
+  const lblDiaphragm = document.getElementById('lblDiaphragm');
+  const sliderDiaphragm = document.getElementById('sliderDiaphragm');
+  const valAction = document.getElementById('valAction');
+  const valChestVol = document.getElementById('valChestVol');
+  const valPressure = document.getElementById('valPressure');
+  const valLungVol = document.getElementById('valLungVol');
+
+  const btnInhale = document.getElementById('btnInhale');
+  const btnExhale = document.getElementById('btnExhale');
+
+  function updateRespiratoryState() {
+    // Cập nhật đường cong màng cao su: điểm uốn tại (0, 260 + diaphragmOffset)
+    const curveY = 260 + diaphragmOffset;
+    diaphragmPath.setAttribute('d', `M -110 260 Q 0 ${curveY} 110 260 L 110 270 Q 0 ${curveY + 10} -110 270 Z`);
+    handleGroup.setAttribute('transform', `translate(0, ${curveY + 5})`);
+
+    // Bán kính quả bóng bay (phổi)
+    // Bình thường rx=25, ry=35
+    // Hít vào (offset > 0): rx tăng lên tới 38, ry tăng lên tới 50
+    // Thở ra (offset < 0): rx giảm xuống 14, ry giảm xuống 22
+    const scaleFactor = 1 + (diaphragmOffset / 70);
+    const newRx = Math.max(12, Math.min(42, 25 * scaleFactor));
+    const newRy = Math.max(20, Math.min(55, 35 * scaleFactor));
+
+    lungLeft.setAttribute('rx', newRx.toFixed(1));
+    lungLeft.setAttribute('ry', newRy.toFixed(1));
+    lungRight.setAttribute('rx', newRx.toFixed(1));
+    lungRight.setAttribute('ry', newRy.toFixed(1));
+
+    if (diaphragmOffset > 10) {
+      lblDiaphragm.textContent = `Hạ thấp (${diaphragmOffset}px) — Cơ hoành co`;
+      lblDiaphragm.style.color = '#10b981';
+      valAction.textContent = 'HÍT VÀO (Không khí tràn vào phổi)';
+      valAction.style.color = '#10b981';
+      valChestVol.textContent = 'Tăng tối đa';
+      valPressure.textContent = 'Giảm (< Áp suất khí quyển)';
+      valLungVol.textContent = 'Phổi căng phồng';
+
+      airFlowArrows.setAttribute('opacity', '1');
+      arrowLine.setAttribute('y1', '-25');
+      arrowLine.setAttribute('y2', '10');
+      arrowHead.setAttribute('points', '-6,10 6,10 0,20');
+      arrowHead.setAttribute('fill', '#38bdf8');
+      guidePrompt.textContent = '💨 Đang HÍT VÀO: Không khí bên ngoài tràn vào làm 2 lá phổi căng phồng!';
+    } else if (diaphragmOffset < -10) {
+      lblDiaphragm.textContent = `Nâng cao hình vòm (${diaphragmOffset}px) — Cơ hoành dãn`;
+      lblDiaphragm.style.color = '#f59e0b';
+      valAction.textContent = 'THỞ RA (Ép khí trong phổi ra ngoài)';
+      valAction.style.color = '#f59e0b';
+      valChestVol.textContent = 'Thu hẹp lại';
+      valPressure.textContent = 'Tăng (> Áp suất khí quyển)';
+      valLungVol.textContent = 'Phổi xẹp xuống';
+
+      airFlowArrows.setAttribute('opacity', '1');
+      arrowLine.setAttribute('y1', '10');
+      arrowLine.setAttribute('y2', '-25');
+      arrowHead.setAttribute('points', '-6,-15 6,-15 0,-25');
+      arrowHead.setAttribute('fill', '#fb923c');
+      guidePrompt.textContent = '😮‍💨 Đang THỞ RA: Cơ hoành nâng lên ép thể tích giảm, tống khí ra ngoài!';
+    } else {
+      lblDiaphragm.textContent = 'Bình thường (Cân bằng)';
+      lblDiaphragm.style.color = 'var(--ink)';
+      valAction.textContent = 'Trạng thái chuyển tiếp';
+      valAction.style.color = 'var(--ink)';
+      valChestVol.textContent = 'Bình thường';
+      valPressure.textContent = 'Cân bằng khí quyển';
+      valLungVol.textContent = 'Kích thước chuẩn';
+      airFlowArrows.setAttribute('opacity', '0');
+      guidePrompt.textContent = '👆 Kéo núm màng cao su xuống dưới để HÍT VÀO, đẩy lên trên để THỞ RA';
+    }
+  }
+
+  sliderDiaphragm.addEventListener('input', (e) => {
+    diaphragmOffset = parseInt(e.target.value);
+    updateRespiratoryState();
+  });
+
+  btnInhale.addEventListener('click', () => {
+    diaphragmOffset = 45;
+    sliderDiaphragm.value = 45;
+    btnInhale.setAttribute('data-active', 'true');
+    btnExhale.setAttribute('data-active', 'false');
+    updateRespiratoryState();
+  });
+
+  btnExhale.addEventListener('click', () => {
+    diaphragmOffset = -35;
+    sliderDiaphragm.value = -35;
+    btnExhale.setAttribute('data-active', 'true');
+    btnInhale.setAttribute('data-active', 'false');
+    updateRespiratoryState();
+  });
+
+  // Pointer Events thao tác trực tiếp trên núm màng cao su (Direct manipulation)
+  let isDraggingHandle = false;
+  handleGroup.addEventListener('pointerdown', (e) => {
+    isDraggingHandle = true;
+    handleGroup.setPointerCapture(e.pointerId);
+  });
+  handleGroup.addEventListener('pointermove', (e) => {
+    if (!isDraggingHandle) return;
+    diaphragmOffset = Math.max(-40, Math.min(50, diaphragmOffset + e.movementY));
+    sliderDiaphragm.value = Math.round(diaphragmOffset);
+    updateRespiratoryState();
+  });
+  handleGroup.addEventListener('pointerup', (e) => {
+    if (isDraggingHandle) {
+      isDraggingHandle = false;
+      handleGroup.releasePointerCapture(e.pointerId);
+    }
+  });
+
+  function checkQuiz(btn, isCorrect) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.quiz-opt').forEach(b => {
+      b.disabled = true;
+      if (b === btn) {
+        b.classList.add(isCorrect ? 'correct' : 'wrong');
+      }
+    });
+  }
+
+  updateRespiratoryState();
+</script>
+</body>
+</html>

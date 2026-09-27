@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Thư viện thí nghiệm ảo KHTN THCS</title>
-<meta name="description" content="Mô phỏng 2.5D các thí nghiệm trong SGK Khoa học tự nhiên THCS, bộ Kết nối tri thức với cuộc sống — thực hành trực tiếp trên trình duyệt.">
+<meta name="description" content="Thư viện thí nghiệm ảo KHTN THCS — Mô phỏng 2.5D thực hành trên trình duyệt theo SGK Khoa học tự nhiên Bộ Kết nối tri thức với cuộc sống.">
 <meta property="og:title" content="Thư viện thí nghiệm ảo KHTN THCS">
-<meta property="og:description" content="Mô phỏng 2.5D các thí nghiệm trong SGK Khoa học tự nhiên THCS, bộ Kết nối tri thức với cuộc sống — thực hành trực tiếp trên trình duyệt.">
+<meta property="og:description" content="Thư viện thí nghiệm ảo KHTN THCS — Mô phỏng 2.5D thực hành trên trình duyệt theo SGK Khoa học tự nhiên Bộ Kết nối tri thức với cuộc sống.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,120 +44,960 @@
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  h1,h2{ font-family:'Baloo 2', sans-serif; }
-  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  h1,h2,h3,h4{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1160px; margin:0 auto; padding:18px 18px 60px; }
 
+  /* Banner chỉ để lại tiêu đề gọn gàng đúng yêu cầu */
   .banner{
     position:relative; overflow:hidden;
-    background: linear-gradient(120deg, var(--purple-1), var(--purple-2));
-    border-radius:26px; padding:30px 26px; color:#fff;
-    box-shadow: 0 14px 30px -12px rgba(123,31,162,0.55);
+    background: linear-gradient(125deg, #6a1b9a 0%, #8e24aa 50%, #c2185b 100%);
+    border-radius:24px; padding:22px 28px; color:#fff;
+    box-shadow: 0 12px 28px -12px rgba(106,27,154,0.5);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
   }
-  .banner h1{ margin:0 0 6px; font-size:clamp(22px,4vw,30px); }
-  .banner p{ margin:0; font-size:14px; opacity:.92; max-width:560px; }
+  .banner h1{ margin:0; font-size:clamp(22px,3.8vw,30px); font-weight:800; letter-spacing:-0.3px; }
 
-  .filters{ display:flex; gap:8px; flex-wrap:wrap; margin:22px 0 18px; }
-  .filter-btn{
-    border:1.5px solid var(--panel-border); background:var(--panel-bg); color:var(--ink);
-    padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
-    font-family:'Inter';
+  .filter-section{
+    margin:20px 0;
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    border-radius:20px;
+    padding:18px 20px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+    display:flex; flex-direction:column; gap:13px;
   }
+  .filter-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .filter-label{ font-size:13px; font-weight:700; color:var(--ink-soft); min-width:92px; display:inline-flex; align-items:center; gap:5px; }
+  .filter-chips{ display:flex; gap:8px; flex-wrap:wrap; }
+  .filter-btn{
+    border:1.5px solid var(--panel-border); background:var(--paper); color:var(--ink);
+    padding:5px 13px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter'; transition: all .15s ease;
+  }
+  .filter-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
   .filter-btn[aria-pressed="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
 
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; }
-  .card{
-    display:block; text-decoration:none; color:inherit;
-    background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:18px;
-    padding:16px; box-shadow: 0 10px 22px -14px var(--panel-shadow);
-    transition: transform .12s ease;
+  .search-row{
+    display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    padding-top:10px; border-top:1px dashed var(--panel-border);
   }
-  .card:hover{ transform: translateY(-2px); }
-  .card .icon{ font-size:26px; }
-  .card h3{ margin:10px 0 4px; font-size:15.5px; font-family:'Baloo 2'; }
-  .card .ref{ font-size:12px; color:var(--ink-faint); margin:0 0 10px; }
+  .search-box{
+    position:relative; flex:1; min-width:240px; max-width:440px;
+  }
+  .search-box input{
+    width:100%; padding:8px 14px 8px 34px;
+    border-radius:999px; border:1.5px solid var(--panel-border);
+    background:var(--paper); color:var(--ink); font-family:'Inter'; font-size:13.5px;
+    outline:none; transition: border-color .15s;
+  }
+  .search-box input:focus{ border-color:var(--purple-1); }
+  .search-box span.search-icon{
+    position:absolute; left:11px; top:50%; transform:translateY(-50%);
+    font-size:14px; color:var(--ink-faint); pointer-events:none;
+  }
+  .view-options{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-soft); }
+  .view-toggle-btn{
+    background:var(--paper); border:1.5px solid var(--panel-border); border-radius:8px;
+    padding:5px 10px; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer;
+  }
+  .view-toggle-btn[data-active="true"]{ background:var(--chip-bg); border-color:var(--chip-ink); color:var(--chip-ink); }
+
+  /* Nhóm danh mục */
+  .category-group{ margin-top:26px; }
+  .category-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-bottom:10px; border-bottom:2px solid var(--panel-border); margin-bottom:16px;
+  }
+  .category-title{ display:flex; align-items:center; gap:10px; margin:0; font-size:19px; color:var(--ink); }
+  .category-badge{
+    background:rgba(123,31,162,0.12); color:var(--purple-1);
+    font-size:12px; font-weight:700; padding:3px 9px; border-radius:999px; font-family:'Inter';
+  }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:18px; }
+  .card{
+    display:flex; flex-direction:column; justify-content:space-between;
+    text-decoration:none; color:inherit;
+    background:var(--panel-bg); border:1.5px solid var(--panel-border); border-radius:20px;
+    padding:18px; box-shadow: 0 8px 20px -12px var(--panel-shadow);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .card:hover{
+    transform: translateY(-4px);
+    box-shadow: 0 16px 28px -12px var(--panel-shadow);
+    border-color:var(--purple-1);
+  }
+  .card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .card .icon-box{
+    width:46px; height:46px; border-radius:14px; background:var(--chip-bg);
+    display:flex; align-items:center; justify-content:center; font-size:24px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); flex-shrink:0;
+  }
+  .card-lesson-badge{
+    font-size:11px; font-weight:700; color:var(--purple-1);
+    background:rgba(123,31,162,0.1); padding:4px 9px; border-radius:999px;
+  }
+  .card h3{ margin:6px 0 6px; font-size:16.5px; line-height:1.3; font-family:'Baloo 2'; color:var(--ink); font-weight:700; }
+  .card .desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.45; margin:0 0 14px; flex-grow:1; }
+  .card .ref{ font-size:11.5px; color:var(--ink-faint); margin:0 0 12px; font-weight:500; }
+  
+  .card-footer{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding-top:12px; border-top:1px solid var(--paper-edge);
+  }
   .card .tags{ display:flex; gap:6px; flex-wrap:wrap; }
-  .card .tag{ background:var(--chip-bg); color:var(--chip-ink); font-size:11.5px; padding:3px 9px; border-radius:999px; font-weight:600; }
-  .empty{ text-align:center; color:var(--ink-faint); padding:40px 0; font-size:14px; }
+  .card .tag{ background:var(--chip-bg); color:var(--chip-ink); font-size:11px; padding:3px 8px; border-radius:999px; font-weight:600; }
+  .card .tag.grade{ background:rgba(123,31,162,0.12); color:var(--purple-1); }
+  .card .tag.subject-vl{ background:#e3f2fd; color:#1565c0; }
+  .card .tag.subject-hh{ background:#fff3e0; color:#e65100; }
+  .card .tag.subject-sh{ background:#e8f5e9; color:#2e7d32; }
+
+  .card-action{
+    font-size:12px; font-weight:700; color:var(--purple-1);
+    display:inline-flex; align-items:center; gap:3px; white-space:nowrap;
+  }
+  .card:hover .card-action{ text-decoration:underline; }
+
+  .empty{ text-align:center; color:var(--ink-faint); padding:60px 0; font-size:15px; }
+  .empty-icon{ font-size:40px; margin-bottom:10px; }
 </style>
 </head>
 <body>
 <div class="shell">
+  <!-- Banner chỉ giữ lại tiêu đề đúng yêu cầu -->
   <div class="banner">
     <h1>Thư viện thí nghiệm ảo KHTN THCS</h1>
-    <p>Mô phỏng 2.5D các thí nghiệm trong SGK Khoa học tự nhiên, bộ Kết nối tri thức với cuộc sống — thực hành trực tiếp trên trình duyệt.</p>
   </div>
 
-  <div class="filters" id="filters">
-    <button class="filter-btn" data-filter="all" aria-pressed="true">Tất cả</button>
-    <button class="filter-btn" data-filter="vat-ly" aria-pressed="false">Vật lí</button>
-    <button class="filter-btn" data-filter="hoa-hoc" aria-pressed="false">Hoá học</button>
-    <button class="filter-btn" data-filter="sinh-hoc" aria-pressed="false">Sinh học</button>
+  <!-- Bảng lọc và tìm kiếm -->
+  <div class="filter-section">
+    <!-- Khối lọc theo Lớp -->
+    <div class="filter-row">
+      <span class="filter-label">📚 Khối lớp:</span>
+      <div class="filter-chips" id="gradeFilters">
+        <button class="filter-btn" data-grade="all" aria-pressed="true">Tất cả các lớp</button>
+        <button class="filter-btn" data-grade="6" aria-pressed="false">Lớp 6</button>
+        <button class="filter-btn" data-grade="7" aria-pressed="false">Lớp 7</button>
+        <button class="filter-btn" data-grade="8" aria-pressed="false">Lớp 8</button>
+        <button class="filter-btn" data-grade="9" aria-pressed="false">Lớp 9</button>
+      </div>
+    </div>
+
+    <!-- Khối lọc theo Phân môn -->
+    <div class="filter-row">
+      <span class="filter-label">🔬 Phân môn:</span>
+      <div class="filter-chips" id="subjectFilters">
+        <button class="filter-btn" data-subject="all" aria-pressed="true">Tất cả môn</button>
+        <button class="filter-btn" data-subject="vat-ly" aria-pressed="false">⚛️ Vật lí</button>
+        <button class="filter-btn" data-subject="hoa-hoc" aria-pressed="false">🧪 Hoá học</button>
+        <button class="filter-btn" data-subject="sinh-hoc" aria-pressed="false">🌿 Sinh học</button>
+      </div>
+    </div>
+
+    <!-- Khối lọc theo Danh mục chủ đề -->
+    <div class="filter-row">
+      <span class="filter-label">📂 Danh mục:</span>
+      <div class="filter-chips" id="categoryFilters">
+        <button class="filter-btn" data-category="all" aria-pressed="true">Tất cả danh mục</button>
+        <button class="filter-btn" data-category="do-luong" aria-pressed="false">📏 Mở đầu &amp; Đo lường</button>
+        <button class="filter-btn" data-category="chat-nguyen-tu" aria-pressed="false">⚛️ Chất &amp; Nguyên tử</button>
+        <button class="filter-btn" data-category="vat-lieu-lien-ket" aria-pressed="false">🔗 Vật liệu &amp; Liên kết hoá học</button>
+        <button class="filter-btn" data-category="toc-do-chuyen-dong" aria-pressed="false">⏱️ Tốc độ, Lực &amp; Đòn bẩy</button>
+        <button class="filter-btn" data-category="ap-suat-co-nang" aria-pressed="false">⚖️ Khối lượng riêng, Áp suất &amp; Cơ năng</button>
+        <button class="filter-btn" data-category="song-am" aria-pressed="false">🔊 Sóng âm &amp; Âm thanh</button>
+        <button class="filter-btn" data-category="anh-sang" aria-pressed="false">💡 Ánh sáng &amp; Quang học</button>
+        <button class="filter-btn" data-category="dien-tu-truong" aria-pressed="false">🧲 Điện học &amp; Từ trường</button>
+        <button class="filter-btn" data-category="phan-ung-hoa-hoc" aria-pressed="false">🧪 Phản ứng hoá học &amp; Hợp chất</button>
+        <button class="filter-btn" data-category="sinh-hoc" aria-pressed="false">🌱 Sinh học, Di truyền &amp; Sinh thái</button>
+        <button class="filter-btn" data-category="trai-dat-bau-troi" aria-pressed="false">🪐 Trái Đất &amp; Bầu trời</button>
+      </div>
+    </div>
+
+    <!-- Thanh tìm kiếm & Chế độ xem -->
+    <div class="search-row">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Tìm kiếm theo tên bài, số bài, từ khoá (vd: âm thoa, quang hợp, nam châm, thấu kính, men-đen)..." autocomplete="off">
+      </div>
+      <div class="view-options">
+        <span>Chế độ hiển thị:</span>
+        <button class="view-toggle-btn" id="btnGroupView" data-active="true">📂 Gom nhóm danh mục</button>
+        <button class="view-toggle-btn" id="btnGridView" data-active="false">🔲 Lưới liên tục</button>
+      </div>
+    </div>
   </div>
 
-  <div class="grid" id="grid"></div>
-  <p class="empty" id="emptyMsg" style="display:none;">Chưa có thí nghiệm nào ở mục này.</p>
+  <!-- Khu vực hiển thị danh mục / danh sách bài -->
+  <div id="contentArea"></div>
+
+  <!-- Thông báo rỗng -->
+  <div class="empty" id="emptyMsg" style="display:none;">
+    <div class="empty-icon">🔎</div>
+    <div>Không tìm thấy thí nghiệm nào phù hợp với bộ lọc hiện tại.</div>
+  </div>
 </div>
 
 <script>
   /*
-   * === DANH SÁCH THÍ NGHIỆM ===
-   * Mỗi khi thêm 1 thí nghiệm mới, CHỈ thêm 1 phần tử vào mảng này.
-   * Không sửa/xoá các phần tử đã có, không sửa phần code phía dưới.
+   * === CƠ SỞ DỮ LIỆU THÍ NGHIỆM KHTN THCS (KNTT) ===
+   * Đầy đủ các bài thực hành, mô phỏng SGK KHTN 6, 7, 8 và 9
    */
+  const CATEGORIES = {
+    "do-luong": {
+      name: "Mở đầu & Các phép đo lường",
+      chapter: "KHTN 6, 7 — Mở đầu",
+      icon: "📏"
+    },
+    "chat-nguyen-tu": {
+      name: "Chất quanh ta, Thể & Cấu tạo nguyên tử",
+      chapter: "KHTN 6 (Chương II) & KHTN 7 (Chương I)",
+      icon: "⚛️"
+    },
+    "vat-lieu-lien-ket": {
+      name: "Vật liệu, Oxygen & Liên kết hoá học",
+      chapter: "KHTN 6 (Chương III, IV) & KHTN 7 (Chương II)",
+      icon: "🔗"
+    },
+    "toc-do-chuyen-dong": {
+      name: "Tốc độ, Chuyển động & Đòn bẩy",
+      chapter: "KHTN 6, 7 & KHTN 8 (Chương IV)",
+      icon: "⏱️"
+    },
+    "ap-suat-co-nang": {
+      name: "Khối lượng riêng, Áp suất & Cơ năng",
+      chapter: "KHTN 8 (Chương III) & KHTN 9 (Chương I)",
+      icon: "⚖️"
+    },
+    "song-am": {
+      name: "Sóng âm & Độ to, độ cao của âm",
+      chapter: "KHTN 7 — Chương IV",
+      icon: "🔊"
+    },
+    "anh-sang": {
+      name: "Ánh sáng, Quang học & Lăng kính",
+      chapter: "KHTN 7 (Chương V) & KHTN 9 (Chương II)",
+      icon: "💡"
+    },
+    "dien-tu-truong": {
+      name: "Điện học, Từ trường & Cảm ứng điện từ",
+      chapter: "KHTN 7 (Chương VI), KHTN 8 & KHTN 9",
+      icon: "🧲"
+    },
+    "phan-ung-hoa-hoc": {
+      name: "Phản ứng hoá học, Acid - Base & Hợp chất",
+      chapter: "KHTN 8 (Chương I, II) & KHTN 9 (Chương VI, VIII)",
+      icon: "🧪"
+    },
+    "sinh-hoc": {
+      name: "Sinh học, Trao đổi chất, Di truyền & Sinh thái",
+      chapter: "KHTN 6, 7, 8 & KHTN 9",
+      icon: "🌱"
+    },
+    "trai-dat-bau-troi": {
+      name: "Trái Đất và bầu trời (Thiên văn)",
+      chapter: "KHTN 6 — Chương XI",
+      icon: "🪐"
+    }
+  };
+
   const EXPERIMENTS = [
+    // ==================== LỚP 6 ====================
     {
       id: "vl6-do-chieu-dai",
-      title: "Đo chiều dài",
+      title: "Đo chiều dài vật thể",
       subject: "vat-ly",
       icon: "📏",
       grade: 6,
-      sgk_ref: "KHTN 6 - KNTT, Bài 5",
+      category: "do-luong",
+      lesson: "Bài 5",
+      sgk_ref: "KHTN 6 — KNTT, Bài 5",
+      desc: "Sử dụng thước kẻ có vạch chia, xác định GHĐ & ĐCNN, khắc phục sai số thị giác (parallax error) khi quan sát vuông góc.",
       file: "experiments/vl6-do-chieu-dai.html"
     },
     {
       id: "vl6-do-khoi-luong",
-      title: "Đo khối lượng",
+      title: "Đo khối lượng bằng cân Roberval",
       subject: "vat-ly",
       icon: "⚖️",
       grade: 6,
-      sgk_ref: "KHTN 6 - KNTT, Bài 6",
+      category: "do-luong",
+      lesson: "Bài 6",
+      sgk_ref: "KHTN 6 — KNTT, Bài 6",
+      desc: "Điều chỉnh ốc cân bằng đòn cân, đặt vật lên đĩa trái và gắp các quả cân 10g, 20g, 50g lên đĩa phải đến khi kim chỉ đúng vạch số 0.",
       file: "experiments/vl6-do-khoi-luong.html"
+    },
+    {
+      id: "vl6-do-nhiet-do",
+      title: "Đo nhiệt độ bằng nhiệt kế",
+      subject: "vat-ly",
+      icon: "🌡️",
+      grade: 6,
+      category: "do-luong",
+      lesson: "Bài 8",
+      sgk_ref: "KHTN 6 — KNTT, Bài 8",
+      desc: "Quan sát sự nở vì nhiệt của chất lỏng trong nhiệt kế thủy ngân/rượu khi đo cốc nước đá (0°C), nước ấm (37°C) và nước sôi (100°C).",
+      file: "experiments/vl6-do-nhiet-do.html"
+    },
+    {
+      id: "hh6-chuyen-the-va-nen",
+      title: "Sự chuyển thể và tính nén được của các chất",
+      subject: "hoa-hoc",
+      icon: "🧊",
+      grade: 6,
+      category: "chat-nguyen-tu",
+      lesson: "Bài 9",
+      sgk_ref: "KHTN 6 — KNTT, Bài 9",
+      desc: "Thí nghiệm nén pittông chứa chất rắn, chất lỏng, chất khí và khảo sát quá trình nóng chảy, đông đặc, bay hơi, ngưng tụ.",
+      file: "experiments/hh6-chuyen-the-va-nen.html"
+    },
+    {
+      id: "hh6-thanh-phan-oxygen",
+      title: "Xác định phần trăm thể tích Oxygen trong không khí",
+      subject: "hoa-hoc",
+      icon: "🕯️",
+      grade: 6,
+      category: "vat-lieu-lien-ket",
+      lesson: "Bài 11",
+      sgk_ref: "KHTN 6 — KNTT, Bài 11",
+      desc: "Đốt nến trong cốc úp ngược trên đĩa nước vôi trong, quan sát nến tắt và cột nước dâng lên chiếm đúng 1/5 thể tích cốc (21% Oxygen).",
+      file: "experiments/hh6-thanh-phan-oxygen.html"
+    },
+    {
+      id: "hh6-tinh-chat-vat-lieu",
+      title: "Khả năng dẫn điện của vật liệu",
+      subject: "hoa-hoc",
+      icon: "⚡",
+      grade: 6,
+      category: "vat-lieu-lien-ket",
+      lesson: "Bài 12",
+      sgk_ref: "KHTN 6 — KNTT, Bài 12",
+      desc: "Lắp mạch điện thử nghiệm kẹp mẫu vật liệu: kim loại (đồng, nhôm dẫn điện tốt - đèn sáng), gỗ, cao su, nhựa, thuỷ tinh (cách điện).",
+      file: "experiments/hh6-tinh-chat-vat-lieu.html"
+    },
+    {
+      id: "hh6-tach-chat",
+      title: "Tách chất ra khỏi hỗn hợp (Lọc & Cô cạn)",
+      subject: "hoa-hoc",
+      icon: "⚗️",
+      grade: 6,
+      category: "vat-lieu-lien-ket",
+      lesson: "Bài 17",
+      sgk_ref: "KHTN 6 — KNTT, Bài 17",
+      desc: "Thực hành phương pháp lọc qua phễu giấy lọc để tách cát không tan, sau đó đun nóng cô cạn dung dịch muối ăn thu tinh thể kết tinh.",
+      file: "experiments/hh6-tach-chat.html"
+    },
+    {
+      id: "sh6-kinh-hien-vi-te-bao",
+      title: "Quan sát tế bào vảy hành bằng kính hiển vi",
+      subject: "sinh-hoc",
+      icon: "🔬",
+      grade: 6,
+      category: "sinh-hoc",
+      lesson: "Bài 21",
+      sgk_ref: "KHTN 6 — KNTT, Bài 21",
+      desc: "Các bước tách lớp biểu bì vảy hành, nhuộm xanh methylene, đặt lên lam kính và điều chỉnh ốc vi cấp phóng đại 100x – 400x.",
+      file: "experiments/sh6-kinh-hien-vi-te-bao.html"
+    },
+    {
+      id: "vl6-bien-dang-lo-xo",
+      title: "Biến dạng của lò xo & Lực đàn hồi",
+      subject: "vat-ly",
+      icon: "🪝",
+      grade: 6,
+      category: "toc-do-chuyen-dong",
+      lesson: "Bài 42",
+      sgk_ref: "KHTN 6 — KNTT, Bài 42",
+      desc: "Treo các quả nặng 50g, 100g, 150g lên lò xo, đo độ dãn Δl tương ứng và rút ra định luật tỉ lệ thuận giữa độ dãn và khối lượng treo.",
+      file: "experiments/vl6-bien-dang-lo-xo.html"
+    },
+    {
+      id: "vl6-luc-ma-sat",
+      title: "Đo lực ma sát trượt và ma sát nghỉ",
+      subject: "vat-ly",
+      icon: "📦",
+      grade: 6,
+      category: "toc-do-chuyen-dong",
+      lesson: "Bài 44",
+      sgk_ref: "KHTN 6 — KNTT, Bài 44",
+      desc: "Dùng lực kế kéo khối gỗ chuyển động đều trên mặt bàn gỗ nhẵn và mặt nhám ráp, ghi nhận số chỉ lực kế để so sánh lực ma sát.",
+      file: "experiments/vl6-luc-ma-sat.html"
+    },
+    {
+      id: "vl6-he-mat-troi",
+      title: "Mô hình Hệ Mặt Trời và các hành tinh",
+      subject: "vat-ly",
+      icon: "🪐",
+      grade: 6,
+      category: "trai-dat-bau-troi",
+      lesson: "Bài 53",
+      sgk_ref: "KHTN 6 — KNTT, Bài 53",
+      desc: "Khám phá vị trí, kích thước tỉ đối và chu kỳ quay của 8 hành tinh quanh Mặt Trời (Thủy, Kim, Trái Đất, Hỏa, Mộc, Thổ, Thiên Vương, Hải Vương).",
+      file: "experiments/vl6-he-mat-troi.html"
+    },
+    {
+      id: "vl6-cac-pha-mat-trang",
+      title: "Các pha của Mặt Trăng (Tuần trăng)",
+      subject: "vat-ly",
+      icon: "🌒",
+      grade: 6,
+      category: "trai-dat-bau-troi",
+      lesson: "Bài 54",
+      sgk_ref: "KHTN 6 — KNTT, Bài 54",
+      desc: "Tương tác quay Mặt Trăng quanh Trái Đất để quan sát góc chiếu Mặt Trời và hình ảnh trăng nhìn từ Trái Đất (Trăng tròn, Khuyết, Bán nguyệt, Không trăng).",
+      file: "experiments/vl6-cac-pha-mat-trang.html"
+    },
+
+    // ==================== LỚP 7 ====================
+    {
+      id: "hh7-mo-hinh-nguyen-tu",
+      title: "Mô hình nguyên tử Rutherford - Bohr",
+      subject: "hoa-hoc",
+      icon: "⚛️",
+      grade: 7,
+      category: "chat-nguyen-tu",
+      lesson: "Bài 2 & 4",
+      sgk_ref: "KHTN 7 — KNTT, Bài 2 & 4",
+      desc: "Mô phỏng hạt nhân proton, neutron và các electron chuyển động theo từng lớp vỏ quanh hạt nhân, xác định chu kỳ và nhóm Bảng tuần hoàn.",
+      file: "experiments/hh7-mo-hinh-nguyen-tu.html"
+    },
+    {
+      id: "hh7-lien-ket-hoa-hoc",
+      title: "Liên kết hoá học (Ion & Cộng hoá trị)",
+      subject: "hoa-hoc",
+      icon: "🔗",
+      grade: 7,
+      category: "vat-lieu-lien-ket",
+      lesson: "Bài 6",
+      sgk_ref: "KHTN 7 — KNTT, Bài 6",
+      desc: "Khám phá sự hình thành liên kết ion (chuyển giao e giữa Na và Cl) và liên kết cộng hoá trị (dùng chung cặp e trong phân tử H2O).",
+      file: "experiments/hh7-lien-ket-hoa-hoc.html"
+    },
+    {
+      id: "vl7-do-toc-do",
+      title: "Đo tốc độ chuyển động bằng cổng quang điện",
+      subject: "vat-ly",
+      icon: "⏱️",
+      grade: 7,
+      category: "toc-do-chuyen-dong",
+      lesson: "Bài 9",
+      sgk_ref: "KHTN 7 — KNTT, Bài 9",
+      desc: "Thí nghiệm xe lăn trên máng nghiêng ngắt chùm sáng cổng quang điện, đồng hồ hiện số tự động đo thời gian và tính vận tốc v = s / t.",
+      file: "experiments/vl7-do-toc-do.html"
+    },
+    {
+      id: "vl7-do-thi-quang-duong",
+      title: "Đồ thị quãng đường — thời gian (s - t)",
+      subject: "vat-ly",
+      icon: "📈",
+      grade: 7,
+      category: "toc-do-chuyen-dong",
+      lesson: "Bài 10",
+      sgk_ref: "KHTN 7 — KNTT, Bài 10",
+      desc: "Vẽ và phân tích đồ thị s - t của xe ô tô trên quốc lộ theo Bảng 10.1: Phân biệt đoạn thẳng nghiêng (chạy đều) và đoạn nằm ngang (nghỉ ngơi).",
+      file: "experiments/vl7-do-thi-quang-duong.html"
+    },
+    {
+      id: "vl7-truyen-am-chan-khong",
+      title: "Môi trường truyền âm & Bình hút chân không",
+      subject: "vat-ly",
+      icon: "🔔",
+      grade: 7,
+      category: "song-am",
+      lesson: "Bài 12",
+      sgk_ref: "KHTN 7 — KNTT, Bài 12",
+      desc: "Khảo sát sự truyền âm và chứng minh sóng âm không thể truyền trong chân không khi hút hết không khí trong bình chuông báo thức.",
+      file: "experiments/vl7-truyen-am-chan-khong.html"
+    },
+    {
+      id: "vl7-do-to-do-cao-am",
+      title: "Độ to và độ cao của âm (Dao động kí)",
+      subject: "vat-ly",
+      icon: "🔊",
+      grade: 7,
+      category: "song-am",
+      lesson: "Bài 13",
+      sgk_ref: "KHTN 7 — KNTT, Bài 13",
+      desc: "Gõ âm thoa, quan sát sóng trên màn hình dao động kí ảo: Biên độ dao động quyết định độ to (dB), tần số quyết định độ cao bổng/trầm (Hz).",
+      file: "experiments/vl7-do-to-do-cao-am.html"
+    },
+    {
+      id: "vl7-tao-vung-toi",
+      title: "Tia sáng, Vùng tối và Hiện tượng Nhật thực",
+      subject: "vat-ly",
+      icon: "🌑",
+      grade: 7,
+      category: "anh-sang",
+      lesson: "Bài 15",
+      sgk_ref: "KHTN 7 — KNTT, Bài 15",
+      desc: "Khảo sát sự tạo thành vùng tối (nguồn hẹp) và vùng nửa tối (nguồn rộng), giải thích hiện tượng Nhật thực toàn phần và một phần.",
+      file: "experiments/vl7-tao-vung-toi.html"
+    },
+    {
+      id: "vl7-su-phan-xa-anh-sang",
+      title: "Sự phản xạ ánh sáng (Định luật phản xạ)",
+      subject: "vat-ly",
+      icon: "🔴",
+      grade: 7,
+      category: "anh-sang",
+      lesson: "Bài 16",
+      sgk_ref: "KHTN 7 — KNTT, Bài 16",
+      desc: "Chiếu tia sáng tới gương phẳng trên đĩa chia độ, gập nửa bảng kiểm tra mặt phẳng tới và chứng minh góc phản xạ bằng góc tới (i' = i).",
+      file: "experiments/vl7-su-phan-xa-anh-sang.html"
+    },
+    {
+      id: "vl7-anh-guong-phang",
+      title: "Ảnh của vật qua gương phẳng",
+      subject: "vat-ly",
+      icon: "🪞",
+      grade: 7,
+      category: "anh-sang",
+      lesson: "Bài 17",
+      sgk_ref: "KHTN 7 — KNTT, Bài 17",
+      desc: "Thí nghiệm hai cây nến qua tấm kính trong suốt, kiểm chứng ảnh ảo, khoảng cách đối xứng d' = d, chiều cao bằng vật h' = h và chữ Ambulance.",
+      file: "experiments/vl7-anh-guong-phang.html"
+    },
+    {
+      id: "vl7-tu-truong-nam-cham",
+      title: "Từ trường, Từ phổ & Đường sức từ",
+      subject: "vat-ly",
+      icon: "🧲",
+      grade: 7,
+      category: "dien-tu-truong",
+      lesson: "Bài 19",
+      sgk_ref: "KHTN 7 — KNTT, Bài 19",
+      desc: "Rắc mạt sắt tạo từ phổ nam châm thẳng và chữ U, kéo rê kim la bàn kiểm chứng chiều đường sức từ quy ước Ra Bắc Vào Nam.",
+      file: "experiments/vl7-tu-truong-nam-cham.html"
+    },
+    {
+      id: "vl7-nam-cham-dien",
+      title: "Chế tạo nam châm điện đơn giản",
+      subject: "vat-ly",
+      icon: "⚡",
+      grade: 7,
+      category: "dien-tu-truong",
+      lesson: "Bài 20",
+      sgk_ref: "KHTN 7 — KNTT, Bài 20",
+      desc: "Ống dây quấn quanh đinh sắt non: Bật/tắt công tắc, điều chỉnh số quả pin nguồn điện để khảo sát lực từ hút đinh ghim kẹp giấy.",
+      file: "experiments/vl7-nam-cham-dien.html"
+    },
+    {
+      id: "sh7-quang-hop-cay-xanh",
+      title: "Thực hành: Chứng minh quang hợp ở cây xanh",
+      subject: "sinh-hoc",
+      icon: "🍃",
+      grade: 7,
+      category: "sinh-hoc",
+      lesson: "Bài 24",
+      sgk_ref: "KHTN 7 — KNTT, Bài 24",
+      desc: "Bịt băng giấy đen, đun cồn tẩy diệp lục, nhỏ Iodine thử tinh bột (hóa xanh tím) và thu khí Oxygen làm que đóm bùng cháy.",
+      file: "experiments/sh7-quang-hop-cay-xanh.html"
+    },
+    {
+      id: "sh7-ho-hap-thuc-vat",
+      title: "Thực hành: Hô hấp ở thực vật",
+      subject: "sinh-hoc",
+      icon: "🌱",
+      grade: 7,
+      category: "sinh-hoc",
+      lesson: "Bài 27",
+      sgk_ref: "KHTN 7 — KNTT, Bài 27",
+      desc: "Hạt đậu nảy mầm trong chuông thủy tinh hô hấp giải phóng khí CO2 làm vẩn đục cốc nước vôi trong Ca(OH)2.",
+      file: "experiments/sh7-ho-hap-thuc-vat.html"
+    },
+    {
+      id: "sh7-van-chuyen-nuoc-thoat-hoi",
+      title: "Thân vận chuyển nước & Lá thoát hơi nước",
+      subject: "sinh-hoc",
+      icon: "💧",
+      grade: 7,
+      category: "sinh-hoc",
+      lesson: "Bài 32",
+      sgk_ref: "KHTN 7 — KNTT, Bài 32",
+      desc: "Cắm cành cần tây vào cốc nước màu đỏ để quan sát mạch gỗ nhuộm đỏ và trùm túi nilon đọng nước chứng minh lá thoát hơi nước.",
+      file: "experiments/sh7-van-chuyen-nuoc-thoat-hoi.html"
+    },
+
+    // ==================== LỚP 8 ====================
+    {
+      id: "hh8-bao-toan-khoi-luong",
+      title: "Định luật bảo toàn khối lượng",
+      subject: "hoa-hoc",
+      icon: "🧪",
+      grade: 8,
+      category: "phan-ung-hoa-hoc",
+      lesson: "Bài 6",
+      sgk_ref: "KHTN 8 — KNTT, Bài 6",
+      desc: "Trộn dung dịch BaCl₂ và Na₂SO₄ trên cân điện tử: xuất hiện kết tủa trắng BaSO₄ nhưng tổng khối lượng trước và sau phản ứng giữ nguyên.",
+      file: "experiments/hh8-bao-toan-khoi-luong.html"
+    },
+    {
+      id: "hh8-kim-loai-axit",
+      title: "Kim loại tác dụng với Acid (Zn + HCl)",
+      subject: "hoa-hoc",
+      icon: "💥",
+      grade: 8,
+      category: "phan-ung-hoa-hoc",
+      lesson: "Bài 8 & 16",
+      sgk_ref: "KHTN 8 — KNTT, Bài 8 & 16",
+      desc: "Kẽm Zn tan trong dung dịch acid HCl sủi bọt khí H₂, thu khí vào ống nghiệm úp ngược và thử bằng que đóm phát tiếng nổ 'bốp' đặc trưng.",
+      file: "experiments/hh8-kim-loai-axit.html"
+    },
+    {
+      id: "hh8-thang-ph-axit-bazo",
+      title: "Thang pH & Dung dịch Acid - Base",
+      subject: "hoa-hoc",
+      icon: "🌈",
+      grade: 8,
+      category: "phan-ung-hoa-hoc",
+      lesson: "Bài 10",
+      sgk_ref: "KHTN 8 — KNTT, Bài 10",
+      desc: "Nhúng giấy quỳ tím và giấy chỉ thị pH vào dung dịch HCl, NaOH, chanh, giấm, xà phòng; so sánh dải màu chuẩn pH từ 1 đến 14.",
+      file: "experiments/hh8-thang-ph-axit-bazo.html"
+    },
+    {
+      id: "vl8-khoi-luong-rieng",
+      title: "Xác định khối lượng riêng của chất rắn",
+      subject: "vat-ly",
+      icon: "📏",
+      grade: 8,
+      category: "ap-suat-co-nang",
+      lesson: "Bài 14",
+      sgk_ref: "KHTN 8 — KNTT, Bài 14",
+      desc: "Đo khối lượng m bằng cân điện tử, đo thể tích vật V bằng bình chia độ và tính khối lượng riêng D = m / V của khối sắt, nhôm, đồng.",
+      file: "experiments/vl8-khoi-luong-rieng.html"
+    },
+    {
+      id: "vl8-ap-suat-chat-ran",
+      title: "Áp suất trên một bề mặt",
+      subject: "vat-ly",
+      icon: "🧱",
+      grade: 8,
+      category: "ap-suat-co-nang",
+      lesson: "Bài 15",
+      sgk_ref: "KHTN 8 — KNTT, Bài 15",
+      desc: "Đặt khối kim loại trên khay cát mịn theo các diện tích tiếp xúc khác nhau và tăng tải trọng, đo độ lún sâu của cát để rút ra p = F / S.",
+      file: "experiments/vl8-ap-suat-chat-ran.html"
+    },
+    {
+      id: "vl8-luc-day-archimedes",
+      title: "Lực đẩy Archimedes trong chất lỏng",
+      subject: "vat-ly",
+      icon: "⚓",
+      grade: 8,
+      category: "ap-suat-co-nang",
+      lesson: "Bài 17",
+      sgk_ref: "KHTN 8 — KNTT, Bài 17",
+      desc: "Thí nghiệm bình tràn và lực kế: Lực đẩy Archimedes FA = P - F1 đúng bằng trọng lượng phần chất lỏng bị vật chiếm chỗ.",
+      file: "experiments/vl8-luc-day-archimedes.html"
+    },
+    {
+      id: "vl8-don-bay",
+      title: "Tác dụng làm quay của lực — Đòn bẩy",
+      subject: "vat-ly",
+      icon: "⚖️",
+      grade: 8,
+      category: "toc-do-chuyen-dong",
+      lesson: "Bài 18",
+      sgk_ref: "KHTN 8 — KNTT, Bài 18",
+      desc: "Treo các quả cân ở các khoảng cách khác nhau so với trục quay O, kiểm chứng điều kiện cân bằng đòn bẩy F1·d1 = F2·d2.",
+      file: "experiments/vl8-don-bay.html"
+    },
+    {
+      id: "vl8-mach-dien-dong-dien",
+      title: "Mạch điện, Đo Cường độ dòng điện & Hiệu điện thế",
+      subject: "vat-ly",
+      icon: "⚡",
+      grade: 8,
+      category: "dien-tu-truong",
+      lesson: "Bài 21 & 23",
+      sgk_ref: "KHTN 8 — KNTT, Bài 21 & 23",
+      desc: "Khảo sát mạch điện nối tiếp: điều chỉnh nguồn pin, kéo biến trở con chạy, đọc số chỉ Ampe kế (A), Vôn kế (V) và độ sáng đèn.",
+      file: "experiments/vl8-mach-dien-dong-dien.html"
+    },
+    {
+      id: "sh8-mo-hinh-phoi-ho-hap",
+      title: "Mô hình cơ chế hoạt động của phổi",
+      subject: "sinh-hoc",
+      icon: "🫁",
+      grade: 8,
+      category: "sinh-hoc",
+      lesson: "Bài 31",
+      sgk_ref: "KHTN 8 — KNTT, Bài 31",
+      desc: "Kéo thả màng cao su (cơ hoành) của bình chuông lồng ngực để quan sát sự dãn và xẹp của 2 lá phổi tương ứng cử động hít vào và thở ra.",
+      file: "experiments/sh8-mo-hinh-phoi-ho-hap.html"
+    },
+
+    // ==================== LỚP 9 ====================
+    {
+      id: "vl9-bao-toan-co-nang",
+      title: "Động năng, Thế năng & Bảo toàn cơ năng",
+      subject: "vat-ly",
+      icon: "🎯",
+      grade: 9,
+      category: "ap-suat-co-nang",
+      lesson: "Bài 2",
+      sgk_ref: "KHTN 9 — KNTT, Bài 2",
+      desc: "Kéo thả quả nặng con lắc đơn lệch góc, quan sát sự chuyển hoá qua lại giữa thế năng Wt và động năng Wđ với cơ năng bảo toàn W = const.",
+      file: "experiments/vl9-bao-toan-co-nang.html"
+    },
+    {
+      id: "vl9-khuc-xa-anh-sang",
+      title: "Khúc xạ ánh sáng qua khối bán trụ",
+      subject: "vat-ly",
+      icon: "🔴",
+      grade: 9,
+      category: "anh-sang",
+      lesson: "Bài 4",
+      sgk_ref: "KHTN 9 — KNTT, Bài 4",
+      desc: "Chiếu tia laser từ không khí vào khối thuỷ tinh bán trụ, đo góc tới i và góc khúc xạ r trên đĩa chia độ, kiểm chứng định luật khúc xạ.",
+      file: "experiments/vl9-khuc-xa-anh-sang.html"
+    },
+    {
+      id: "vl9-thau-kinh-hoi-tu",
+      title: "Thấu kính hội tụ & Sự tạo ảnh",
+      subject: "vat-ly",
+      icon: "🔍",
+      grade: 9,
+      category: "anh-sang",
+      lesson: "Bài 6",
+      sgk_ref: "KHTN 9 — KNTT, Bài 6",
+      desc: "Dịch chuyển cây nến trước thấu kính hội tụ (f = 10cm), dựng đường truyền 2 tia sáng đặc biệt, quan sát ảnh thật ngược chiều hoặc ảnh ảo cùng chiều.",
+      file: "experiments/vl9-thau-kinh-hoi-tu.html"
+    },
+    {
+      id: "vl9-tan-sac-anh-sang",
+      title: "Sự tán sắc ánh sáng qua lăng kính",
+      subject: "vat-ly",
+      icon: "🌈",
+      grade: 9,
+      category: "anh-sang",
+      lesson: "Bài 8",
+      sgk_ref: "KHTN 9 — KNTT, Bài 8",
+      desc: "Chiếu chùm ánh sáng trắng qua lăng kính tam giác phân tách thành dải quang phổ 7 màu liên tục (Đỏ → Tím) và kiểm chứng ánh sáng đơn sắc qua kính lọc.",
+      file: "experiments/vl9-tan-sac-anh-sang.html"
+    },
+    {
+      id: "vl9-cam-ung-dien-tu",
+      title: "Hiện tượng cảm ứng điện từ",
+      subject: "vat-ly",
+      icon: "🧲",
+      grade: 9,
+      category: "dien-tu-truong",
+      lesson: "Bài 11",
+      sgk_ref: "KHTN 9 — KNTT, Bài 11",
+      desc: "Thí nghiệm Faraday: Kéo di chuyển thanh nam châm đâm xuyên qua cuộn dây dẫn kín, quan sát kim điện kế (G) lệch chiều và đèn LED chớp sáng.",
+      file: "experiments/vl9-cam-ung-dien-tu.html"
+    },
+    {
+      id: "hh9-day-hoat-dong-kim-loai",
+      title: "Dãy hoạt động hoá học của kim loại",
+      subject: "hoa-hoc",
+      icon: "🔩",
+      grade: 9,
+      category: "phan-ung-hoa-hoc",
+      lesson: "Bài 15",
+      sgk_ref: "KHTN 9 — KNTT, Bài 15",
+      desc: "Nhúng Fe vào dd CuSO₄ (Fe đẩy Cu tạo lớp đồng đỏ) và Cu vào dd AgNO₃ (Cu đẩy Ag tạo tinh thể bạc sáng), kiểm chứng quy luật Fe > Cu > Ag.",
+      file: "experiments/hh9-day-hoat-dong-kim-loai.html"
+    },
+    {
+      id: "hh9-phan-ung-ruou-etilic",
+      title: "Tính chất hoá học của Rượu ethylic (Ethanol)",
+      subject: "hoa-hoc",
+      icon: "🔥",
+      grade: 9,
+      category: "phan-ung-hoa-hoc",
+      lesson: "Bài 22",
+      sgk_ref: "KHTN 9 — KNTT, Bài 22",
+      desc: "Đốt cháy rượu ethylic với ngọn lửa xanh mờ toả nhiều nhiệt (tạo CO₂ và H₂O) và phản ứng thế nhóm -OH với mẩu Natri giải phóng bọt khí H₂.",
+      file: "experiments/hh9-phan-ung-ruou-etilic.html"
+    },
+    {
+      id: "sh9-lai-men-den",
+      title: "Thí nghiệm lai một cặp tính trạng của Men-đen",
+      subject: "sinh-hoc",
+      icon: "🫛",
+      grade: 9,
+      category: "sinh-hoc",
+      lesson: "Bài 36",
+      sgk_ref: "KHTN 9 — KNTT, Bài 36",
+      desc: "Phép lai hạt vàng x hạt xanh ở đậu Hà Lan, thế hệ F₁ đồng tính (100% vàng), thế hệ F₂ phân li tỉ lệ xấp xỉ 3 hạt vàng : 1 hạt xanh trên lưới Punnett.",
+      file: "experiments/sh9-lai-men-den.html"
+    },
+    {
+      id: "sh9-chuoi-thuc-an-sinh-thai",
+      title: "Hệ sinh thái & Chuỗi thức ăn",
+      subject: "sinh-hoc",
+      icon: "🦅",
+      grade: 9,
+      category: "sinh-hoc",
+      lesson: "Bài 44",
+      sgk_ref: "KHTN 9 — KNTT, Bài 44",
+      desc: "Khảo sát mắt xích dinh dưỡng Cỏ → Cào cào → Ếch → Rắn → Đại bàng, quy luật dòng năng lượng 10% và phản ứng dây chuyền khi biến động quần thể.",
+      file: "experiments/sh9-chuoi-thuc-an-sinh-thai.html"
     }
   ];
 
   const SUBJECT_LABEL = { "vat-ly":"Vật lí", "hoa-hoc":"Hoá học", "sinh-hoc":"Sinh học" };
+  const SUBJECT_CLASS = { "vat-ly":"subject-vl", "hoa-hoc":"subject-hh", "sinh-hoc":"subject-sh" };
 
-  const grid = document.getElementById('grid');
+  let currentGrade = 'all';
+  let currentSubject = 'all';
+  let currentCategory = 'all';
+  let searchQuery = '';
+  let isGroupView = true;
+
+  const contentArea = document.getElementById('contentArea');
   const emptyMsg = document.getElementById('emptyMsg');
+  const searchInput = document.getElementById('searchInput');
 
-  function renderCards(filter){
-    const list = filter === 'all' ? EXPERIMENTS : EXPERIMENTS.filter(e => e.subject === filter);
-    grid.innerHTML = '';
-    list.forEach(e=>{
-      const a = document.createElement('a');
-      a.className = 'card'; a.href = e.file;
-      a.innerHTML = `
-        <div class="icon">${e.icon || '🧪'}</div>
-        <h3>${e.title}</h3>
-        <p class="ref">${e.sgk_ref}</p>
-        <div class="tags">
-          <span class="tag">${SUBJECT_LABEL[e.subject] || e.subject}</span>
-          <span class="tag">Lớp ${e.grade}</span>
-        </div>`;
-      grid.appendChild(a);
-    });
-    emptyMsg.style.display = list.length ? 'none' : 'block';
+  function renderCardHTML(e){
+    return `
+      <a class="card" href="${e.file}">
+        <div>
+          <div class="card-top">
+            <div class="icon-box">${e.icon || '🧪'}</div>
+            <span class="card-lesson-badge">${e.lesson || ('Lớp ' + e.grade)}</span>
+          </div>
+          <h3>${e.title}</h3>
+          <p class="desc">${e.desc || ''}</p>
+          <div class="ref">📖 ${e.sgk_ref}</div>
+        </div>
+        <div class="card-footer">
+          <div class="tags">
+            <span class="tag grade">Lớp ${e.grade}</span>
+            <span class="tag ${SUBJECT_CLASS[e.subject] || ''}">${SUBJECT_LABEL[e.subject] || e.subject}</span>
+          </div>
+          <span class="card-action">Vào thực hành ›</span>
+        </div>
+      </a>
+    `;
   }
 
-  document.getElementById('filters').addEventListener('click', (ev)=>{
+  function getFilteredList(){
+    const q = searchQuery.trim().toLowerCase();
+    return EXPERIMENTS.filter(e => {
+      const matchGrade = (currentGrade === 'all') || (String(e.grade) === currentGrade);
+      const matchSubject = (currentSubject === 'all') || (e.subject === currentSubject);
+      const matchCategory = (currentCategory === 'all') || (e.category === currentCategory);
+      
+      let matchSearch = true;
+      if (q) {
+        const text = (e.title + ' ' + (e.desc||'') + ' ' + (e.lesson||'') + ' ' + (e.sgk_ref||'') + ' ' + (SUBJECT_LABEL[e.subject]||'')).toLowerCase();
+        matchSearch = text.includes(q);
+      }
+
+      return matchGrade && matchSubject && matchCategory && matchSearch;
+    });
+  }
+
+  function renderView(){
+    const list = getFilteredList();
+
+    if (list.length === 0) {
+      contentArea.innerHTML = '';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    if (!isGroupView) {
+      contentArea.innerHTML = `
+        <div class="grid" style="margin-top:10px;">
+          ${list.map(e => renderCardHTML(e)).join('')}
+        </div>
+      `;
+      return;
+    }
+
+    // Dạng gom nhóm theo Danh mục
+    const grouped = {};
+    list.forEach(e => {
+      const catKey = e.category || 'khac';
+      if (!grouped[catKey]) grouped[catKey] = [];
+      grouped[catKey].push(e);
+    });
+
+    let html = '';
+    for (const [catKey, items] of Object.entries(grouped)) {
+      const catInfo = CATEGORIES[catKey] || { name: "Danh mục khác", chapter: "", icon: "📁" };
+      html += `
+        <div class="category-group">
+          <div class="category-header">
+            <h2 class="category-title">
+              <span>${catInfo.icon}</span>
+              <span>${catInfo.name}</span>
+            </h2>
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${catInfo.chapter ? `<span style="font-size:12px; color:var(--ink-faint); font-weight:600;">${catInfo.chapter}</span>` : ''}
+              <span class="category-badge">${items.length} bài thí nghiệm</span>
+            </div>
+          </div>
+          <div class="grid">
+            ${items.map(e => renderCardHTML(e)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    contentArea.innerHTML = html;
+  }
+
+  // Lắng nghe sự kiện chọn khối Lớp
+  document.getElementById('gradeFilters').addEventListener('click', (ev)=>{
     const btn = ev.target.closest('.filter-btn');
     if(!btn) return;
-    document.querySelectorAll('.filter-btn').forEach(b=>b.setAttribute('aria-pressed','false'));
+    document.querySelectorAll('#gradeFilters .filter-btn').forEach(b=>b.setAttribute('aria-pressed','false'));
     btn.setAttribute('aria-pressed','true');
-    renderCards(btn.dataset.filter);
+    currentGrade = btn.dataset.grade;
+    renderView();
   });
 
-  renderCards('all');
+  // Lắng nghe sự kiện chọn Phân môn
+  document.getElementById('subjectFilters').addEventListener('click', (ev)=>{
+    const btn = ev.target.closest('.filter-btn');
+    if(!btn) return;
+    document.querySelectorAll('#subjectFilters .filter-btn').forEach(b=>b.setAttribute('aria-pressed','false'));
+    btn.setAttribute('aria-pressed','true');
+    currentSubject = btn.dataset.subject;
+    renderView();
+  });
+
+  // Lắng nghe sự kiện chọn Danh mục
+  document.getElementById('categoryFilters').addEventListener('click', (ev)=>{
+    const btn = ev.target.closest('.filter-btn');
+    if(!btn) return;
+    document.querySelectorAll('#categoryFilters .filter-btn').forEach(b=>b.setAttribute('aria-pressed','false'));
+    btn.setAttribute('aria-pressed','true');
+    currentCategory = btn.dataset.category;
+    renderView();
+  });
+
+  // Lắng nghe ô tìm kiếm
+  searchInput.addEventListener('input', (ev)=>{
+    searchQuery = ev.target.value;
+    renderView();
+  });
+
+  // Chuyển đổi chế độ hiển thị
+  const btnGroupView = document.getElementById('btnGroupView');
+  const btnGridView = document.getElementById('btnGridView');
+
+  btnGroupView.addEventListener('click', ()=>{
+    isGroupView = true;
+    btnGroupView.setAttribute('data-active', 'true');
+    btnGridView.setAttribute('data-active', 'false');
+    renderView();
+  });
+
+  btnGridView.addEventListener('click', ()=>{
+    isGroupView = false;
+    btnGroupView.setAttribute('data-active', 'false');
+    btnGridView.setAttribute('data-active', 'true');
+    renderView();
+  });
+
+  renderView();
 </script>
 </body>
 </html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 24: Chứng minh quang hợp ở cây xanh — KHTN 7 (Kết nối tri thức)</title>
+<meta name="description" content="Thí nghiệm chứng minh cây xanh tạo ra tinh bột khi có ánh sáng qua thuốc thử Iodine và thải khí Oxygen làm bùng cháy que đóm tàn đỏ.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+    --leaf-green:#2e7d32; --iodine-blue:#1a237e;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7b1fa2, #c2185b);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(123,31,162,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#1c2530; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .step-pill-box{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .step-pill{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    padding:5px 10px; border-radius:999px; font-size:12px; font-weight:700;
+    cursor:pointer; transition:all .15s;
+  }
+  .step-pill[data-active="true"]{ background:var(--chip-bg); border-color:var(--chip-ink); color:var(--chip-ink); }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:var(--purple-1); }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Sinh học</b> &nbsp;›&nbsp; Lớp 7 &nbsp;›&nbsp; Bài 24</div>
+    <div class="status-pill">KHTN 7 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 24: Chứng minh quang hợp ở cây xanh</h1>
+    <p>Thực hành các bước thí nghiệm chứng minh sự tạo thành tinh bột (thử bằng dung dịch Iodine) và sự giải phóng khí Oxygen của cây xanh khi có ánh sáng mặt trời.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <!-- Bàn thí nghiệm quang hợp SVG 2.5D -->
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Hiệu ứng ngọn lửa đèn cồn -->
+          <radialGradient id="flameGrad" cx="50%" cy="80%" r="60%">
+            <stop offset="0%" stop-color="#fffb8f"/>
+            <stop offset="50%" stop-color="#ff9800"/>
+            <stop offset="100%" stop-color="#f44336" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#1b2430"/>
+        <line x1="20" y1="410" x2="620" y2="410" stroke="#334155" stroke-width="2"/>
+
+        <!-- CHẾ ĐỘ 1: THÍ NGHIỆM CHỨNG MINH TINH BỘT TRÊN LÁ -->
+        <g id="starchExpGroup">
+          <!-- Bàn đặt đĩa Petri chứa lá cây thí nghiệm (320, 230) -->
+          <!-- Đĩa Petri thủy tinh lớn -->
+          <ellipse cx="320" cy="240" rx="190" ry="110" fill="#243342" stroke="#475569" stroke-width="2.5"/>
+          <ellipse cx="320" cy="235" rx="180" ry="102" fill="#1a2532" stroke="#334155" stroke-width="1.5"/>
+
+          <!-- HÌNH DÁNG CHIẾC LÁ KHOAI LANG TRONG ĐĨA -->
+          <g id="leafShapeGroup" transform="translate(320, 230)">
+            <!-- Phần chóp lá (tiếp xúc ánh sáng) -->
+            <path id="leafTop" d="M 0 -85 C 60 -75, 110 -25, 90 20 C 70 55, 30 75, 0 85 C -30 75, -70 55, -90 20 C -110 -25, -60 -75, 0 -85 Z" fill="#2e7d32" stroke="#1b5e20" stroke-width="2"/>
+
+            <!-- Dải băng giấy đen bịt ngang giữa lá (Bước 1, 2) -->
+            <rect id="blackPaperBand" x="-95" y="-15" width="190" height="45" rx="4" fill="#1e1e1e" stroke="#000000" stroke-width="1.5"/>
+            <text id="paperBandText" x="0" y="12" fill="#9e9e9e" font-size="11" font-weight="700" text-anchor="middle">BĂNG GIẤY ĐEN CHE ÁNH SÁNG</text>
+
+            <!-- Gân lá -->
+            <path id="leafVeins" d="M 0 -80 L 0 80 M 0 -50 L 40 -30 M 0 -50 L -40 -30 M 0 0 L 60 20 M 0 0 L -60 20 M 0 40 L 40 60 M 0 40 L -40 60" stroke="rgba(255,255,255,0.25)" stroke-width="2" fill="none"/>
+          </g>
+
+          <!-- Ống nhỏ giọt dung dịch Iodine (Có thể kéo hoặc nhấp để nhỏ dung dịch) -->
+          <g id="dropperGroup" transform="translate(480, 80)" style="cursor:pointer;">
+            <!-- Quả bóp cao su -->
+            <ellipse cx="0" cy="0" rx="14" ry="18" fill="#d32f2f"/>
+            <!-- Ống thủy tinh -->
+            <rect x="-5" y="16" width="10" height="70" fill="rgba(255,255,255,0.7)" stroke="#64748b" stroke-width="1"/>
+            <!-- Đầu nhỏ giọt -->
+            <polygon points="-5,86 5,86 0,105" fill="rgba(255,255,255,0.7)"/>
+            <!-- Dung dịch Iodine màu vàng nâu trong ống -->
+            <rect x="-3" y="30" width="6" height="50" fill="#b45309"/>
+            <text x="20" y="55" fill="#fcd34d" font-size="12" font-weight="700">Thuốc thử Iodine</text>
+
+            <!-- Giọt hóa chất rơi xuống -->
+            <circle id="droplet" cx="0" cy="112" r="4" fill="#b45309" opacity="0"/>
+          </g>
+          
+          <text id="stepCaption" x="320" y="375" fill="#e2e8f0" font-size="14" font-weight="700" text-anchor="middle">Bước 1: Bịt băng giấy đen ở giữa chiếc lá, để ngoài nắng 6 giờ</text>
+        </g>
+
+        <!-- CHẾ ĐỘ 2: THÍ NGHIỆM THẢI OXYGEN Ở RONG ĐUÔI CHÓ (Ẩn mặc định) -->
+        <g id="oxygenExpGroup" style="display:none;">
+          <!-- Cốc A: Trong bóng tối (Không quang hợp) -->
+          <g transform="translate(180, 180)">
+            <!-- Cốc thủy tinh -->
+            <rect x="-60" y="0" width="120" height="180" rx="8" fill="rgba(56,189,248,0.1)" stroke="#38bdf8" stroke-width="2"/>
+            <!-- Mực nước -->
+            <rect x="-58" y="20" width="116" height="158" fill="rgba(56,189,248,0.18)"/>
+            <!-- Phễu và ống nghiệm úp ngược -->
+            <rect x="-12" y="30" width="24" height="120" fill="rgba(255,255,255,0.2)" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Cành rong đuôi chó -->
+            <path d="M 0 170 Q -10 130 0 100 Q 10 70 0 50" stroke="#15803d" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <text x="0" y="210" fill="#94a3b8" font-size="13" font-weight="700" text-anchor="middle">Cốc A (Trong bóng tối)</text>
+            <text x="0" y="228" fill="#f87171" font-size="11" text-anchor="middle">Không có bọt khí O2</text>
+          </g>
+
+          <!-- Cốc B: Ngoài ánh sáng mạnh (Quang hợp mạnh) -->
+          <g transform="translate(460, 180)">
+            <rect x="-60" y="0" width="120" height="180" rx="8" fill="rgba(56,189,248,0.1)" stroke="#38bdf8" stroke-width="2"/>
+            <rect x="-58" y="20" width="116" height="158" fill="rgba(56,189,248,0.18)"/>
+            <!-- Khoang khí Oxygen thu được ở đáy ống nghiệm úp ngược -->
+            <rect x="-12" y="30" width="24" height="35" fill="rgba(255,255,255,0.7)"/>
+            <rect x="-12" y="30" width="24" height="120" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Cành rong -->
+            <path d="M 0 170 Q 10 130 0 100 Q -10 70 0 50" stroke="#22c55e" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <!-- Bọt khí Oxygen sủi lên liên tục -->
+            <g fill="#ffffff" opacity="0.8">
+              <circle cx="-4" cy="120" r="3"/>
+              <circle cx="5" cy="100" r="3.5"/>
+              <circle cx="-2" cy="80" r="4"/>
+              <circle cx="3" cy="65" r="4.5"/>
+            </g>
+            <!-- Que đóm đưa lại gần bùng cháy đỏ -->
+            <g id="glowingSplint" transform="translate(0, 10)">
+              <line x1="0" y1="-25" x2="0" y2="15" stroke="#78350f" stroke-width="3"/>
+              <ellipse cx="0" cy="18" rx="8" ry="14" fill="url(#flameGrad)"/>
+              <text x="25" y="15" fill="#fef08a" font-size="11" font-weight="700">Bùng cháy!</text>
+            </g>
+            <text x="0" y="210" fill="#38bdf8" font-size="13" font-weight="700" text-anchor="middle">Cốc B (Ngoài nắng)</text>
+            <text x="0" y="228" fill="#4ade80" font-size="11" text-anchor="middle">Khí Oxygen đẩy nước xuống</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bảng điều khiển -->
+    <div class="sidebar">
+      <div class="card">
+        <h3>🌱 Nội dung thí nghiệm</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnStarchExp" data-active="true">1. Tạo tinh bột</button>
+          <button class="btn" id="btnOxygenExp" data-active="false">2. Thoát Oxygen</button>
+        </div>
+      </div>
+
+      <div class="card" id="starchStepsCard">
+        <h3>📋 Các bước tiến hành (Bài 24)</h3>
+        <div class="step-pill-box">
+          <button class="step-pill" data-step="1" data-active="true">1. Bịt giấy đen</button>
+          <button class="step-pill" data-step="2">2. Tháo giấy đen</button>
+          <button class="step-pill" data-step="3">3. Đun cồn tẩy diệp lục</button>
+          <button class="step-pill" data-step="4">4. Nhỏ dung dịch Iodine</button>
+        </div>
+        <button class="btn" id="btnNextStep" style="width:100%;">Tiếp tục bước tiếp theo ›</button>
+      </div>
+
+      <div class="card">
+        <h3>📊 Hiện tượng &amp; Kết luận</h3>
+        <div class="data-box">
+          <div class="data-line">
+            <span>Phần lá nhận ánh sáng:</span>
+            <span id="resLightPart" style="font-weight:700; color:#3b82f6;">Chưa thử thuốc</span>
+          </div>
+          <div class="data-line">
+            <span>Phần lá bịt giấy đen:</span>
+            <span id="resDarkPart">Chưa thử thuốc</span>
+          </div>
+          <div class="data-line" style="border-top:1px dashed var(--panel-border); padding-top:6px; margin-top:6px;">
+            <span>Kết luận:</span>
+            <span id="resStarchConclusion" style="color:var(--purple-1); font-weight:700;">Quang hợp tạo ra tinh bột</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Câu hỏi củng cố SGK -->
+  <div class="quiz-section">
+    <div class="card">
+      <h3>✍️ Câu hỏi củng cố (SGK KHTN 7)</h3>
+      
+      <div class="quiz-q" data-correct="1">
+        <p>1. Mục đích của việc đun sôi chiếc lá trong cồn 90° cách thủy trước khi nhỏ dung dịch Iodine là gì?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Để làm lá mềm và nở to ra</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Tẩy sạch chất diệp lục màu xanh để dễ quan sát sự đổi màu xanh tím của tinh bột</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Khử trùng vi khuẩn bám trên lá</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Để hòa tan tinh bột trong nước</button>
+        </div>
+      </div>
+
+      <div class="quiz-q" data-correct="2">
+        <p>2. Khi đưa que đóm còn tàn đỏ vào miệng ống nghiệm thu khí từ cốc rong đuôi chó để ngoài nắng (cốc B), que đóm bùng cháy chứng tỏ:</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Cây xanh đã thải ra khí Carbon dioxide (CO2)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Cây xanh thải ra khí Nitrogen</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Quá trình quang hợp của cây xanh dưới ánh sáng đã giải phóng khí Oxygen (O2)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Nước trong cốc bị bốc hơi mạnh</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentExp = 'starch'; // 'starch' | 'oxygen'
+  let currentStep = 1; // 1, 2, 3, 4
+
+  const starchExpGroup = document.getElementById('starchExpGroup');
+  const oxygenExpGroup = document.getElementById('oxygenExpGroup');
+  const starchStepsCard = document.getElementById('starchStepsCard');
+  const leafTop = document.getElementById('leafTop');
+  const blackPaperBand = document.getElementById('blackPaperBand');
+  const paperBandText = document.getElementById('paperBandText');
+  const stepCaption = document.getElementById('stepCaption');
+  const dropperGroup = document.getElementById('dropperGroup');
+  const droplet = document.getElementById('droplet');
+  const resLightPart = document.getElementById('resLightPart');
+  const resDarkPart = document.getElementById('resDarkPart');
+  const resStarchConclusion = document.getElementById('resStarchConclusion');
+
+  function updateStepUI(){
+    document.querySelectorAll('.step-pill').forEach(p => {
+      p.setAttribute('data-active', parseInt(p.dataset.step) === currentStep ? 'true' : 'false');
+    });
+
+    if (currentStep === 1) {
+      leafTop.setAttribute('fill', '#2e7d32');
+      blackPaperBand.style.display = 'block';
+      paperBandText.style.display = 'block';
+      stepCaption.textContent = 'Bước 1: Bịt băng giấy đen ở giữa chiếc lá, để ngoài nắng 4 - 6 giờ.';
+      resLightPart.textContent = 'Nhận ánh sáng mặt trời';
+      resDarkPart.textContent = 'Bị che khuất bóng tối';
+      resStarchConclusion.textContent = 'Đang tích lũy quang hợp';
+    } else if (currentStep === 2) {
+      leafTop.setAttribute('fill', '#2e7d32');
+      blackPaperBand.style.display = 'none';
+      paperBandText.style.display = 'none';
+      stepCaption.textContent = 'Bước 2: Ngắt chiếc lá, tháo bỏ băng giấy đen.';
+      resLightPart.textContent = 'Lá màu xanh lục đồng đều';
+      resDarkPart.textContent = 'Lá màu xanh lục đồng đều';
+      resStarchConclusion.textContent = 'Chưa tẩy diệp lục';
+    } else if (currentStep === 3) {
+      // Đun cồn tẩy diệp lục -> lá chuyển màu trắng ngà
+      leafTop.setAttribute('fill', '#f5f5f4');
+      blackPaperBand.style.display = 'none';
+      paperBandText.style.display = 'none';
+      stepCaption.textContent = 'Bước 3: Đun lá trong cồn 90° cách thủy để tẩy sạch diệp lục ➜ Lá hóa trắng ngà.';
+      resLightPart.textContent = 'Màu trắng ngà (đã tẩy diệp lục)';
+      resDarkPart.textContent = 'Màu trắng ngà (đã tẩy diệp lục)';
+      resStarchConclusion.textContent = 'Sẵn sàng thử thuốc Iodine';
+    } else if (currentStep === 4) {
+      // Nhỏ iodine: phần nhận ánh sáng chuyển XANH TÍM ĐẬM, phần bịt giấy đen màu NÂU NHẠT
+      // Tạo hiệu ứng màu loang trên lá
+      leafTop.setAttribute('fill', '#1e1b4b'); // xanh tím đen
+      // Vẽ vùng giữa màu vàng nâu của iodine không có tinh bột
+      blackPaperBand.style.display = 'block';
+      blackPaperBand.setAttribute('fill', '#d97706'); // vàng nâu
+      blackPaperBand.setAttribute('stroke', '#b45309');
+      paperBandText.style.display = 'block';
+      paperBandText.textContent = 'MÀU VÀNG NÂU (KHÔNG CÓ TINH BỘT)';
+      paperBandText.setAttribute('fill', '#ffffff');
+
+      stepCaption.textContent = 'Bước 4: Nhỏ dung dịch Iodine ➜ Phần nhận ánh sáng hóa XANH TÍM, phần che tối màu VÀNG NÂU.';
+      resLightPart.textContent = 'Hóa màu XANH TÍM (Có tinh bột)';
+      resLightPart.style.color = '#38bdf8';
+      resDarkPart.textContent = 'Màu vàng nâu (Không có tinh bột)';
+      resDarkPart.style.color = '#f59e0b';
+      resStarchConclusion.textContent = 'Ánh sáng cần thiết để tạo tinh bột';
+    }
+  }
+
+  document.querySelectorAll('.step-pill').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      currentStep = parseInt(btn.dataset.step);
+      updateStepUI();
+    });
+  });
+
+  document.getElementById('btnNextStep').addEventListener('click', ()=>{
+    currentStep = currentStep < 4 ? currentStep + 1 : 1;
+    updateStepUI();
+  });
+
+  function triggerDrop(){
+    droplet.style.opacity = '1';
+    droplet.setAttribute('cy', '112');
+    let y = 112;
+    const dropAnim = setInterval(()=>{
+      y += 8;
+      droplet.setAttribute('cy', y);
+      if (y > 230) {
+        clearInterval(dropAnim);
+        droplet.style.opacity = '0';
+        currentStep = 4;
+        updateStepUI();
+      }
+    }, 20);
+  }
+
+  let isDraggingDropper = false;
+  dropperGroup.addEventListener('pointerdown', (e)=>{
+    isDraggingDropper = true;
+    dropperGroup.setPointerCapture(e.pointerId);
+  });
+  dropperGroup.addEventListener('pointermove', ()=>{
+    if (!isDraggingDropper) return;
+  });
+  dropperGroup.addEventListener('pointerup', ()=>{
+    if (isDraggingDropper) {
+      isDraggingDropper = false;
+      triggerDrop();
+    }
+  });
+  dropperGroup.addEventListener('click', triggerDrop);
+
+  // Chuyển đổi giữa 2 thí nghiệm
+  document.getElementById('btnStarchExp').addEventListener('click', ()=>{
+    currentExp = 'starch';
+    document.getElementById('btnStarchExp').setAttribute('data-active', 'true');
+    document.getElementById('btnOxygenExp').setAttribute('data-active', 'false');
+    starchExpGroup.style.display = 'block';
+    oxygenExpGroup.style.display = 'none';
+    starchStepsCard.style.display = 'block';
+  });
+
+  document.getElementById('btnOxygenExp').addEventListener('click', ()=>{
+    currentExp = 'oxygen';
+    document.getElementById('btnStarchExp').setAttribute('data-active', 'false');
+    document.getElementById('btnOxygenExp').setAttribute('data-active', 'true');
+    starchExpGroup.style.display = 'none';
+    oxygenExpGroup.style.display = 'block';
+    starchStepsCard.style.display = 'none';
+  });
+
+  function checkAnswer(btn, optIdx){
+    const q = btn.closest('.quiz-q');
+    const correctIdx = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.classList.remove('correct', 'wrong'));
+    if (optIdx === correctIdx) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+    }
+  }
+
+  updateStepUI();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "sh7-quang-hop-cay-xanh",
+  "subject": "sinh-hoc",
+  "grade": 7,
+  "title": "Chứng minh quang hợp ở cây xanh",
+  "sgk_ref": "KHTN 7 — KNTT, Bài 24",
+  "objective": "Tiến hành thí nghiệm chứng minh sự tạo thành tinh bột khi quang hợp và sự giải phóng khí Oxygen dưới ánh sáng.",
+  "controls": [
+    {"name": "Bước thí nghiệm tinh bột", "type": "stepper", "range": [1, 4]},
+    {"name": "Chuyển thí nghiệm", "type": "toggle"}
+  ],
+  "outputs": [
+    {"name": "Màu sắc phần lá quang hợp", "type": "string"},
+    {"name": "Khí thoát ra ở cành rong", "type": "string"}
+  ],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

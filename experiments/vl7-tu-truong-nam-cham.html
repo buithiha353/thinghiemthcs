@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 19: Từ trường và đường sức từ — KHTN 7 (Kết nối tri thức)</title>
+<meta name="description" content="Thí nghiệm từ phổ của nam châm, vẽ đường sức từ và xác định hướng của kim la bàn thử theo quy tắc Ra Bắc Vào Nam.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+    --mag-north:#e53935; --mag-south:#1e88e5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7b1fa2, #c2185b);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(123,31,162,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#17202c; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .ctrl-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .ctrl-label{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:var(--purple-1); }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 7 &nbsp;›&nbsp; Bài 19</div>
+    <div class="status-pill">KHTN 7 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 19: Từ trường và đường sức từ</h1>
+    <p>Khám phá từ phổ của nam châm thẳng và nam châm chữ U qua mạt sắt, vẽ đường sức từ và kiểm chứng quy tắc định hướng kim la bàn "Ra Bắc (N) — Vào Nam (S)".</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <!-- Bàn thí nghiệm từ phổ SVG 2.5D -->
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Mũi tên chỉ chiều đường sức từ -->
+          <marker id="arrowB" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#38bdf8"/>
+          </marker>
+        </defs>
+
+        <!-- Mặt tấm nhựa trong suốt đặt mạt sắt -->
+        <rect width="640" height="440" fill="#0f172a"/>
+        <rect x="20" y="20" width="600" height="400" rx="14" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+
+        <!-- ĐỐI TƯỢNG 1: NAM CHÂM THẲNG (Bar Magnet) -->
+        <g id="barMagnetGroup" transform="translate(320, 220)">
+          <!-- Cực Bắc (N - Đỏ) ở bên trái: x = -100 đến 0 -->
+          <rect x="-100" y="-22" width="100" height="44" fill="#e53935" stroke="#b71c1c" stroke-width="1.5" rx="3"/>
+          <text x="-50" y="7" fill="#ffffff" font-size="20" font-weight="800" text-anchor="middle">N</text>
+          <text x="-50" y="28" fill="#ffcdd2" font-size="9" text-anchor="middle">CỰC BẮC</text>
+
+          <!-- Cực Nam (S - Xanh) ở bên phải: x = 0 đến 100 -->
+          <rect x="0" y="-22" width="100" height="44" fill="#1e88e5" stroke="#0d47a1" stroke-width="1.5" rx="3"/>
+          <text x="50" y="7" fill="#ffffff" font-size="20" font-weight="800" text-anchor="middle">S</text>
+          <text x="50" y="28" fill="#bbdefb" font-size="9" text-anchor="middle">CỰC NAM</text>
+        </g>
+
+        <!-- ĐỐI TƯỢNG 2: NAM CHÂM CHỮ U (Horseshoe Magnet - Ẩn mặc định) -->
+        <g id="uMagnetGroup" transform="translate(320, 220)" style="display:none;">
+          <!-- Thân cong phía dưới -->
+          <path d="M -90 -30 L -90 40 A 90 90 0 0 0 90 40 L 90 -30 L 50 -30 L 50 40 A 50 50 0 0 1 -50 40 L -50 -30 Z" fill="#64748b" stroke="#334155" stroke-width="2"/>
+          <!-- Cực Bắc (N) bên trái -->
+          <rect x="-90" y="-70" width="40" height="50" fill="#e53935" stroke="#b71c1c" stroke-width="1.5"/>
+          <text x="-70" y="-38" fill="#ffffff" font-size="18" font-weight="800" text-anchor="middle">N</text>
+          <!-- Cực Nam (S) bên phải -->
+          <rect x="50" y="-70" width="40" height="50" fill="#1e88e5" stroke="#0d47a1" stroke-width="1.5"/>
+          <text x="70" y="-38" fill="#ffffff" font-size="18" font-weight="800" text-anchor="middle">S</text>
+        </g>
+
+        <!-- LỚP ĐƯỜNG SỨC TỪ (Magnetic Field Lines) -->
+        <g id="fieldLinesGroup" stroke="#38bdf8" stroke-width="1.5" fill="none" opacity="0.8"></g>
+
+        <!-- LỚP MẠT SẮT (Iron filings) -->
+        <g id="ironFilingsGroup" fill="#94a3b8" opacity="0.65"></g>
+
+        <!-- KIM LA BÀN THỬ TƯƠNG TÁC (Có thể kéo rê chuột để dò từ trường) -->
+        <g id="compassProbe" transform="translate(320, 110)" style="cursor:grab;">
+          <!-- Vòng ngoài la bàn -->
+          <circle r="26" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.5))"/>
+          <circle r="22" fill="#1e293b"/>
+          <!-- Vạch chia nhỏ -->
+          <circle r="2" fill="#cbd5e1"/>
+          
+          <!-- Kim xoay theo từ trường địa phương -->
+          <g id="needleRotator">
+            <!-- Nửa kim Bắc (Màu đỏ chỉ theo chiều đường sức từ) -->
+            <polygon points="0,-20 4,-2 0,0 -4,-2" fill="#ef4444"/>
+            <text x="0" y="-8" fill="#ffffff" font-size="8" font-weight="800" text-anchor="middle">N</text>
+            <!-- Nửa kim Nam (Màu xanh) -->
+            <polygon points="0,20 4,2 0,0 -4,2" fill="#3b82f6"/>
+            <text x="0" y="14" fill="#ffffff" font-size="8" font-weight="800" text-anchor="middle">S</text>
+          </g>
+          <text x="0" y="38" fill="#fcd34d" font-size="11" font-weight="700" text-anchor="middle">Kim la bàn (Kéo thả)</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bảng điều khiển -->
+    <div class="sidebar">
+      <div class="card">
+        <h3>🧲 Loại nam châm</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnBar" data-active="true">Nam châm thẳng</button>
+          <button class="btn" id="btnU" data-active="false">Nam châm chữ U</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>✨ Hiển thị từ trường</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnToggleFilings" data-active="true">Rắc mạt sắt</button>
+          <button class="btn" id="btnToggleLines" data-active="true">Đường sức từ</button>
+        </div>
+        <div style="margin-top:10px;">
+          <button class="btn" id="btnTapTray" style="width:100%;">🫳 Gõ nhẹ tấm nhựa (Hiện rõ từ phổ)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Tọa độ &amp; Hướng kim la bàn</h3>
+        <div class="data-box">
+          <div class="data-line">
+            <span>Tọa độ kim thử:</span>
+            <span id="resPos">(320, 110)</span>
+          </div>
+          <div class="data-line">
+            <span>Góc định hướng:</span>
+            <span id="resAngle">0° (Ngang)</span>
+          </div>
+          <div class="data-line">
+            <span>Cực gần nhất:</span>
+            <span id="resNearestPole">Cực Bắc (N)</span>
+          </div>
+          <div class="data-line" style="border-top:1px dashed var(--panel-border); padding-top:6px; margin-top:6px;">
+            <span>Quy tắc:</span>
+            <span style="color:#38bdf8; font-weight:700;">Ra Bắc (N) ➜ Vào Nam (S)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Câu hỏi củng cố SGK -->
+  <div class="quiz-section">
+    <div class="card">
+      <h3>✍️ Câu hỏi củng cố (SGK KHTN 7)</h3>
+      
+      <div class="quiz-q" data-correct="0">
+        <p>1. Ở bên ngoài thanh nam châm, đường sức từ có chiều quy ước như thế nào?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Đi ra từ cực Bắc (N) và đi vào cực Nam (S)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Đi ra từ cực Nam (S) và đi vào cực Bắc (N)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Luôn đi theo chiều kim đồng hồ</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Không có chiều xác định</button>
+        </div>
+      </div>
+
+      <div class="quiz-q" data-correct="2">
+        <p>2. Ở vùng không gian giữa hai cực của nam châm chữ U, các đường sức từ có đặc điểm gì?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Rất thưa và cong ngược chiều</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Cắt nhau tại một điểm</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Gần như là các đường thẳng song song và cách đều nhau (từ trường đều)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Biến mất hoàn toàn</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let magnetType = 'bar'; // 'bar' | 'u'
+  let showFilings = true;
+  let showLines = true;
+  let compassX = 320, compassY = 110;
+
+  const barMagnetGroup = document.getElementById('barMagnetGroup');
+  const uMagnetGroup = document.getElementById('uMagnetGroup');
+  const fieldLinesGroup = document.getElementById('fieldLinesGroup');
+  const ironFilingsGroup = document.getElementById('ironFilingsGroup');
+  const compassProbe = document.getElementById('compassProbe');
+  const needleRotator = document.getElementById('needleRotator');
+  const resPos = document.getElementById('resPos');
+  const resAngle = document.getElementById('resAngle');
+  const resNearestPole = document.getElementById('resNearestPole');
+
+  // Tính vector từ trường B tại điểm (x, y) do hai cực từ (North tại xN, yN và South tại xS, yS)
+  function getMagneticField(px, py){
+    let xN, yN, xS, yS;
+    if (magnetType === 'bar') {
+      xN = 320 - 70; yN = 220;
+      xS = 320 + 70; yS = 220;
+    } else {
+      xN = 320 - 70; yN = 220 - 50;
+      xS = 320 + 70; yS = 220 - 50;
+    }
+
+    // Từ trường đẩy từ cực N (tỉ lệ 1/r^2)
+    const dxN = px - xN, dyN = py - yN;
+    const rN2 = dxN*dxN + dyN*dyN + 100;
+    const rN = Math.sqrt(rN2);
+    const BxN = (dxN / rN) / rN2;
+    const ByN = (dyN / rN) / rN2;
+
+    // Từ trường hút vào cực S
+    const dxS = px - xS, dyS = py - yS;
+    const rS2 = dxS*dxS + dyS*dyS + 100;
+    const rS = Math.sqrt(rS2);
+    const BxS = -(dxS / rS) / rS2;
+    const ByS = -(dyS / rS) / rS2;
+
+    const Bx = BxN + BxS;
+    const By = ByN + ByS;
+    return { Bx, By, angleRad: Math.atan2(By, Bx) };
+  }
+
+  // Vẽ đường sức từ
+  function drawFieldLines(){
+    if (!showLines) {
+      fieldLinesGroup.innerHTML = '';
+      return;
+    }
+
+    let paths = '';
+    if (magnetType === 'bar') {
+      const cx = 320, cy = 220;
+      // Vẽ các vòng elip đường sức từ đối xứng
+      const heights = [45, 80, 125, 175, 230];
+      heights.forEach(h => {
+        // Nửa trên: Ra N (trái) vòng qua S (phải)
+        paths += `<path d="M ${cx - 70} ${cy - 10} C ${cx - 70} ${cy - h}, ${cx + 70} ${cy - h}, ${cx + 70} ${cy - 10}" marker-mid="url(#arrowB)"/>`;
+        // Nửa dưới: Ra N vòng dưới qua S
+        paths += `<path d="M ${cx - 70} ${cy + 10} C ${cx - 70} ${cy + h}, ${cx + 70} ${cy + h}, ${cx + 70} ${cy + 10}"/>`;
+      });
+      // Tia thẳng từ hai cực
+      paths += `<line x1="${cx - 100}" y1="${cy}" x2="40" y2="${cy}"/>`;
+      paths += `<line x1="${cx + 100}" y1="${cy}" x2="600" y2="${cy}"/>`;
+    } else {
+      // Nam châm chữ U
+      const cx = 320, cy = 220;
+      // Giữa 2 cực N và S: các đường song song từ N (-70) sang S (+70)
+      for(let y = cy - 70; y <= cy - 30; y += 12){
+        paths += `<line x1="${cx - 50}" y1="${y}" x2="${cx + 50}" y2="${y}"/>`;
+      }
+      // Vòng ngoài
+      paths += `<path d="M ${cx - 70} ${cy - 70} C ${cx - 120} ${cy - 140}, ${cx + 120} ${cy - 140}, ${cx + 70} ${cy - 70}"/>`;
+      paths += `<path d="M ${cx - 70} ${cy - 70} C ${cx - 160} ${cy - 190}, ${cx + 160} ${cy - 190}, ${cx + 70} ${cy - 70}"/>`;
+    }
+    fieldLinesGroup.innerHTML = paths;
+  }
+
+  // Tạo mạt sắt ngẫu nhiên sắp xếp theo từ trường
+  function generateIronFilings(){
+    if (!showFilings) {
+      ironFilingsGroup.innerHTML = '';
+      return;
+    }
+    let filings = '';
+    for(let i = 0; i < 480; i++){
+      const x = 50 + Math.random() * 540;
+      const y = 40 + Math.random() * 360;
+
+      // Bỏ qua bên trong nam châm
+      if (magnetType === 'bar' && x > 220 && x < 420 && y > 195 && y < 245) continue;
+      if (magnetType === 'u' && x > 230 && x < 410 && y > 140 && y < 320) continue;
+
+      const field = getMagneticField(x, y);
+      const deg = field.angleRad * 180 / Math.PI;
+      const len = 4 + Math.random() * 5;
+      filings += `<line x1="${x - len/2}" y1="${y}" x2="${x + len/2}" y2="${y}" stroke="#94a3b8" stroke-width="1.2" stroke-linecap="round" transform="rotate(${deg} ${x} ${y})"/>`;
+    }
+    ironFilingsGroup.innerHTML = filings;
+  }
+
+  function updateCompass(){
+    compassProbe.setAttribute('transform', `translate(${compassX}, ${compassY})`);
+    resPos.textContent = `(${Math.round(compassX)}, ${Math.round(compassY)})`;
+
+    const field = getMagneticField(compassX, compassY);
+    // Hướng Bắc của kim la bàn quay theo tiếp tuyến B (angleRad)
+    // Lưu ý mũi tên đỏ chỉ lên (0, -20) nên góc chuẩn cần trừ 90°
+    const deg = (field.angleRad * 180 / Math.PI) + 90;
+    needleRotator.setAttribute('transform', `rotate(${deg})`);
+
+    const displayDeg = Math.round((field.angleRad * 180 / Math.PI + 360) % 360);
+    resAngle.textContent = `${displayDeg}°`;
+
+    const distN = Math.hypot(compassX - (320 - 70), compassY - 220);
+    const distS = Math.hypot(compassX - (320 + 70), compassY - 220);
+    resNearestPole.textContent = distN < distS ? 'Cực Bắc (N — Đẩy ra)' : 'Cực Nam (S — Hút vào)';
+  }
+
+  // Đổi loại nam châm
+  document.getElementById('btnBar').addEventListener('click', ()=>{
+    magnetType = 'bar';
+    document.getElementById('btnBar').setAttribute('data-active', 'true');
+    document.getElementById('btnU').setAttribute('data-active', 'false');
+    barMagnetGroup.style.display = 'block';
+    uMagnetGroup.style.display = 'none';
+    drawFieldLines();
+    generateIronFilings();
+    updateCompass();
+  });
+
+  document.getElementById('btnU').addEventListener('click', ()=>{
+    magnetType = 'u';
+    document.getElementById('btnBar').setAttribute('data-active', 'false');
+    document.getElementById('btnU').setAttribute('data-active', 'true');
+    barMagnetGroup.style.display = 'none';
+    uMagnetGroup.style.display = 'block';
+    drawFieldLines();
+    generateIronFilings();
+    updateCompass();
+  });
+
+  document.getElementById('btnToggleFilings').addEventListener('click', (e)=>{
+    showFilings = !showFilings;
+    e.target.setAttribute('data-active', showFilings ? 'true' : 'false');
+    generateIronFilings();
+  });
+
+  document.getElementById('btnToggleLines').addEventListener('click', (e)=>{
+    showLines = !showLines;
+    e.target.setAttribute('data-active', showLines ? 'true' : 'false');
+    drawFieldLines();
+  });
+
+  document.getElementById('btnTapTray').addEventListener('click', ()=>{
+    // Hiệu ứng gõ nhẹ tấm nhựa
+    ironFilingsGroup.style.transform = 'translate(1px, -1px)';
+    setTimeout(()=>{ ironFilingsGroup.style.transform = 'translate(0, 0)'; }, 100);
+    generateIronFilings();
+  });
+
+  // Kéo rê kim la bàn bằng Pointer Events
+  let isDraggingCompass = false;
+  const svg = document.getElementById('scene');
+
+  compassProbe.addEventListener('pointerdown', (e)=>{
+    isDraggingCompass = true;
+    compassProbe.setPointerCapture(e.pointerId);
+  });
+
+  compassProbe.addEventListener('pointermove', (e)=>{
+    if (!isDraggingCompass) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = 640 / rect.width;
+    const scaleY = 440 / rect.height;
+    compassX = (e.clientX - rect.left) * scaleX;
+    compassY = (e.clientY - rect.top) * scaleY;
+
+    if (compassX < 40) compassX = 40;
+    if (compassX > 600) compassX = 600;
+    if (compassY < 40) compassY = 40;
+    if (compassY > 400) compassY = 400;
+
+    updateCompass();
+  });
+
+  compassProbe.addEventListener('pointerup', ()=>{
+    isDraggingCompass = false;
+  });
+
+  function checkAnswer(btn, optIdx){
+    const q = btn.closest('.quiz-q');
+    const correctIdx = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.classList.remove('correct', 'wrong'));
+    if (optIdx === correctIdx) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+    }
+  }
+
+  drawFieldLines();
+  generateIronFilings();
+  updateCompass();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl7-tu-truong-nam-cham",
+  "subject": "vat-ly",
+  "grade": 7,
+  "title": "Từ trường và đường sức từ",
+  "sgk_ref": "KHTN 7 — KNTT, Bài 19",
+  "objective": "Khảo sát từ phổ của nam châm thẳng và chữ U, quy ước chiều đường sức từ Ra Bắc Vào Nam và định hướng kim la bàn.",
+  "controls": [
+    {"name": "Loại nam châm", "type": "select", "options": ["Nam châm thẳng", "Nam châm chữ U"]},
+    {"name": "Vị trí la bàn", "type": "drag"}
+  ],
+  "outputs": [
+    {"name": "Góc định hướng kim nam châm", "unit": "độ"}
+  ],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

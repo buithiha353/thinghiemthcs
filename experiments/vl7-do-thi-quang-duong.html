@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 10: Đồ thị quãng đường - thời gian — KHTN 7 (Kết nối tri thức)</title>
+<meta name="description" content="Thực hành vẽ và phân tích đồ thị quãng đường - thời gian (s - t), xác định tốc độ chuyển động và các giai đoạn dừng nghỉ của vật.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+    --graph-line:#2563eb;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7b1fa2, #c2185b);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(123,31,162,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#ffffff; border-radius:14px;
+    touch-action:none; user-select:none;
+    border:1px solid #e2e8f0;
+  }
+
+  .ctrl-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .ctrl-label{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .ctrl-row input[type="range"]{ width:100%; accent-color:var(--purple-1); cursor:pointer; }
+  
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:var(--purple-1); }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 7 &nbsp;›&nbsp; Bài 10</div>
+    <div class="status-pill">KHTN 7 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 10: Đồ thị quãng đường — thời gian</h1>
+    <p>Khảo sát chuyển động của ô tô chở khách trên quốc lộ theo bảng 10.1 SGK KHTN 7: Phân tích các đoạn đồ thị thẳng nghiêng (chuyển động đều) và đoạn nằm ngang (nghỉ ngơi).</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <!-- Đồ thị tọa độ s - t SVG 2.5D theo SGK Hình 10.2 -->
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <!-- Nền giấy kẻ ô đồ thị (Graph grid) -->
+        <rect width="640" height="440" fill="#f8fafc"/>
+
+        <!-- GỐC TỌA ĐỘ O TẠI (100, 360) -->
+        <!-- Trục hoành Ot: dài 480px (0 đến 6 giờ, mỗi 1 giờ = 70px) -->
+        <!-- Trục tung Os: cao 300px (0 đến 300 km, mỗi 60km = 55px) -->
+        <g stroke="#e2e8f0" stroke-width="1.5">
+          <!-- Các đường ngang s -->
+          <line x1="100" y1="305" x2="520" y2="305"/>
+          <line x1="100" y1="250" x2="520" y2="250"/>
+          <line x1="100" y1="195" x2="520" y2="195"/>
+          <line x1="100" y1="140" x2="520" y2="140"/>
+          <line x1="100" y1="85"  x2="520" y2="85"/>
+
+          <!-- Các đường dọc t -->
+          <line x1="170" y1="60" x2="170" y2="360"/>
+          <line x1="240" y1="60" x2="240" y2="360"/>
+          <line x1="310" y1="60" x2="310" y2="360"/>
+          <line x1="380" y1="60" x2="380" y2="360"/>
+          <line x1="450" y1="60" x2="450" y2="360"/>
+          <line x1="520" y1="60" x2="520" y2="360"/>
+        </g>
+
+        <!-- Trục tọa độ chính (Os và Ot) -->
+        <g stroke="#1e293b" stroke-width="2.5">
+          <!-- Trục hoành Ot -->
+          <line x1="90" y1="360" x2="550" y2="360"/>
+          <polygon points="550,356 560,360 550,364" fill="#1e293b"/>
+          <!-- Trục tung Os -->
+          <line x1="100" y1="370" x2="100" y2="50"/>
+          <polygon points="96,50 100,40 104,50" fill="#1e293b"/>
+        </g>
+
+        <text x="82" y="375" fill="#334155" font-size="14" font-weight="700">O</text>
+        <text x="565" y="365" fill="#334155" font-size="13" font-weight="700">t (h)</text>
+        <text x="75" y="45" fill="#334155" font-size="13" font-weight="700">s (km)</text>
+
+        <!-- Các vạch số trên trục Ot -->
+        <g font-size="12" font-weight="600" fill="#475569" text-anchor="middle">
+          <text x="170" y="378">1</text>
+          <text x="240" y="378">2</text>
+          <text x="310" y="378">3</text>
+          <text x="380" y="378">4</text>
+          <text x="450" y="378">5</text>
+          <text x="520" y="378">6</text>
+        </g>
+
+        <!-- Các vạch số trên trục Os -->
+        <g font-size="12" font-weight="600" fill="#475569" text-anchor="end">
+          <text x="92" y="310">60</text>
+          <text x="92" y="255">120</text>
+          <text x="92" y="200">180</text>
+          <text x="92" y="145">240</text>
+          <text x="92" y="90">300</text>
+        </g>
+
+        <!-- ĐƯỜNG ĐỒ THỊ CHUYỂN ĐỘNG (Hình 10.2 SGK) -->
+        <!-- O(0, 0) -> A(1, 60) -> B(2, 120) -> C(3, 180) -> D(4, 180) -> E(5, 220) -> G(6, 260) -->
+        <!-- O: (100, 360) -->
+        <!-- A: (170, 305) -->
+        <!-- B: (240, 250) -->
+        <!-- C: (310, 195) -->
+        <!-- D: (380, 195) [Đoạn nằm ngang nghỉ 1h!] -->
+        <!-- E: (450, 158) -->
+        <!-- G: (520, 122) -->
+        <polyline id="graphLine" points="100,360 170,305 240,250 310,195 380,195 450,158 520,122" fill="none" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Đoạn nghỉ CD tô màu cam nổi bật -->
+        <line x1="310" y1="195" x2="380" y2="195" stroke="#f59e0b" stroke-width="4.5"/>
+        <text x="345" y="185" fill="#d97706" font-size="11" font-weight="700" text-anchor="middle">Nghỉ (v=0)</text>
+
+        <!-- Các điểm mốc trên đồ thị -->
+        <g fill="#1e40af" stroke="#ffffff" stroke-width="2">
+          <circle cx="100" cy="360" r="5"/>
+          <circle cx="170" cy="305" r="5"/>
+          <circle cx="240" cy="250" r="5"/>
+          <circle cx="310" cy="195" r="5"/>
+          <circle cx="380" cy="195" r="5"/>
+          <circle cx="450" cy="158" r="5"/>
+          <circle cx="520" cy="122" r="5"/>
+        </g>
+
+        <!-- Nhãn chữ cái các điểm -->
+        <g font-size="13" font-weight="800" fill="#1e3a8a">
+          <text x="175" y="300">A</text>
+          <text x="245" y="245">B</text>
+          <text x="300" y="185">C</text>
+          <text x="390" y="190">D</text>
+          <text x="455" y="152">E</text>
+          <text x="525" y="118">G</text>
+        </g>
+
+        <!-- ĐƯỜNG DÓNG THỜI GIAN THỰC KHI KÉO THANH TRƯỢT -->
+        <g id="crosshair">
+          <line id="lineV" x1="240" y1="50" x2="240" y2="360" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,4"/>
+          <line id="lineH" x1="100" y1="250" x2="520" y2="250" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,4"/>
+          <circle id="trackPoint" cx="240" cy="250" r="8" fill="#ef4444" stroke="#ffffff" stroke-width="2.5" style="cursor:grab;"/>
+        </g>
+
+        <!-- MÔ HÌNH XE Ô TÔ CHẠY TRÊN ĐƯỜNG MÔ PHỎNG PHÍA DƯỚI -->
+        <g transform="translate(100, 410)">
+          <!-- Đường nhựa -->
+          <line x1="0" y1="0" x2="430" y2="0" stroke="#475569" stroke-width="8"/>
+          <!-- Chiếc ô tô chạy theo thời gian t -->
+          <g id="carIcon" transform="translate(170, -12)">
+            <rect x="-16" y="-8" width="32" height="14" rx="4" fill="#2563eb"/>
+            <rect x="-8" y="-14" width="18" height="8" rx="2" fill="#60a5fa"/>
+            <circle cx="-9" cy="6" r="4" fill="#0f172a"/>
+            <circle cx="9" cy="6" r="4" fill="#0f172a"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bảng điều khiển -->
+    <div class="sidebar">
+      <div class="card">
+        <h3>⏱️ Thời gian hành trình (t)</h3>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Thời điểm khảo sát:</span>
+            <b id="valTime">t = 2.0 h</b>
+          </div>
+          <input type="range" id="sliderTime" min="0" max="6" value="2" step="0.1">
+        </div>
+
+        <div class="btn-grid" style="margin-top:6px;">
+          <button class="btn" id="btnPlayAnim">▶️ Chạy xe mô phỏng</button>
+          <button class="btn" id="btnReset">🔄 Đặt lại t = 0</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Phân tích trạng thái xe</h3>
+        <div class="data-box">
+          <div class="data-line">
+            <span>Quãng đường đi được:</span>
+            <span id="resDistance" style="font-weight:700; color:#2563eb;">120 km</span>
+          </div>
+          <div class="data-line">
+            <span>Tốc độ tức thời:</span>
+            <span id="resSpeed">60 km/h</span>
+          </div>
+          <div class="data-line">
+            <span>Trạng thái chuyển động:</span>
+            <span id="resState">Đang chạy đều (Đoạn OB)</span>
+          </div>
+          <div class="data-line" style="border-top:1px dashed var(--panel-border); padding-top:6px; margin-top:6px;">
+            <span>Giai đoạn nghỉ ngơi:</span>
+            <span style="color:#d97706; font-weight:700;">Từ 3h đến 4h (Đoạn CD)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Câu hỏi củng cố SGK -->
+  <div class="quiz-section">
+    <div class="card">
+      <h3>✍️ Câu hỏi củng cố (SGK KHTN 7)</h3>
+      
+      <div class="quiz-q" data-correct="1">
+        <p>1. Trong 3 giờ đầu tiên (đoạn OC), xe ô tô chạy với tốc độ bằng bao nhiêu?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. 40 km/h</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. 60 km/h (lấy s = 180 km chia cho t = 3 h)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. 80 km/h</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. 180 km/h</button>
+        </div>
+      </div>
+
+      <div class="quiz-q" data-correct="2">
+        <p>2. Trên đồ thị s - t, đoạn nằm ngang song song với trục thời gian Ot biểu diễn:</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Xe đang chuyển động rất nhanh</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Xe đang quay đầu chạy ngược lại</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Xe đang đứng yên, không chuyển động (quãng đường s không tăng)</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Xe đang tăng tốc đột ngột</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let curTime = 2.0; // giờ
+  let isPlaying = false;
+  let animId = null;
+
+  const sliderTime = document.getElementById('sliderTime');
+  const valTime = document.getElementById('valTime');
+  const lineV = document.getElementById('lineV');
+  const lineH = document.getElementById('lineH');
+  const trackPoint = document.getElementById('trackPoint');
+  const carIcon = document.getElementById('carIcon');
+  const resDistance = document.getElementById('resDistance');
+  const resSpeed = document.getElementById('resSpeed');
+  const resState = document.getElementById('resState');
+  const btnPlayAnim = document.getElementById('btnPlayAnim');
+
+  // Tính quãng đường s(t) theo từng chặng
+  function getS(t){
+    if (t <= 3) {
+      return t * 60; // 0 -> 180 km (v = 60 km/h)
+    } else if (t <= 4) {
+      return 180; // Nghỉ từ 3h đến 4h (v = 0)
+    } else {
+      return 180 + (t - 4) * 40; // 4h -> 6h (v = 40 km/h)
+    }
+  }
+
+  function updateDisplay(){
+    valTime.textContent = `t = ${curTime.toFixed(1)} h`;
+    sliderTime.value = curTime;
+
+    const s = getS(curTime);
+    resDistance.textContent = `${Math.round(s)} km`;
+
+    // Tính tọa độ pixel trên đồ thị
+    // Gốc O: (100, 360)
+    // 1 giờ = 70px -> x = 100 + t * 70
+    // 60 km = 55px -> y = 360 - (s / 60) * 55
+    const px = 100 + curTime * 70;
+    const py = 360 - (s / 60) * 55;
+
+    lineV.setAttribute('x1', px);
+    lineV.setAttribute('x2', px);
+    lineH.setAttribute('y1', py);
+    lineH.setAttribute('y2', py);
+
+    trackPoint.setAttribute('cx', px);
+    trackPoint.setAttribute('cy', py);
+
+    // Vị trí xe ô tô ở thanh chạy dưới
+    const carX = (s / 260) * 420;
+    carIcon.setAttribute('transform', `translate(${carX}, -12)`);
+
+    // Tốc độ và trạng thái
+    if (curTime < 3) {
+      resSpeed.textContent = '60 km/h';
+      resState.textContent = 'Chạy đều trên quốc lộ (Đoạn OC)';
+      resState.style.color = '#2563eb';
+    } else if (curTime <= 4) {
+      resSpeed.textContent = '0 km/h';
+      resState.textContent = 'Xe dừng nghỉ tại trạm (Đoạn CD)';
+      resState.style.color = '#d97706';
+    } else {
+      resSpeed.textContent = '40 km/h';
+      resState.textContent = 'Chạy chậm vào đô thị (Đoạn DG)';
+      resState.style.color = '#2563eb';
+    }
+  }
+
+  sliderTime.addEventListener('input', (e)=>{
+    curTime = parseFloat(e.target.value);
+    updateDisplay();
+  });
+
+  // Tương tác kéo điểm trackPoint trên đồ thị bằng Pointer Events
+  let isDraggingPoint = false;
+  const svg = document.getElementById('scene');
+
+  trackPoint.addEventListener('pointerdown', (e)=>{
+    isDraggingPoint = true;
+    trackPoint.setPointerCapture(e.pointerId);
+  });
+
+  trackPoint.addEventListener('pointermove', (e)=>{
+    if (!isDraggingPoint) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = 640 / rect.width;
+    const px = (e.clientX - rect.left) * scaleX;
+    let t = (px - 100) / 70;
+    if (t < 0) t = 0;
+    if (t > 6) t = 6;
+    curTime = t;
+    updateDisplay();
+  });
+
+  trackPoint.addEventListener('pointerup', ()=>{
+    isDraggingPoint = false;
+  });
+
+  // Nút chạy mô phỏng tự động
+  btnPlayAnim.addEventListener('click', ()=>{
+    if (isPlaying) {
+      isPlaying = false;
+      btnPlayAnim.textContent = '▶️ Chạy xe mô phỏng';
+      if (animId) cancelAnimationFrame(animId);
+    } else {
+      isPlaying = true;
+      btnPlayAnim.textContent = '⏸️ Tạm dừng';
+      if (curTime >= 6) curTime = 0;
+      function step(){
+        if (!isPlaying) return;
+        curTime += 0.02;
+        if (curTime > 6) {
+          curTime = 6;
+          isPlaying = false;
+          btnPlayAnim.textContent = '▶️ Chạy xe mô phỏng';
+        }
+        updateDisplay();
+        if (isPlaying) animId = requestAnimationFrame(step);
+      }
+      animId = requestAnimationFrame(step);
+    }
+  });
+
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    isPlaying = false;
+    btnPlayAnim.textContent = '▶️ Chạy xe mô phỏng';
+    curTime = 0;
+    updateDisplay();
+  });
+
+  function checkAnswer(btn, optIdx){
+    const q = btn.closest('.quiz-q');
+    const correctIdx = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.classList.remove('correct', 'wrong'));
+    if (optIdx === correctIdx) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+    }
+  }
+
+  updateDisplay();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl7-do-thi-quang-duong",
+  "subject": "vat-ly",
+  "grade": 7,
+  "title": "Đồ thị quãng đường - thời gian",
+  "sgk_ref": "KHTN 7 — KNTT, Bài 10",
+  "objective": "Thực hành đọc và phân tích đồ thị s - t để tìm tốc độ và nhận biết các giai đoạn chuyển động, dừng nghỉ.",
+  "controls": [
+    {"name": "Thời gian (t)", "type": "range", "range": [0, 6], "unit": "giờ"},
+    {"name": "Chạy mô phỏng", "type": "button"}
+  ],
+  "outputs": [
+    {"name": "Quãng đường (s)", "unit": "km"},
+    {"name": "Tốc độ (v)", "unit": "km/h"}
+  ],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 22: Tính chất hoá học của Rượu ethylic (Ethanol) — KHTN 9</title>
+<meta name="description" content="Thí nghiệm phản ứng cháy của rượu ethylic (ngọn lửa xanh toả nhiệt) và phản ứng tác dụng với mẩu Natri (Na) giải phóng khí Hydrogen.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #ea580c, #f97316);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(234,88,12,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#0f172a; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:#ea580c; color:#ea580c; }
+  .btn[data-active="true"]{ background:#ea580c; border-color:#ea580c; color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:#ea580c; font-size:14px; }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Hoá học</b> &nbsp;›&nbsp; Lớp 9 &nbsp;›&nbsp; Bài 22</div>
+    <div class="status-pill">KHTN 9 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 22: Tính chất hoá học của Rượu ethylic (Ethanol)</h1>
+    <p>Khảo sát 2 phản ứng đặc trưng của C₂H₅OH: Phản ứng cháy với ngọn lửa xanh mờ toả nhiều nhiệt, và phản ứng với kim loại Natri (Na) giải phóng khí H₂.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="alcoholFlame" cx="50%" cy="80%" r="70%">
+            <stop offset="0%" stop-color="#bae6fd"/>
+            <stop offset="40%" stop-color="#38bdf8"/>
+            <stop offset="80%" stop-color="#0284c7" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#0369a1" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#0f172a"/>
+        <!-- Mặt bàn thực hành -->
+        <rect x="20" y="380" width="600" height="18" fill="#334155" rx="3"/>
+
+        <!-- KHU VỰC 1: ĐĨA SỨ ĐỐT CỒN (Bên trái) -->
+        <g id="burnExp" transform="translate(180, 240)">
+          <!-- Đĩa sứ màu trắng -->
+          <ellipse cx="0" cy="90" rx="60" ry="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+          <ellipse cx="0" cy="88" rx="52" ry="12" fill="#e2e8f0"/>
+          <!-- Rượu ethylic trong đĩa -->
+          <ellipse cx="0" cy="89" rx="46" ry="10" fill="#93c5fd" opacity="0.6"/>
+
+          <!-- NGỌN LỬA CHÁY XANH MỜ CỦA CỒN -->
+          <g id="flameGroup" opacity="0">
+            <path d="M -25 85 C -35 50 -15 20 0 5 C 15 20 35 50 25 85 Z" fill="url(#alcoholFlame)"/>
+            <path d="M -12 85 C -15 65 -5 45 0 35 C 5 45 15 65 12 85 Z" fill="#e0f2fe" opacity="0.9"/>
+          </g>
+
+          <!-- Cốc thuỷ tinh úp ngược thử khí CO2 và H2O -->
+          <path id="cupBeaker" d="M -30 20 L -30 80 C -30 84 30 84 30 80 L 30 20 Z" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3" opacity="0"/>
+          <text x="0" y="125" fill="#facc15" font-size="11" font-weight="bold" text-anchor="middle">1. Phản ứng cháy (C₂H₅OH + O₂)</text>
+        </g>
+
+        <!-- KHU VỰC 2: ỐNG NGHIỆM PHẢN ỨNG VỚI NATRI (Bên phải) -->
+        <g id="sodiumExp" transform="translate(440, 110)">
+          <!-- Giá kẹp ống nghiệm -->
+          <rect x="-40" y="140" width="80" height="130" fill="#1e293b" stroke="#475569" stroke-width="2" rx="4"/>
+          <!-- Rượu ethylic trong ống nghiệm -->
+          <path d="M 12 90 L 12 210 Q 12 225 25 225 Q 38 225 38 210 L 38 90 Z" fill="#93c5fd" opacity="0.45"/>
+          <!-- Thành ống nghiệm -->
+          <rect x="10" y="10" width="30" height="205" rx="15" fill="none" stroke="#94a3b8" stroke-width="2.5"/>
+          <ellipse cx="25" cy="10" rx="15" ry="4" fill="none" stroke="#94a3b8" stroke-width="2"/>
+
+          <!-- Mẩu Natri Na chìm dưới đáy ống nghiệm -->
+          <g id="naInTube" opacity="0">
+            <circle cx="25" cy="216" r="5" fill="#cbd5e1" stroke="#64748b"/>
+          </g>
+
+          <!-- Bọt khí Hydrogen H2 sủi lên -->
+          <g id="naBubbles" opacity="0">
+            <circle cx="23" cy="180" r="2.5" fill="#e0f2fe" opacity="0.8"/>
+            <circle cx="28" cy="150" r="3" fill="#e0f2fe" opacity="0.8"/>
+            <circle cx="22" cy="120" r="3.5" fill="#e0f2fe" opacity="0.8"/>
+          </g>
+
+          <text x="25" y="245" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">2. Tác dụng với Natri (Na)</text>
+        </g>
+
+        <!-- QUE DIÊM KÉO THẢ (Direct manipulation châm lửa) -->
+        <g id="matchStick" transform="translate(80, 160)" style="cursor:grab;">
+          <line x1="0" y1="0" x2="-40" y2="0" stroke="#b45309" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="3" cy="0" r="5" fill="#ef4444"/>
+          <circle cx="5" cy="-2" r="6" fill="#facc15" opacity="0.8"/>
+          <text x="-20" y="-12" fill="#facc15" font-size="10" font-weight="bold">Que diêm</text>
+        </g>
+
+        <!-- MẨU NATRI KÉO THẢ (Direct manipulation) -->
+        <g id="naPiece" transform="translate(560, 200)" style="cursor:grab;">
+          <rect x="-18" y="-14" width="36" height="28" rx="6" fill="#1e293b" stroke="#cbd5e1" stroke-width="2"/>
+          <circle cx="0" cy="0" r="7" fill="#e2e8f0" stroke="#94a3b8"/>
+          <text x="0" y="-20" fill="#facc15" font-size="11" font-weight="bold" text-anchor="middle">Mẩu Natri (Na)</text>
+        </g>
+
+        <text id="guideMsg" x="320" y="50" fill="#facc15" font-size="13" font-weight="600" text-anchor="middle">👆 Kéo que diêm châm lửa đĩa cồn (trái) hoặc thả mẩu Natri vào ống nghiệm (phải)</text>
+      </svg>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>🔬 Thao tác thí nghiệm</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnBurn" data-active="false">🔥 Đốt cháy C₂H₅OH</button>
+          <button class="btn" id="btnDropNa" data-active="false">🧪 Thả Na vào C₂H₅OH</button>
+          <button class="btn" id="btnResetAll" style="grid-column:span 2;">🔄 Đặt lại thí nghiệm</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📝 Hiện tượng quan sát</h3>
+        <div class="data-box">
+          <div class="data-line"><span>Thí nghiệm 1 (Cháy):</span><b id="valBurn">Chưa châm lửa</b></div>
+          <div class="data-line"><span>Ngọn lửa:</span><b id="valFlame">--</b></div>
+          <div class="data-line"><span>Thí nghiệm 2 (+ Na):</span><b id="valNa">Chưa phản ứng</b></div>
+          <div class="data-line"><span>Khí thoát ra:</span><b id="valGas">--</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📖 Phương trình hoá học SGK</h3>
+        <p style="font-size:12px; line-height:1.6; margin:0; color:var(--ink-soft);">
+          <b>1. Phản ứng cháy toả nhiệt:</b><br>
+          C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O (ngọn lửa xanh mờ).<br><br>
+          <b>2. Phản ứng thế nhóm -OH với kim loại kiềm:</b><br>
+          2C₂H₅OH + 2Na → 2C₂H₅ONa + H₂ ↑<br>
+          (Natri etylat sinh ra tan trong rượu, giải phóng khí H₂).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="quiz-section">
+    <div class="quiz-q">
+      <p>Câu 1: Khi đốt cháy rượu ethylic (cồn) trong không khí, ngọn lửa có đặc điểm gì nổi bật?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">A. Ngọn lửa màu xanh mờ, toả rất nhiều nhiệt</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">B. Ngọn lửa màu vàng chói loà và sinh ra nhiều khói đen muội than</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. Không có ngọn lửa mà chỉ phát sáng đỏ</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. Rượu ethylic hoàn toàn không cháy được</button>
+      </div>
+    </div>
+    <div class="quiz-q">
+      <p>Câu 2: Thả một mẩu nhỏ kim loại Natri (Na) vào ống nghiệm chứa rượu ethylic khan, hiện tượng nào xảy ra?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">A. Mẩu Natri nổi bồng bềnh và bốc cháy nổ tung tức thì</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">B. Mẩu Natri chìm xuống đáy, tan dần và có bọt khí H₂ sủi lên chậm rãi</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. Không có hiện tượng hoá học nào xảy ra</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. Dung dịch chuyển sang màu đỏ rực</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="manifest">
+{
+  "id": "hh9-phan-ung-ruou-etilic",
+  "subject": "hoa-hoc",
+  "grade": 9,
+  "title": "Tính chất hoá học của Rượu ethylic (Ethanol)",
+  "sgk_ref": "KHTN 9 — KNTT, Bài 22",
+  "objective": "Quan sát phản ứng cháy toả nhiệt tạo ngọn lửa xanh mờ và phản ứng thế với Natri sinh khí Hydrogen của rượu ethylic.",
+  "controls": ["Kéo que diêm đốt đĩa cồn", "Kéo mẩu Natri thả vào ống nghiệm", "Nút bấm thực hiện nhanh"],
+  "outputs": ["Ngọn lửa xanh mờ toả nhiệt", "Bọt khí H2 sủi lên", "Mẩu Na tan dần"],
+  "status": "ready"
+}
+</script>
+
+<script>
+  let isBurning = false;
+  let isNaReacted = false;
+
+  const flameGroup = document.getElementById('flameGroup');
+  const cupBeaker = document.getElementById('cupBeaker');
+  const naInTube = document.getElementById('naInTube');
+  const naBubbles = document.getElementById('naBubbles');
+  const matchStick = document.getElementById('matchStick');
+  const naPiece = document.getElementById('naPiece');
+  const guideMsg = document.getElementById('guideMsg');
+
+  const valBurn = document.getElementById('valBurn');
+  const valFlame = document.getElementById('valFlame');
+  const valNa = document.getElementById('valNa');
+  const valGas = document.getElementById('valGas');
+
+  const btnBurn = document.getElementById('btnBurn');
+  const btnDropNa = document.getElementById('btnDropNa');
+  const btnResetAll = document.getElementById('btnResetAll');
+
+  function startBurn() {
+    if (isBurning) return;
+    isBurning = true;
+    flameGroup.setAttribute('opacity', '1');
+    cupBeaker.setAttribute('opacity', '0.7');
+    valBurn.textContent = 'Đang cháy mãnh liệt';
+    valFlame.textContent = 'Ngọn lửa xanh mờ, toả nhiều nhiệt';
+    guideMsg.textContent = '🔥 Cồn đang cháy: C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O!';
+  }
+
+  function startNaReaction() {
+    if (isNaReacted) return;
+    isNaReacted = true;
+    naPiece.style.opacity = '0';
+    naInTube.setAttribute('opacity', '1');
+    naBubbles.setAttribute('opacity', '1');
+
+    valNa.textContent = 'Na chìm dưới đáy, tan dần';
+    valGas.textContent = 'Sủi bọt khí Hydrogen (H₂ ↑)';
+    guideMsg.textContent = '⚡ Phản ứng sinh khí: 2C₂H₅OH + 2Na → 2C₂H₅ONa + H₂ ↑!';
+  }
+
+  btnBurn.addEventListener('click', startBurn);
+  btnDropNa.addEventListener('click', startNaReaction);
+
+  btnResetAll.addEventListener('click', () => {
+    isBurning = false;
+    isNaReacted = false;
+    flameGroup.setAttribute('opacity', '0');
+    cupBeaker.setAttribute('opacity', '0');
+    naPiece.style.opacity = '1';
+    naPiece.setAttribute('transform', 'translate(560, 200)');
+    matchStick.setAttribute('transform', 'translate(80, 160)');
+    naInTube.setAttribute('opacity', '0');
+    naBubbles.setAttribute('opacity', '0');
+
+    valBurn.textContent = 'Chưa châm lửa';
+    valFlame.textContent = '--';
+    valNa.textContent = 'Chưa phản ứng';
+    valGas.textContent = '--';
+    guideMsg.textContent = '👆 Kéo que diêm châm lửa đĩa cồn (trái) hoặc thả mẩu Natri vào ống nghiệm (phải)';
+  });
+
+  // Pointer Events thao tác trực tiếp (Direct manipulation)
+  const svgScene = document.getElementById('scene');
+  function getSvgPoint(e) {
+    const pt = svgScene.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    return pt.matrixTransform(svgScene.getScreenCTM().inverse());
+  }
+
+  // Kéo que diêm
+  let isDraggingMatch = false;
+  let matchPos = { x: 80, y: 160 };
+  let matchOffset = { x: 0, y: 0 };
+
+  matchStick.addEventListener('pointerdown', (e) => {
+    isDraggingMatch = true;
+    matchStick.setPointerCapture(e.pointerId);
+    matchStick.style.cursor = 'grabbing';
+    const pt = getSvgPoint(e);
+    matchOffset.x = pt.x - matchPos.x;
+    matchOffset.y = pt.y - matchPos.y;
+  });
+
+  matchStick.addEventListener('pointermove', (e) => {
+    if (!isDraggingMatch) return;
+    const pt = getSvgPoint(e);
+    matchPos.x = pt.x - matchOffset.x;
+    matchPos.y = pt.y - matchOffset.y;
+    matchStick.setAttribute('transform', `translate(${matchPos.x}, ${matchPos.y})`);
+
+    // Đầu que diêm quanh matchPos.x, matchPos.y
+    // Đĩa cồn quanh x=180, y=320
+    if (Math.hypot(matchPos.x - 180, matchPos.y - 320) < 60) {
+      startBurn();
+    }
+  });
+
+  matchStick.addEventListener('pointerup', (e) => {
+    if (!isDraggingMatch) return;
+    isDraggingMatch = false;
+    matchStick.releasePointerCapture(e.pointerId);
+    matchStick.style.cursor = 'grab';
+    matchPos = { x: 80, y: 160 };
+    matchStick.setAttribute('transform', `translate(${matchPos.x}, ${matchPos.y})`);
+  });
+
+  // Kéo mẩu Natri
+  let isDraggingNa = false;
+  let naPos = { x: 560, y: 200 };
+  let naOffsetPoint = { x: 0, y: 0 };
+
+  naPiece.addEventListener('pointerdown', (e) => {
+    if (isNaReacted) return;
+    isDraggingNa = true;
+    naPiece.setPointerCapture(e.pointerId);
+    naPiece.style.cursor = 'grabbing';
+    const pt = getSvgPoint(e);
+    naOffsetPoint.x = pt.x - naPos.x;
+    naOffsetPoint.y = pt.y - naPos.y;
+  });
+
+  naPiece.addEventListener('pointermove', (e) => {
+    if (!isDraggingNa) return;
+    const pt = getSvgPoint(e);
+    naPos.x = pt.x - naOffsetPoint.x;
+    naPos.y = pt.y - naOffsetPoint.y;
+    naPiece.setAttribute('transform', `translate(${naPos.x}, ${naPos.y})`);
+  });
+
+  naPiece.addEventListener('pointerup', (e) => {
+    if (!isDraggingNa) return;
+    isDraggingNa = false;
+    naPiece.releasePointerCapture(e.pointerId);
+    naPiece.style.cursor = 'grab';
+
+    // Miệng ống nghiệm quanh x=465, y=120
+    if (Math.hypot(naPos.x - 465, naPos.y - 120) < 60) {
+      startNaReaction();
+    } else {
+      naPos = { x: 560, y: 200 };
+      naPiece.setAttribute('transform', `translate(${naPos.x}, ${naPos.y})`);
+    }
+  });
+
+  function checkQuiz(btn, isCorrect) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.quiz-opt').forEach(b => {
+      b.disabled = true;
+      if (b === btn) {
+        b.classList.add(isCorrect ? 'correct' : 'wrong');
+      }
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 21 & 23: Mạch điện, Đo Cường độ dòng điện & Hiệu điện thế — KHTN 8</title>
+<meta name="description" content="Thí nghiệm lắp mạch điện đơn giản: nguồn pin, công tắc, bóng đèn, biến trở, ampe kế đo cường độ I và vôn kế đo hiệu điện thế U.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #e65100, #f57c00);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(230,81,0,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#0f172a; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .ctrl-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .ctrl-label{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .ctrl-row input[type="range"]{ width:100%; accent-color:#f57c00; cursor:pointer; }
+
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:#e65100; color:#e65100; }
+  .btn[data-active="true"]{ background:#e65100; border-color:#e65100; color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:#e65100; font-size:14px; }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 8 &nbsp;›&nbsp; Bài 21 &amp; 23</div>
+    <div class="status-pill">KHTN 8 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 21 &amp; 23: Mạch điện — Đo Cường độ dòng điện và Hiệu điện thế</h1>
+    <p>Khảo sát mạch điện một chiều: Đóng/ngắt công tắc K, điều chỉnh nguồn pin và con chạy biến trở, đọc số chỉ Ampe kế (A) và Vôn kế (V).</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="bulbGlow" cx="50%" cy="50%" r="50%">
+            <stop id="glowStop1" offset="0%" stop-color="#fef08a" stop-opacity="0.9"/>
+            <stop id="glowStop2" offset="50%" stop-color="#f59e0b" stop-opacity="0.4"/>
+            <stop offset="100%" stop-color="#d97706" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#0f172a"/>
+        <!-- Lưới nền bảng mạch -->
+        <g stroke="#1e293b" stroke-width="1">
+          <line x1="40" y1="40" x2="600" y2="40"/>
+          <line x1="40" y1="120" x2="600" y2="120"/>
+          <line x1="40" y1="200" x2="600" y2="200"/>
+          <line x1="40" y1="280" x2="600" y2="280"/>
+          <line x1="40" y1="360" x2="600" y2="360"/>
+        </g>
+
+        <!-- DÂY DẪN ĐIỆN CHÍNH (Màu đỏ cực dương, xanh cực âm) -->
+        <g stroke="#38bdf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <!-- Từ nguồn pin dương qua công tắc -->
+          <path id="wire1" d="M 120 80 L 120 60 L 220 60" stroke="#f87171"/>
+          <!-- Từ công tắc sang Ampe kế -->
+          <path id="wire2" d="M 280 60 L 360 60" stroke="#f87171"/>
+          <!-- Từ Ampe kế sang biến trở -->
+          <path id="wire3" d="M 440 60 L 520 60 L 520 180" stroke="#f87171"/>
+          <!-- Từ biến trở xuống bóng đèn -->
+          <path id="wire4" d="M 520 240 L 520 340 L 380 340" stroke="#38bdf8"/>
+          <!-- Từ bóng đèn về cực âm nguồn pin -->
+          <path id="wire5" d="M 300 340 L 120 340 L 120 140" stroke="#38bdf8"/>
+        </g>
+
+        <!-- DÂY MẮC VÔN KẾ SONG SONG HAI ĐẦU ĐÈN -->
+        <g stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="4,4" fill="none">
+          <path d="M 380 340 L 380 270 L 350 240"/>
+          <path d="M 300 340 L 300 270 L 330 240"/>
+        </g>
+
+        <!-- NGUỒN ĐIỆN PIN (Battery box) -->
+        <g id="batteryBox" transform="translate(70, 70)">
+          <rect x="0" y="0" width="100" height="70" rx="8" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+          <!-- Cực dương & âm -->
+          <rect x="5" y="15" width="20" height="40" rx="3" fill="#ef4444"/>
+          <text x="15" y="40" fill="#fff" font-size="14" font-weight="bold" text-anchor="middle">+</text>
+          <rect x="75" y="15" width="20" height="40" rx="3" fill="#3b82f6"/>
+          <text x="85" y="40" fill="#fff" font-size="14" font-weight="bold" text-anchor="middle">-</text>
+          <text id="batteryLabel" x="50" y="42" fill="#f8fafc" font-size="13" font-weight="bold" text-anchor="middle">3.0 V</text>
+          <text x="50" y="62" fill="#94a3b8" font-size="9" text-anchor="middle">NGUỒN PIN</text>
+        </g>
+
+        <!-- CÔNG TẮC K (Direct manipulation) -->
+        <g id="switchGroup" transform="translate(220, 40)" style="cursor:pointer;">
+          <rect x="-10" y="-10" width="80" height="40" rx="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/>
+          <circle cx="5" cy="20" r="5" fill="#f87171"/>
+          <circle cx="55" cy="20" r="5" fill="#f87171"/>
+          <!-- Cần gạt công tắc -->
+          <line id="switchBlade" x1="5" y1="20" x2="52" y2="20" stroke="#facc15" stroke-width="5" stroke-linecap="round"/>
+          <circle id="switchHandle" cx="52" cy="20" r="7" fill="#f59e0b"/>
+          <text x="30" y="-15" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">Khóa K (Đang ĐÓNG)</text>
+        </g>
+
+        <!-- AMPE KẾ MẮC NỐI TIẾP -->
+        <g id="ammeterGroup" transform="translate(400, 60)">
+          <circle cx="0" cy="0" r="38" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/>
+          <circle cx="0" cy="0" r="32" fill="#0f172a"/>
+          <!-- Kim đồng hồ Ampe kế -->
+          <line id="ampNeedle" x1="0" y1="12" x2="0" y2="-24" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="0" cy="12" r="3" fill="#fff"/>
+          <text x="0" y="-6" fill="#38bdf8" font-size="18" font-weight="bold" text-anchor="middle">A</text>
+          <text id="ampValSvg" x="0" y="24" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">0.30 A</text>
+        </g>
+
+        <!-- VÔN KẾ MẮC SONG SONG -->
+        <g id="voltmeterGroup" transform="translate(340, 220)">
+          <circle cx="0" cy="0" r="32" fill="#1e293b" stroke="#fbbf24" stroke-width="2.5"/>
+          <circle cx="0" cy="0" r="26" fill="#0f172a"/>
+          <!-- Kim đồng hồ Vôn kế -->
+          <line id="voltNeedle" x1="0" y1="10" x2="0" y2="-20" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="0" cy="10" r="2.5" fill="#fff"/>
+          <text x="0" y="-4" fill="#fbbf24" font-size="16" font-weight="bold" text-anchor="middle">V</text>
+          <text id="voltValSvg" x="0" y="20" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="middle">3.00 V</text>
+        </g>
+
+        <!-- BÓNG ĐÈN DÂY TÓC -->
+        <g id="bulbGroup" transform="translate(340, 340)">
+          <!-- Vầng sáng hào quang -->
+          <circle id="bulbHalo" cx="0" cy="0" r="45" fill="url(#bulbGlow)" opacity="0.8"/>
+          <!-- Đuôi đèn -->
+          <rect x="-14" y="10" width="28" height="16" rx="3" fill="#64748b"/>
+          <line x1="-10" y1="15" x2="10" y2="15" stroke="#94a3b8" stroke-width="2"/>
+          <line x1="-10" y1="20" x2="10" y2="20" stroke="#94a3b8" stroke-width="2"/>
+          <!-- Bóng thủy tinh -->
+          <circle cx="0" cy="-2" r="22" fill="rgba(255,255,255,0.15)" stroke="#cbd5e1" stroke-width="1.5"/>
+          <!-- Dây tóc Vonfram -->
+          <path id="filament" d="M -8 8 L -4 -6 L 0 0 L 4 -6 L 8 8" stroke="#facc15" stroke-width="2" fill="none"/>
+          <text x="0" y="38" fill="#94a3b8" font-size="11" text-anchor="middle">BÓNG ĐÈN (10 Ω)</text>
+        </g>
+
+        <!-- BIẾN TRỞ CON CHẠY (Slider rheostat - Direct manipulation) -->
+        <g id="rheostatGroup" transform="translate(520, 210)">
+          <!-- Cuộn dây biến trở -->
+          <rect x="-18" y="-30" width="36" height="60" rx="4" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
+          <line x1="-16" y1="-20" x2="16" y2="-20" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="-16" y1="-10" x2="16" y2="-10" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="-16" y1="0" x2="16" y2="0" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="-16" y1="10" x2="16" y2="10" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="-16" y1="20" x2="16" y2="20" stroke="#94a3b8" stroke-width="1.5"/>
+          <!-- Con chạy C (Kéo trượt) -->
+          <g id="sliderContact" transform="translate(0, 0)" style="cursor:ns-resize;">
+            <rect x="-24" y="-6" width="48" height="12" rx="3" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>
+            <polygon points="-5,0 5,0 0,-5" fill="#fff"/>
+          </g>
+          <text x="0" y="44" fill="#94a3b8" font-size="10" text-anchor="middle">BIẾN TRỞ</text>
+        </g>
+
+        <!-- Dòng điện chuyển động hạt electron (khi đóng mạch) -->
+        <g id="flowParticles" opacity="1">
+          <circle cx="170" cy="60" r="3" fill="#fef08a"/>
+          <circle cx="320" cy="60" r="3" fill="#fef08a"/>
+          <circle cx="480" cy="60" r="3" fill="#fef08a"/>
+          <circle cx="520" cy="290" r="3" fill="#fef08a"/>
+          <circle cx="210" cy="340" r="3" fill="#fef08a"/>
+        </g>
+
+        <text id="statusNote" x="320" y="420" fill="#facc15" font-size="12" font-weight="600" text-anchor="middle">💡 Bấm vào Khóa K hoặc kéo con chạy biến trở để điều chỉnh dòng điện</text>
+      </svg>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>⚡ Nguồn điện (Số lượng pin)</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnPin1" data-active="false">🔋 1 Pin (1.5V)</button>
+          <button class="btn" id="btnPin2" data-active="true">🔋🔋 2 Pin (3.0V)</button>
+          <button class="btn" id="btnPin3" data-active="false">🔋 3 Pin (4.5V)</button>
+          <button class="btn" id="btnPin4" data-active="false">🔋 4 Pin (6.0V)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎛️ Điều khiển & Biến trở</h3>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Trạng thái khóa K:</span><b id="lblSwitch">Đang ĐÓNG</b></div>
+          <button class="btn" id="btnToggleK" style="width:100%;">🔴 Bật / Tắt Khóa K</button>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Điện trở biến trở R_b:</span><b id="lblRb">0 Ω</b></div>
+          <input type="range" id="sliderRb" min="0" max="20" value="0" step="1">
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Kết quả đo thực tế</h3>
+        <div class="data-box">
+          <div class="data-line"><span>Điện áp nguồn U_nguồn:</span><b id="valUtotal">3.0 V</b></div>
+          <div class="data-line"><span>Điện trở bóng đèn R_đèn:</span><b>10.0 Ω</b></div>
+          <div class="data-line"><span>Điện trở toàn mạch:</span><b id="valRtotal">10.0 Ω</b></div>
+          <div class="data-line"><span>Cường độ dòng điện (A):</span><b id="valI">0.30 A</b></div>
+          <div class="data-line"><span>Hiệu điện thế hai đầu đèn (V):</span><b id="valUlamp">3.00 V</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="quiz-section">
+    <div class="quiz-q">
+      <p>Câu 1: Trong mạch điện, Ampe kế và Vôn kế được mắc như thế nào đối với dụng cụ tiêu thụ điện (bóng đèn)?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">A. Ampe kế mắc nối tiếp, Vôn kế mắc song song với bóng đèn</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">B. Ampe kế mắc song song, Vôn kế mắc nối tiếp với bóng đèn</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. Cả hai dụng cụ đều mắc nối tiếp</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. Cả hai dụng cụ đều mắc song song</button>
+      </div>
+    </div>
+    <div class="quiz-q">
+      <p>Câu 2: Khi tăng điện trở của biến trở trong mạch nối tiếp, cường độ dòng điện trong mạch và độ sáng của bóng đèn sẽ biến đổi thế nào?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">A. Cường độ dòng điện tăng, đèn sáng hơn</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">B. Cường độ dòng điện giảm, đèn sáng yếu đi</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. Cường độ dòng điện không đổi</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. Đèn sẽ chớp nháy liên tục</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl8-mach-dien-dong-dien",
+  "subject": "vat-ly",
+  "grade": 8,
+  "title": "Mạch điện, Đo Cường độ dòng điện & Hiệu điện thế",
+  "sgk_ref": "KHTN 8 — KNTT, Bài 21 & 23",
+  "objective": "Lắp mạch điện đơn giản, đo cường độ dòng điện qua Ampe kế và hiệu điện thế qua Vôn kế, khảo sát hoạt động của biến trở.",
+  "controls": ["Đóng/ngắt khóa K", "Chọn nguồn pin (1.5V - 6V)", "Kéo biến trở con chạy"],
+  "outputs": ["Cường độ dòng điện I (A)", "Hiệu điện thế U (V)", "Độ sáng bóng đèn"],
+  "status": "ready"
+}
+</script>
+
+<script>
+  let isClosed = true;
+  let batteryVolt = 3.0;
+  let rRheostat = 0; // 0 -> 20 ohm
+  const rLamp = 10.0; // 10 ohm
+
+  const switchBlade = document.getElementById('switchBlade');
+  const switchHandle = document.getElementById('switchHandle');
+  const switchGroup = document.getElementById('switchGroup');
+  const btnToggleK = document.getElementById('btnToggleK');
+  const lblSwitch = document.getElementById('lblSwitch');
+
+  const ampNeedle = document.getElementById('ampNeedle');
+  const voltNeedle = document.getElementById('voltNeedle');
+  const ampValSvg = document.getElementById('ampValSvg');
+  const voltValSvg = document.getElementById('voltValSvg');
+
+  const bulbHalo = document.getElementById('bulbHalo');
+  const filament = document.getElementById('filament');
+  const flowParticles = document.getElementById('flowParticles');
+
+  const batteryLabel = document.getElementById('batteryLabel');
+  const lblRb = document.getElementById('lblRb');
+  const sliderRb = document.getElementById('sliderRb');
+  const sliderContact = document.getElementById('sliderContact');
+
+  const valUtotal = document.getElementById('valUtotal');
+  const valRtotal = document.getElementById('valRtotal');
+  const valI = document.getElementById('valI');
+  const valUlamp = document.getElementById('valUlamp');
+
+  const btnPin1 = document.getElementById('btnPin1');
+  const btnPin2 = document.getElementById('btnPin2');
+  const btnPin3 = document.getElementById('btnPin3');
+  const btnPin4 = document.getElementById('btnPin4');
+
+  function updateCircuit() {
+    // Cập nhật công tắc
+    if (isClosed) {
+      switchBlade.setAttribute('x2', '52');
+      switchBlade.setAttribute('y2', '20');
+      switchHandle.setAttribute('cx', '52');
+      switchHandle.setAttribute('cy', '20');
+      lblSwitch.textContent = 'Đang ĐÓNG';
+      lblSwitch.style.color = '#10b981';
+      btnToggleK.textContent = '🔓 Mở Khóa K (Ngắt mạch)';
+    } else {
+      switchBlade.setAttribute('x2', '45');
+      switchBlade.setAttribute('y2', '0');
+      switchHandle.setAttribute('cx', '45');
+      switchHandle.setAttribute('cy', '0');
+      lblSwitch.textContent = 'Đang MỞ';
+      lblSwitch.style.color = '#ef4444';
+      btnToggleK.textContent = '🔒 Đóng Khóa K (Nối mạch)';
+    }
+
+    batteryLabel.textContent = batteryVolt.toFixed(1) + ' V';
+    valUtotal.textContent = batteryVolt.toFixed(1) + ' V';
+    lblRb.textContent = rRheostat.toFixed(0) + ' Ω';
+
+    // Vị trí con chạy trên biến trở (-25 -> +25)
+    const contactY = -25 + (rRheostat / 20) * 50;
+    sliderContact.setAttribute('transform', `translate(0, ${contactY})`);
+
+    const rTotal = rLamp + rRheostat;
+    valRtotal.textContent = rTotal.toFixed(1) + ' Ω';
+
+    let current = 0;
+    let uLamp = 0;
+
+    if (isClosed) {
+      current = batteryVolt / rTotal; // Ampe
+      uLamp = current * rLamp; // Volt
+      flowParticles.style.opacity = '1';
+    } else {
+      flowParticles.style.opacity = '0.1';
+    }
+
+    valI.textContent = current.toFixed(2) + ' A';
+    valUlamp.textContent = uLamp.toFixed(2) + ' V';
+    ampValSvg.textContent = current.toFixed(2) + ' A';
+    voltValSvg.textContent = uLamp.toFixed(2) + ' V';
+
+    // Góc quay kim đo (-50 deg đến +50 deg)
+    // Ampe kế tối đa 1.0 A
+    const ampAngle = -45 + Math.min(1, current / 0.8) * 90;
+    ampNeedle.setAttribute('transform', `rotate(${ampAngle} 0 12)`);
+
+    // Vôn kế tối đa 6.0 V
+    const voltAngle = -45 + Math.min(1, uLamp / 6.0) * 90;
+    voltNeedle.setAttribute('transform', `rotate(${voltAngle} 0 10)`);
+
+    // Độ sáng đèn
+    const brightness = Math.min(1.2, uLamp / 4.0);
+    bulbHalo.setAttribute('transform', `scale(${0.3 + brightness * 0.9})`);
+    bulbHalo.style.opacity = (brightness * 0.9).toString();
+    filament.setAttribute('stroke', isClosed && current > 0.05 ? '#fef08a' : '#64748b');
+  }
+
+  function toggleSwitch() {
+    isClosed = !isClosed;
+    updateCircuit();
+  }
+
+  btnToggleK.addEventListener('click', toggleSwitch);
+  switchGroup.addEventListener('click', toggleSwitch);
+
+  // Thao tác kéo thả con chạy biến trở (Direct manipulation pointer events)
+  let isDraggingSlider = false;
+  sliderContact.addEventListener('pointerdown', (e) => {
+    isDraggingSlider = true;
+    sliderContact.setPointerCapture(e.pointerId);
+  });
+  sliderContact.addEventListener('pointermove', (e) => {
+    if (!isDraggingSlider) return;
+    rRheostat = Math.min(20, Math.max(0, rRheostat + (e.movementY * 0.2)));
+    sliderRb.value = Math.round(rRheostat);
+    updateCircuit();
+  });
+  sliderContact.addEventListener('pointerup', (e) => {
+    if (isDraggingSlider) {
+      isDraggingSlider = false;
+      sliderContact.releasePointerCapture(e.pointerId);
+    }
+  });
+
+  sliderRb.addEventListener('input', (e) => {
+    rRheostat = parseFloat(e.target.value);
+    updateCircuit();
+  });
+
+  function setPins(volts, b1, b2, b3, b4) {
+    batteryVolt = volts;
+    btnPin1.setAttribute('data-active', b1);
+    btnPin2.setAttribute('data-active', b2);
+    btnPin3.setAttribute('data-active', b3);
+    btnPin4.setAttribute('data-active', b4);
+    updateCircuit();
+  }
+
+  btnPin1.addEventListener('click', () => setPins(1.5, true, false, false, false));
+  btnPin2.addEventListener('click', () => setPins(3.0, false, true, false, false));
+  btnPin3.addEventListener('click', () => setPins(4.5, false, false, true, false));
+  btnPin4.addEventListener('click', () => setPins(6.0, false, false, false, true));
+
+  function checkQuiz(btn, isCorrect) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.quiz-opt').forEach(b => {
+      b.disabled = true;
+      if (b === btn) {
+        b.classList.add(isCorrect ? 'correct' : 'wrong');
+      }
+    });
+  }
+
+  updateCircuit();
+</script>
+</body>
+</html>

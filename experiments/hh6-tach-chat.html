@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 17: Tách dầu ăn khỏi nước bằng phễu chiết — KHTN 6 (Kết nối tri thức)</title>
+<meta name="description" content="Mô phỏng 2.5D thực hành tách chất lỏng không tan (dầu ăn và nước) bằng phễu chiết có khoá theo SGK Khoa học tự nhiên 6, bộ Kết nối tri thức với cuộc sống.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1:#a9713f; --wood-2:#7a4c26; --wood-grain:#8f5c30;
+    --paper:#fffdf7; --paper-edge:#efe6d3; --paper-line:#e7ddc4;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --oil-color: #f1c40f; --water-color: #74b9ff;
+    --accent:#1c8c6b; --accent-soft:#e4f4ee;
+    --warn:#c9820f; --warn-soft:#fbeed8;
+    --danger:#c94444; --danger-soft:#fbe7e5;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+      --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+    --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+    --body-bg:#1b1812;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    line-height:1.5;
+  }
+  h1,h2,h3, .display{ font-family:'Baloo 2', 'Inter', sans-serif; }
+  .shell{ max-width: 1120px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap; padding:10px 4px 14px; font-size:13.5px; color:var(--ink-soft);
+  }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px; font-weight:600; font-size:12.5px;
+    text-decoration:none; transition: all .12s ease;
+    box-shadow: 0 2px 6px -2px var(--panel-shadow);
+  }
+  .home-btn:hover{
+    background:var(--purple-1); border-color:var(--purple-1); color:#fff;
+    transform:translateY(-1px); text-decoration:none;
+  }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--warn-soft); color:#8a5c05;
+    border:1px solid rgba(201,130,15,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:600;
+  }
+  .status-pill::before{ content:"●"; font-size:9px; color:#c9820f; }
+
+  .banner{
+    position:relative; background: linear-gradient(120deg, var(--purple-1), var(--purple-2));
+    border-radius: 26px; padding: 26px 26px 40px; color:#fff; overflow:hidden;
+    box-shadow: 0 14px 30px -12px rgba(123,31,162,0.55);
+  }
+  .banner-row{ display:flex; align-items:center; gap:16px; position:relative; z-index:2; flex-wrap:wrap; }
+  .badge{
+    flex:0 0 auto; width:64px; height:64px; border-radius:50%;
+    background:#fff; color:var(--purple-1);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; text-align:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    border: 4px solid rgba(255,255,255,0.55);
+  }
+  .banner-title{ flex:1 1 260px; min-width:200px; }
+  .banner-title h1{ margin:0 0 4px; font-size: clamp(22px,4vw,30px); }
+  .banner-title p{ margin:0; font-size:14px; opacity:0.92; max-width:540px; }
+  .meta-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; position:relative; z-index:2; }
+  .chip{
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(2px);
+    border:1px solid rgba(255,255,255,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:500;
+  }
+
+  .grid{ display:grid; grid-template-columns: 1.55fr 1fr; gap:20px; margin-top:20px; }
+  @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:20px; padding:18px 18px 20px;
+    box-shadow: 0 10px 24px -14px var(--panel-shadow);
+  }
+  .panel h2{ font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  .panel h2 .num{
+    width:24px; height:24px; border-radius:50%; background:var(--purple-1); color:#fff;
+    font-size:12.5px; display:inline-flex; align-items:center; justify-content:center; font-family:'Inter'; font-weight:700;
+  }
+
+  .stage{
+    background:
+      repeating-linear-gradient(100deg, var(--wood-grain) 0px, var(--wood-grain) 2px, transparent 2px, transparent 26px),
+      linear-gradient(160deg, var(--wood-1), var(--wood-2));
+    border-radius:20px; padding:20px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.25), 0 10px 24px -14px var(--panel-shadow);
+  }
+  .worksheet{
+    background: var(--paper); border-radius:14px; padding:14px 10px 6px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.25), 0 2px 0 var(--paper-edge);
+    position:relative;
+  }
+  .worksheet svg{ width:100%; height:auto; display:block; user-select:none; }
+
+  .valve-draggable{ cursor: pointer; touch-action: none; }
+  .valve-draggable:hover{ opacity: 0.85; }
+
+  .steps-note{ font-size:12.5px; color:var(--ink-soft); text-align:center; margin-top:8px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13.5px; font-weight:600; margin-bottom:8px;
+  }
+  .field label .val{ font-family:'Baloo 2'; color:var(--purple-1); font-size:14px; }
+  .field .hint{ font-size:12px; color:var(--ink-faint); margin-top:5px; line-height:1.45; }
+
+  .readout{
+    background: var(--accent-soft); border-radius:14px; padding:14px 16px; margin-top:4px;
+    border:1px solid rgba(28,140,107,0.2);
+  }
+  .readout .big{
+    font-family:'Baloo 2'; font-size:26px; font-weight:700; color:var(--accent);
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .readout .msg{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+
+  .kv{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .kv div{ background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px; padding:8px 10px; }
+  .kv .l{ font-size:11px; color:var(--ink-faint); }
+  .kv .v{ font-family:'Baloo 2'; font-size:16px; }
+
+  .checklist{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .checklist li{ display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--ink-soft); }
+  .checklist .box{
+    width:18px; height:18px; border-radius:6px; border:2px solid var(--panel-border);
+    flex:0 0 auto; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:transparent; transition: all .15s ease;
+  }
+  .checklist li.done .box{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .checklist li.done{ color:var(--ink); font-weight:500; }
+
+  .btn-action{
+    border:1.5px solid var(--panel-border); background:var(--panel-bg); color:var(--ink);
+    padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter'; transition: transform .12s ease;
+  }
+  .btn-action:hover{ transform: translateY(-1px); border-color:var(--purple-1); }
+
+  .quiz-q{ margin-bottom:16px; }
+  .quiz-q p.qtext{ font-weight:600; font-size:13.5px; margin:0 0 8px; }
+  .opt{
+    display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:10px;
+    border:1.5px solid var(--panel-border); margin-bottom:6px; cursor:pointer; font-size:13px;
+  }
+  .opt:hover{ border-color: var(--purple-1); }
+  .opt input{ accent-color: var(--purple-1); }
+  .feedback{ font-size:12.5px; margin-top:6px; padding:8px 10px; border-radius:10px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:var(--accent-soft); color:var(--accent); font-weight:500; }
+  .feedback.wrong{ background:var(--danger-soft); color:var(--danger); }
+
+  details.manifest{
+    margin-top:20px; background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:16px; padding:12px 16px;
+  }
+  details.manifest summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  details.manifest pre{
+    font-size:11.5px; overflow-x:auto; background: var(--body-bg); padding:12px; border-radius:10px;
+    margin-top:10px; color: var(--ink-soft); line-height:1.6;
+  }
+  .foot-note{ text-align:center; font-size:12px; color:var(--ink-faint); margin-top:22px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Hoá học</b> &nbsp;›&nbsp; Lớp 6 &nbsp;›&nbsp; Bài 17</div>
+    <div class="status-pill">KHTN 6 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-row">
+      <div class="badge">BÀI<br>17</div>
+      <div class="banner-title">
+        <h1>Tách chất: Chiết dầu ăn khỏi nước</h1>
+        <p>Mô phỏng 2.5D — phương pháp chiết tách hai chất lỏng không hoà tan vào nhau bằng phễu chiết có khoá theo SGK KHTN 6 (Hình 17.6, tr.62).</p>
+      </div>
+    </div>
+    <div class="meta-chips">
+      <span class="chip">Môn: Hoá học</span>
+      <span class="chip">Lớp 6</span>
+      <span class="chip">SGK KHTN 6 – KNTT, Bài 17, tr.60–63</span>
+      <span class="chip">⏱ ~8 phút</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel" style="padding:16px;">
+        <h2><span class="num">1</span>Bàn thực hành</h2>
+        <div class="stage">
+          <div class="worksheet">
+            <svg id="scene" viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mô phỏng phễu chiết tách dầu ăn và nước">
+              <defs>
+                <linearGradient id="funnelGlass" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="rgba(255,255,255,0.7)"/>
+                  <stop offset="50%" stop-color="rgba(220,240,255,0.2)"/>
+                  <stop offset="100%" stop-color="rgba(180,220,255,0.5)"/>
+                </linearGradient>
+                <linearGradient id="oilGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#f1c40f"/>
+                  <stop offset="100%" stop-color="#f39c12"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Lab Stand (Giá đỡ phễu chiết bên trái x: 200 to 220) -->
+              <rect x="190" y="280" width="100" height="18" rx="4" fill="#2c3e50"/>
+              <rect x="210" y="30" width="12" height="255" rx="2" fill="#7f8c8d" stroke="#2c3e50" stroke-width="1"/>
+              <!-- Iron Ring Clamp holding funnel (x: 215 to 330 at y: 80) -->
+              <rect x="215" y="75" width="80" height="10" rx="2" fill="#34495e"/>
+              <circle cx="330" cy="80" r="32" fill="none" stroke="#34495e" stroke-width="5"/>
+
+              <!-- Separatory Funnel at Center (x: 330, y: 30 to 220) -->
+              <!-- Pear shape funnel outline -->
+              <path d="M 300 40 L 360 40 L 370 80 C 370 120 340 145 334 165 L 334 195 L 326 195 L 326 165 C 320 145 290 120 290 80 Z" fill="url(#funnelGlass)" stroke="#74b9ff" stroke-width="2"/>
+
+              <!-- Upper Layer: Cooking Oil (Dầu ăn màu vàng, nhẹ hơn) -->
+              <g id="oilLayer">
+                <path d="M 292 78 C 292 98 305 115 320 128 L 340 128 C 355 115 368 98 368 78 L 364 50 L 296 50 Z" fill="url(#oilGrad)" opacity="0.85"/>
+                <text x="330" y="85" font-size="11" font-family="'Baloo 2'" font-weight="700" fill="#7a5a24" text-anchor="middle">Dầu ăn (nhẹ hơn)</text>
+              </g>
+
+              <!-- Lower Layer: Water (Nước màu xanh lơ, chìm ở dưới) -->
+              <g id="waterLayer">
+                <path id="waterShape" d="M 320 128 C 326 135 330 148 333 165 L 333 195 L 327 195 L 327 165 C 330 148 334 135 340 128 Z" fill="#0984e3" opacity="0.75"/>
+                <text id="waterLabel" x="330" y="148" font-size="10" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">Nước</text>
+              </g>
+
+              <!-- Valve Stopcock (Khoá phễu chiết ở x: 330, y: 180) -->
+              <!-- Clickable / Draggable Valve -->
+              <g id="valveGroup" class="valve-draggable" transform="translate(330, 180)">
+                <circle cx="0" cy="0" r="10" fill="#2d3436" stroke="#e74c3c" stroke-width="2"/>
+                <!-- T-Handle (Rotates when open / closed) -->
+                <rect id="valveHandle" x="-14" y="-3.5" width="28" height="7" rx="2" fill="#e74c3c"/>
+                <text x="0" y="24" font-size="9" font-family="Inter" font-weight="700" fill="#c0392b" text-anchor="middle">KHOÁ VẶN</text>
+              </g>
+
+              <!-- Liquid stream dripping down when valve is open -->
+              <line id="dripStream" x1="330" y1="200" x2="330" y2="250" stroke="#0984e3" stroke-width="2.5" stroke-dasharray="4 2" opacity="0"/>
+
+              <!-- Receiving Beaker underneath (Cốc thuỷ tinh hứng nước x: 300 to 360, y: 240) -->
+              <g transform="translate(295, 235)">
+                <rect x="0" y="0" width="70" height="55" rx="4" fill="url(#funnelGlass)" stroke="#74b9ff" stroke-width="1.8"/>
+                <!-- Water collecting in beaker -->
+                <rect id="collectedWater" x="2" y="50" width="66" height="4" rx="2" fill="#0984e3" opacity="0.75"/>
+                <text x="35" y="70" font-size="10" font-family="Inter" font-weight="600" fill="#2c3e50" text-anchor="middle">Cốc hứng</text>
+              </g>
+
+            </svg>
+
+            <p class="steps-note">✋ Bấm hoặc kéo xoay khoá phễu chiết màu đỏ để xả lớp nước bên dưới vào cốc hứng, sau đó khoá lại khi dầu chạm vạch khoá!</p>
+          </div>
+        </div>
+      </div>
+
+      <details class="manifest">
+        <summary>ℹ️ Thông tin module (manifest.json)</summary>
+        <pre>{
+  "id": "hh6-tach-chat",
+  "subject": "hoa-hoc",
+  "grade": 6,
+  "title": "Tách dầu ăn khỏi nước bằng phễu chiết",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 17, tr.60-63",
+  "objective": "Thực hành phương pháp chiết để tách hai chất lỏng không hoà tan vào nhau (dầu ăn và nước).",
+  "controls": [
+    { "id": "valve_toggle", "label": "Mở / Khoá van phễu chiết", "type": "toggle" }
+  ],
+  "outputs": ["trang_thai_khoa", "chat_trong_pheu", "chat_trong_coc"],
+  "status": "draft"
+}</pre>
+      </details>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div class="panel">
+        <h2><span class="num">2</span>Điều khiển & Tách chất</h2>
+
+        <div class="field">
+          <label>Khoá phễu chiết: <span class="val" id="valveStatus">Đang đóng</span></label>
+          <div class="hint">Thao tác: Bấm vào khoá phễu trên hình hoặc bấm nút bên dưới để mở van cho nước chảy từ từ xuống cốc hứng.</div>
+          <button type="button" id="btnToggleValve" class="btn-action" style="margin-top:8px;">▶️ Mở khoá phễu chiết</button>
+          <button type="button" id="btnResetFunnel" class="btn-action" style="margin-top:8px; margin-left:6px;">🔄 Làm lại từ đầu</button>
+        </div>
+
+        <div class="readout" id="readoutBox">
+          <div class="big" id="readoutBig">2 LỚP CHẤT LỎNG</div>
+          <div class="msg" id="readoutMsg">Hỗn hợp dầu ăn và nước tách thành 2 lớp: dầu ăn nổi ở trên, nước ở dưới.</div>
+        </div>
+
+        <div class="kv">
+          <div><div class="l">Chất trong phễu</div><div class="v" id="valFunnel">Dầu ăn + Nước</div></div>
+          <div><div class="l">Chất trong cốc</div><div class="v" id="valBeaker">Chưa có</div></div>
+        </div>
+
+        <ul class="checklist" id="checklist">
+          <li class="done"><span class="box">✓</span> Hỗn hợp dầu ăn và nước để yên tách lớp</li>
+          <li id="chkDrain"><span class="box">✓</span> Mở khoá phễu chiết cho nước chảy xuống cốc</li>
+          <li id="chkSeparated"><span class="box">✓</span> Vặn đóng khoá khi dầu chạm tới mặt khoá</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2><span class="num">3</span>Kiểm tra nhanh</h2>
+
+        <div class="quiz-q" data-correct="b">
+          <p class="qtext">1. Phương pháp chiết thường được sử dụng để tách hỗn hợp nào sau đây?</p>
+          <label class="opt"><input type="radio" name="q1" value="a"> Hỗn hợp muối ăn tan trong nước</label>
+          <label class="opt"><input type="radio" name="q1" value="b"> Các chất lỏng không hoà tan vào nhau (tách lớp)</label>
+          <label class="opt"><input type="radio" name="q1" value="c"> Khí oxygen và nitrogen</label>
+          <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-q" data-correct="a">
+          <p class="qtext">2. Vì sao dầu ăn lại nổi ở lớp trên trong phễu chiết?</p>
+          <label class="opt"><input type="radio" name="q2" value="a"> Dầu ăn có khối lượng riêng nhẹ hơn nước và không tan trong nước</label>
+          <label class="opt"><input type="radio" name="q2" value="b"> Dầu ăn bốc hơi nhanh hơn nước</label>
+          <label class="opt"><input type="radio" name="q2" value="c"> Dầu ăn có màu vàng</label>
+          <div class="feedback"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot-note">Chương IV, Bài 17 · Phong cách 2.5D lấy cảm hứng từ SGK KHTN 6 (Kết nối tri thức với cuộc sống).</p>
+</div>
+
+<script>
+(function(){
+  const valveGroup = document.getElementById('valveGroup');
+  const valveHandle = document.getElementById('valveHandle');
+  const valveStatus = document.getElementById('valveStatus');
+  const dripStream = document.getElementById('dripStream');
+  const collectedWater = document.getElementById('collectedWater');
+  const waterShape = document.getElementById('waterShape');
+  const waterLabel = document.getElementById('waterLabel');
+  const readoutBig = document.getElementById('readoutBig');
+  const readoutMsg = document.getElementById('readoutMsg');
+  const valFunnel = document.getElementById('valFunnel');
+  const valBeaker = document.getElementById('valBeaker');
+  const chkDrain = document.getElementById('chkDrain');
+  const chkSeparated = document.getElementById('chkSeparated');
+  const btnToggle = document.getElementById('btnToggleValve');
+  const btnReset = document.getElementById('btnResetFunnel');
+
+  let isOpen = false;
+  let isDone = false;
+  let progress = 0; // 0 to 1
+  let timerId = null;
+
+  function setValve(open){
+    isOpen = open;
+    if(isOpen){
+      valveHandle.setAttribute('transform', 'rotate(90)');
+      valveStatus.textContent = 'ĐANG MỞ (Nước đang chảy)';
+      btnToggle.textContent = '⏹️ Đóng khoá phễu';
+      dripStream.setAttribute('opacity', '1');
+      chkDrain.classList.add('done');
+      readoutMsg.textContent = 'Khoá đang mở: Nước đang từ từ chảy xuống cốc hứng...';
+
+      timerId = setInterval(()=>{
+        progress += 0.05;
+        if(progress >= 1){
+          progress = 1;
+          clearInterval(timerId);
+          setValve(false);
+          isDone = true;
+          waterShape.setAttribute('opacity', '0');
+          waterLabel.setAttribute('opacity', '0');
+          collectedWater.setAttribute('y', '15');
+          collectedWater.setAttribute('height', '38');
+          valFunnel.textContent = 'Dầu ăn nguyên chất';
+          valBeaker.textContent = 'Nước đã tách';
+          chkSeparated.classList.add('done');
+          readoutBig.innerHTML = 'TÁCH THÀNH CÔNG! 🎉';
+          readoutMsg.textContent = 'Đã xả hết lớp nước và kịp thời khoá van! Dầu ăn được giữ lại hoàn toàn trong phễu chiết, nước thu được trong cốc hứng.';
+        } else {
+          // Adjust water height in funnel & beaker
+          const h = 50 - progress * 35;
+          collectedWater.setAttribute('y', h);
+          collectedWater.setAttribute('height', (54 - h));
+        }
+      }, 100);
+    } else {
+      valveHandle.setAttribute('transform', 'rotate(0)');
+      valveStatus.textContent = isDone ? 'ĐÃ TÁCH XONG' : 'Đang đóng';
+      btnToggle.textContent = isDone ? '✅ Đã hoàn tất' : '▶️ Mở khoá phễu chiết';
+      dripStream.setAttribute('opacity', '0');
+      if(timerId) clearInterval(timerId);
+    }
+  }
+
+  function toggle(){
+    if(isDone) return;
+    setValve(!isOpen);
+  }
+
+  valveGroup.addEventListener('pointerdown', (e)=>{
+    e.preventDefault();
+    toggle();
+  });
+
+  btnToggle.addEventListener('click', toggle);
+
+  btnReset.addEventListener('click', ()=>{
+    if(timerId) clearInterval(timerId);
+    isOpen = false;
+    isDone = false;
+    progress = 0;
+    waterShape.setAttribute('opacity', '0.75');
+    waterLabel.setAttribute('opacity', '1');
+    collectedWater.setAttribute('y', '50');
+    collectedWater.setAttribute('height', '4');
+    valFunnel.textContent = 'Dầu ăn + Nước';
+    valBeaker.textContent = 'Chưa có';
+    chkDrain.classList.remove('done');
+    chkSeparated.classList.remove('done');
+    readoutBig.innerHTML = '2 LỚP CHẤT LỎNG';
+    readoutMsg.textContent = 'Hỗn hợp dầu ăn và nước tách thành 2 lớp: dầu ăn nổi ở trên, nước ở dưới.';
+    setValve(false);
+  });
+
+  // Quiz
+  document.querySelectorAll('.quiz-q').forEach(q=>{
+    const correct = q.dataset.correct;
+    const fb = q.querySelector('.feedback');
+    q.querySelectorAll('input[type=radio]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        fb.classList.remove('correct','wrong');
+        if(r.value === correct){
+          fb.textContent = '✅ Rất chính xác!';
+          fb.classList.add('correct');
+        } else {
+          fb.textContent = '❌ Chưa đúng, xem lại phương pháp chiết tách chất trong SGK KHTN 6.';
+          fb.classList.add('wrong');
+        }
+        fb.classList.add('show');
+      });
+    });
+  });
+})();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "hh6-tach-chat",
+  "subject": "hoa-hoc",
+  "grade": 6,
+  "title": "Tách dầu ăn khỏi nước bằng phễu chiết",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 17, tr.60-63",
+  "objective": "Thực hành phương pháp chiết để tách hai chất lỏng không hoà tan vào nhau (dầu ăn và nước).",
+  "controls": [
+    { "id": "valve_toggle", "label": "Mở / Khoá van phễu chiết", "type": "toggle" }
+  ],
+  "outputs": ["trang_thai_khoa", "chat_trong_pheu", "chat_trong_coc"],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

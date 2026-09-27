@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 14: Xác định khối lượng riêng — KHTN 8 (Kết nối tri thức)</title>
+<meta name="description" content="Thực hành đo khối lượng bằng cân điện tử, đo thể tích bằng bình chia độ và tính khối lượng riêng D = m / V của các vật mẫu.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #1565c0, #0288d1);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(21,101,192,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#131d2a; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:#1565c0; font-size:14px; }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 8 &nbsp;›&nbsp; Bài 14</div>
+    <div class="status-pill">KHTN 8 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 14: Thực hành Xác định khối lượng riêng</h1>
+    <p>Đo khối lượng m bằng cân điện tử, đo thể tích V bằng bình chia độ và tính khối lượng riêng D = m / V theo công thức SGK KHTN 8.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="metalIron" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#94a3b8"/>
+            <stop offset="50%" stop-color="#475569"/>
+            <stop offset="100%" stop-color="#1e293b"/>
+          </linearGradient>
+          <linearGradient id="metalAlu" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f1f5f9"/>
+            <stop offset="50%" stop-color="#cbd5e1"/>
+            <stop offset="100%" stop-color="#94a3b8"/>
+          </linearGradient>
+          <linearGradient id="metalCopper" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fb923c"/>
+            <stop offset="50%" stop-color="#b45309"/>
+            <stop offset="100%" stop-color="#78350f"/>
+          </linearGradient>
+          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="#0284c7" stop-opacity="0.85"/>
+          </linearGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#0f172a"/>
+        <!-- Mặt bàn -->
+        <rect x="20" y="380" width="600" height="16" fill="#334155" rx="3"/>
+        <line x1="10" y1="396" x2="630" y2="396" stroke="#1e293b" stroke-width="4"/>
+
+        <!-- CÂN ĐIỆN TỬ (bên trái) -->
+        <g id="scaleGroup" transform="translate(60, 260)">
+          <!-- Thân cân -->
+          <rect x="0" y="80" width="180" height="40" rx="8" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+          <!-- Đĩa cân -->
+          <rect x="25" y="65" width="130" height="15" rx="4" fill="#64748b" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="90" y1="65" x2="90" y2="80" stroke="#94a3b8" stroke-width="6"/>
+          <!-- Màn hình LED cân -->
+          <rect x="40" y="88" width="100" height="24" rx="4" fill="#05101a" stroke="#0ea5e9" stroke-width="1.5"/>
+          <text id="scaleLcd" x="90" y="105" fill="#38bdf8" font-size="14" font-family="'Courier New', monospace" font-weight="bold" text-anchor="middle">0.0 g</text>
+          <text x="90" y="132" fill="#94a3b8" font-size="11" text-anchor="middle">CÂN ĐIỆN TỬ</text>
+        </g>
+
+        <!-- BÌNH CHIA ĐỘ (bên phải) -->
+        <g id="cylinderGroup" transform="translate(360, 100)">
+          <!-- Thân bình thủy tinh -->
+          <rect x="40" y="40" width="80" height="240" rx="6" fill="rgba(255,255,255,0.06)" stroke="#94a3b8" stroke-width="2"/>
+          <!-- Chân đế bình -->
+          <ellipse cx="80" cy="280" rx="55" ry="12" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
+          <!-- Cột nước bên trong -->
+          <rect id="waterRect" x="42" y="160" width="76" height="120" rx="3" fill="url(#waterGrad)"/>
+          <ellipse id="waterTop" cx="80" cy="160" rx="38" ry="6" fill="#38bdf8" opacity="0.8"/>
+          <!-- Vạch chia độ (ml / cm3) -->
+          <g stroke="#e2e8f0" stroke-width="1" opacity="0.6">
+            <line x1="110" y1="60" x2="120" y2="60"/><text x="124" y="63" fill="#cbd5e1" font-size="9">100</text>
+            <line x1="113" y1="84" x2="120" y2="84"/>
+            <line x1="110" y1="108" x2="120" y2="108"/><text x="124" y="111" fill="#cbd5e1" font-size="9">80</text>
+            <line x1="113" y1="132" x2="120" y2="132"/>
+            <line x1="110" y1="156" x2="120" y2="156"/><text x="124" y="159" fill="#cbd5e1" font-size="9">60</text>
+            <line x1="113" y1="180" x2="180" y2="180"/>
+            <line x1="110" y1="204" x2="120" y2="204"/><text x="124" y="207" fill="#cbd5e1" font-size="9">40</text>
+            <line x1="113" y1="228" x2="120" y2="228"/>
+            <line x1="110" y1="252" x2="120" y2="252"/><text x="124" y="255" fill="#cbd5e1" font-size="9">20</text>
+          </g>
+          <text x="80" y="306" fill="#94a3b8" font-size="11" text-anchor="middle">BÌNH CHIA ĐỘ (cm³)</text>
+        </g>
+
+        <!-- VẬT THỂ MẪU KÉO THẢ (Direct manipulation) -->
+        <g id="sampleObj" transform="translate(240, 320)" style="cursor:grab;">
+          <rect id="objRect" x="-20" y="-20" width="40" height="40" rx="4" fill="url(#metalIron)" stroke="#e2e8f0" stroke-width="1.5"/>
+          <text id="objLabel" x="0" y="5" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">Fe</text>
+        </g>
+
+        <!-- Chỉ dẫn tương tác -->
+        <text id="guideText" x="320" y="50" fill="#facc15" font-size="13" font-weight="600" text-anchor="middle">👆 Kéo khối kim loại đặt lên cân hoặc thả vào bình chia độ</text>
+      </svg>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>🧪 Chọn mẫu vật chất rắn</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnFe" data-active="true">🔩 Khối Sắt (Fe)</button>
+          <button class="btn" id="btnAl" data-active="false">🥫 Khối Nhôm (Al)</button>
+          <button class="btn" id="btnCu" data-active="false">🔶 Khối Đồng (Cu)</button>
+          <button class="btn" id="btnReset" data-active="false">🔄 Đặt lại mẫu</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Bảng số liệu thực hành</h3>
+        <div class="data-box">
+          <div class="data-line"><span>Mẫu vật:</span><b id="valName">Khối Sắt (Fe)</b></div>
+          <div class="data-line"><span>Khối lượng m:</span><b id="valMass">78.0 g</b></div>
+          <div class="data-line"><span>Thể tích ban đầu V₁:</span><b>60 cm³</b></div>
+          <div class="data-line"><span>Thể tích dâng lên V₂:</span><b id="valV2">-- cm³</b></div>
+          <div class="data-line"><span>Thể tích vật V = V₂ - V₁:</span><b id="valV">-- cm³</b></div>
+          <div class="data-line"><span>Khối lượng riêng D = m/V:</span><b id="valDensity">-- g/cm³</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📖 Công thức SGK</h3>
+        <p style="font-size:13px; line-height:1.5; margin:0; color:var(--ink-soft);">
+          <b>D = m / V</b><br>
+          Trong đó:<br>
+          • <i>m</i>: khối lượng vật (g hoặc kg)<br>
+          • <i>V</i>: thể tích vật (cm³ hoặc m³)<br>
+          • <i>D</i>: khối lượng riêng (g/cm³ hoặc kg/m³).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="quiz-section">
+    <div class="quiz-q">
+      <p>Câu 1: Một khối sắt có khối lượng m = 156g và thể tích V = 20cm³. Khối lượng riêng của sắt là bao nhiêu?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">A. 3.12 g/cm³</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">B. 7.8 g/cm³ (7800 kg/m³)</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. 78 g/cm³</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. 13.6 g/cm³</button>
+      </div>
+    </div>
+    <div class="quiz-q">
+      <p>Câu 2: Để đo thể tích của một vật rắn không thấm nước và chìm trong nước bằng bình chia độ, ta dùng công thức nào?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">A. V = V₁ + V₂</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">B. V = V₂ - V₁ (với V₁ là mực nước ban đầu, V₂ là mực nước sau khi thả chìm)</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. V = V₁ / V₂</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. V = m × D</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl8-khoi-luong-rieng",
+  "subject": "vat-ly",
+  "grade": 8,
+  "title": "Xác định khối lượng riêng",
+  "sgk_ref": "KHTN 8 — KNTT, Bài 14",
+  "objective": "Đo khối lượng bằng cân điện tử, đo thể tích bằng bình chia độ, tính khối lượng riêng D = m/V.",
+  "controls": ["Chọn mẫu vật Fe/Al/Cu", "Kéo thả vật lên cân điện tử", "Thả vật vào bình chia độ"],
+  "outputs": ["Khối lượng m (g)", "Thể tích dâng lên V (cm³)", "Khối lượng riêng D (g/cm³)"],
+  "status": "ready"
+}
+</script>
+
+<script>
+  const MATERIALS = {
+    Fe: { name: 'Khối Sắt (Fe)', mass: 78.0, volume: 10.0, density: 7.80, fill: 'url(#metalIron)', label: 'Fe' },
+    Al: { name: 'Khối Nhôm (Al)', mass: 27.0, volume: 10.0, density: 2.70, fill: 'url(#metalAlu)', label: 'Al' },
+    Cu: { name: 'Khối Đồng (Cu)', mass: 89.0, volume: 10.0, density: 8.90, fill: 'url(#metalCopper)', label: 'Cu' }
+  };
+
+  let currentMat = 'Fe';
+  let curX = 240, curY = 320;
+  let isDragging = false;
+  let pointerOffset = { x: 0, y: 0 };
+  let locationState = 'table'; // 'table', 'scale', 'cylinder'
+
+  const sampleObj = document.getElementById('sampleObj');
+  const objRect = document.getElementById('objRect');
+  const objLabel = document.getElementById('objLabel');
+  const scaleLcd = document.getElementById('scaleLcd');
+  const waterRect = document.getElementById('waterRect');
+  const waterTop = document.getElementById('waterTop');
+  const guideText = document.getElementById('guideText');
+
+  const valName = document.getElementById('valName');
+  const valMass = document.getElementById('valMass');
+  const valV2 = document.getElementById('valV2');
+  const valV = document.getElementById('valV');
+  const valDensity = document.getElementById('valDensity');
+
+  const btnFe = document.getElementById('btnFe');
+  const btnAl = document.getElementById('btnAl');
+  const btnCu = document.getElementById('btnCu');
+  const btnReset = document.getElementById('btnReset');
+
+  function setMaterial(matKey) {
+    currentMat = matKey;
+    btnFe.setAttribute('data-active', matKey === 'Fe');
+    btnAl.setAttribute('data-active', matKey === 'Al');
+    btnCu.setAttribute('data-active', matKey === 'Cu');
+
+    const m = MATERIALS[matKey];
+    objRect.setAttribute('fill', m.fill);
+    objLabel.textContent = m.label;
+    valName.textContent = m.name;
+    valMass.textContent = m.mass.toFixed(1) + ' g';
+    updateState();
+  }
+
+  function updateState() {
+    const m = MATERIALS[currentMat];
+    if (locationState === 'scale') {
+      scaleLcd.textContent = m.mass.toFixed(1) + ' g';
+      waterRect.setAttribute('y', 160);
+      waterRect.setAttribute('height', 120);
+      waterTop.setAttribute('cy', 160);
+      valV2.textContent = '-- cm³';
+      valV.textContent = '-- cm³';
+      valDensity.textContent = '-- g/cm³';
+      guideText.textContent = `✅ Đã cân: m = ${m.mass.toFixed(1)}g. Hãy kéo thả vào bình chia độ!`;
+    } else if (locationState === 'cylinder') {
+      scaleLcd.textContent = '0.0 g';
+      // Mực nước dâng thêm 10cm3 -> dâng 12px (mỗi 20cm3 = 24px)
+      const newY = 160 - (m.volume / 20) * 24;
+      const newH = 120 + (m.volume / 20) * 24;
+      waterRect.setAttribute('y', newY);
+      waterRect.setAttribute('height', newH);
+      waterTop.setAttribute('cy', newY);
+
+      valV2.textContent = (60 + m.volume).toFixed(0) + ' cm³';
+      valV.textContent = m.volume.toFixed(0) + ' cm³';
+      valDensity.textContent = m.density.toFixed(2) + ' g/cm³';
+      guideText.textContent = `🎉 Hoàn thành: D = ${m.mass.toFixed(1)} / ${m.volume} = ${m.density.toFixed(2)} g/cm³`;
+    } else {
+      scaleLcd.textContent = '0.0 g';
+      waterRect.setAttribute('y', 160);
+      waterRect.setAttribute('height', 120);
+      waterTop.setAttribute('cy', 160);
+      valV2.textContent = '-- cm³';
+      valV.textContent = '-- cm³';
+      valDensity.textContent = '-- g/cm³';
+      guideText.textContent = '👆 Kéo khối kim loại đặt lên cân hoặc thả vào bình chia độ';
+    }
+  }
+
+  btnFe.addEventListener('click', () => setMaterial('Fe'));
+  btnAl.addEventListener('click', () => setMaterial('Al'));
+  btnCu.addEventListener('click', () => setMaterial('Cu'));
+  btnReset.addEventListener('click', () => {
+    locationState = 'table';
+    curX = 240; curY = 320;
+    sampleObj.setAttribute('transform', `translate(${curX}, ${curY})`);
+    updateState();
+  });
+
+  // Xử lý kéo thả Pointer Events trực tiếp
+  const svgScene = document.getElementById('scene');
+  function getSvgPoint(e) {
+    const pt = svgScene.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    return pt.matrixTransform(svgScene.getScreenCTM().inverse());
+  }
+
+  sampleObj.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    sampleObj.setPointerCapture(e.pointerId);
+    sampleObj.style.cursor = 'grabbing';
+    const pt = getSvgPoint(e);
+    pointerOffset.x = pt.x - curX;
+    pointerOffset.y = pt.y - curY;
+  });
+
+  sampleObj.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const pt = getSvgPoint(e);
+    curX = pt.x - pointerOffset.x;
+    curY = pt.y - pointerOffset.y;
+    sampleObj.setAttribute('transform', `translate(${curX}, ${curY})`);
+  });
+
+  sampleObj.addEventListener('pointerup', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    sampleObj.releasePointerCapture(e.pointerId);
+    sampleObj.style.cursor = 'grab';
+
+    // Kiểm tra vị trí thả:
+    // Đĩa cân: quanh x=150, y=320 (vùng x: 90-210, y: 280-350)
+    if (curX >= 90 && curX <= 210 && curY >= 280 && curY <= 360) {
+      curX = 150; curY = 310;
+      locationState = 'scale';
+    }
+    // Bình chia độ: quanh x=440, y=280 (vùng x: 380-500, y: 120-360)
+    else if (curX >= 380 && curX <= 500 && curY >= 120 && curY <= 380) {
+      curX = 440; curY = 280;
+      locationState = 'cylinder';
+    } else {
+      locationState = 'table';
+      curX = 240; curY = 320;
+    }
+    sampleObj.setAttribute('transform', `translate(${curX}, ${curY})`);
+    updateState();
+  });
+
+  function checkQuiz(btn, isCorrect) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.quiz-opt').forEach(b => {
+      b.disabled = true;
+      if (b === btn) {
+        b.classList.add(isCorrect ? 'correct' : 'wrong');
+      }
+    });
+  }
+
+  setMaterial('Fe');
+</script>
+</body>
+</html>

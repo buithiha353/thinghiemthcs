@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 36: Thí nghiệm lai một cặp tính trạng của Men-đen — KHTN 9</title>
+<meta name="description" content="Mô phỏng phép lai một cặp tính trạng ở đậu Hà Lan của Men-đen: hạt vàng x hạt xanh, thế hệ F1 đồng tính, thế hệ F2 phân li tỉ lệ 3 vàng : 1 xanh.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #15803d, #65a30d);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(21,128,61,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#0f172a; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:#15803d; color:#15803d; }
+  .btn[data-active="true"]{ background:#15803d; border-color:#15803d; color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:#15803d; font-size:14px; }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Sinh học</b> &nbsp;›&nbsp; Lớp 9 &nbsp;›&nbsp; Bài 36</div>
+    <div class="status-pill">KHTN 9 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 36: Di truyền học Mendel — Lai một cặp tính trạng</h1>
+    <p>Khảo sát quy luật phân li của Men-đen: Lai hạt vàng thuần chủng (AA) với hạt xanh (aa), phân tích cơ chế phân li giao tử và tỉ lệ F₂ xấp xỉ 3 trội : 1 lặn.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="peaYellow" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#fef08a"/>
+            <stop offset="60%" stop-color="#facc15"/>
+            <stop offset="100%" stop-color="#ca8a04"/>
+          </radialGradient>
+          <radialGradient id="peaGreen" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#bbf7d0"/>
+            <stop offset="60%" stop-color="#4ade80"/>
+            <stop offset="100%" stop-color="#15803d"/>
+          </radialGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#0f172a"/>
+
+        <!-- BẢNG LƯỚI PUNNETT (2x2 CHO THẾ HỆ F2) -->
+        <g id="punnettGrid" transform="translate(240, 150)">
+          <!-- Tiêu đề lưới -->
+          <text x="70" y="-30" fill="#facc15" font-size="13" font-weight="bold" text-anchor="middle">LƯỚI PUNNETT THẾ HỆ F₂ (Aa × Aa)</text>
+
+          <!-- Giao tử đực ♂ (Hàng ngang trên) -->
+          <text x="-40" y="25" fill="#38bdf8" font-size="11" font-weight="bold">Giao tử ♀</text>
+          <text x="60" y="-8" fill="#38bdf8" font-size="11" font-weight="bold">Giao tử ♂</text>
+
+          <!-- Ô giao tử A và a -->
+          <circle cx="35" cy="15" r="14" fill="#1e293b" stroke="#facc15" stroke-width="1.5"/>
+          <text x="35" y="19" fill="#facc15" font-size="12" font-weight="bold" text-anchor="middle">A</text>
+
+          <circle cx="105" cy="15" r="14" fill="#1e293b" stroke="#4ade80" stroke-width="1.5"/>
+          <text x="105" y="19" fill="#4ade80" font-size="12" font-weight="bold" text-anchor="middle">a</text>
+
+          <circle cx="-15" cy="65" r="14" fill="#1e293b" stroke="#facc15" stroke-width="1.5"/>
+          <text x="-15" y="69" fill="#facc15" font-size="12" font-weight="bold" text-anchor="middle">A</text>
+
+          <circle cx="-15" cy="135" r="14" fill="#1e293b" stroke="#4ade80" stroke-width="1.5"/>
+          <text x="-15" y="139" fill="#4ade80" font-size="12" font-weight="bold" text-anchor="middle">a</text>
+
+          <!-- KHUNG LƯỚI 4 Ô CON -->
+          <rect x="0" y="30" width="140" height="140" fill="#1e293b" stroke="#475569" stroke-width="2" rx="4"/>
+          <line x1="70" y1="30" x2="70" y2="170" stroke="#475569" stroke-width="2"/>
+          <line x1="0" y1="100" x2="140" y2="100" stroke="#475569" stroke-width="2"/>
+
+          <!-- Ô 1 (Hàng 1, Cột 1): AA (Hạt vàng) -->
+          <g id="cell1" transform="translate(35, 65)">
+            <circle cx="0" cy="0" r="18" fill="url(#peaYellow)"/>
+            <text x="0" y="24" fill="#facc15" font-size="10" font-weight="bold" text-anchor="middle">AA (Vàng)</text>
+          </g>
+
+          <!-- Ô 2 (Hàng 1, Cột 2): Aa (Hạt vàng) -->
+          <g id="cell2" transform="translate(105, 65)">
+            <circle cx="0" cy="0" r="18" fill="url(#peaYellow)"/>
+            <text x="0" y="24" fill="#facc15" font-size="10" font-weight="bold" text-anchor="middle">Aa (Vàng)</text>
+          </g>
+
+          <!-- Ô 3 (Hàng 2, Cột 1): Aa (Hạt vàng) -->
+          <g id="cell3" transform="translate(35, 135)">
+            <circle cx="0" cy="0" r="18" fill="url(#peaYellow)"/>
+            <text x="0" y="24" fill="#facc15" font-size="10" font-weight="bold" text-anchor="middle">Aa (Vàng)</text>
+          </g>
+
+          <!-- Ô 4 (Hàng 2, Cột 2): aa (Hạt xanh) -->
+          <g id="cell4" transform="translate(105, 135)">
+            <circle cx="0" cy="0" r="18" fill="url(#peaGreen)"/>
+            <text x="0" y="24" fill="#4ade80" font-size="10" font-weight="bold" text-anchor="middle">aa (Xanh)</text>
+          </g>
+        </g>
+
+        <!-- SƠ ĐỒ THẾ HỆ P VÀ F1 BÊN TRÁI -->
+        <g id="lineageP" transform="translate(60, 60)">
+          <text x="40" y="0" fill="#94a3b8" font-size="12" font-weight="bold">P thuần chủng:</text>
+          <!-- Hạt vàng AA -->
+          <circle cx="20" cy="30" r="16" fill="url(#peaYellow)"/>
+          <text x="20" y="58" fill="#facc15" font-size="11" font-weight="bold" text-anchor="middle">AA (Vàng)</text>
+
+          <text x="50" y="34" fill="#94a3b8" font-size="16">×</text>
+
+          <!-- Hạt xanh aa -->
+          <circle cx="80" cy="30" r="16" fill="url(#peaGreen)"/>
+          <text x="80" y="58" fill="#4ade80" font-size="11" font-weight="bold" text-anchor="middle">aa (Xanh)</text>
+
+          <line x1="50" y1="65" x2="50" y2="85" stroke="#94a3b8" stroke-width="2"/>
+          <polygon points="50,90 46,82 54,82" fill="#94a3b8"/>
+
+          <!-- F1: 100% Vàng Aa -->
+          <text x="50" y="110" fill="#94a3b8" font-size="12" font-weight="bold" text-anchor="middle">F₁ (100% Vàng):</text>
+          <circle cx="50" cy="140" r="18" fill="url(#peaYellow)"/>
+          <text x="50" y="172" fill="#facc15" font-size="11" font-weight="bold" text-anchor="middle">Aa (Vàng)</text>
+        </g>
+
+        <!-- GIAO TỬ KÉO THẢ (Direct manipulation) -->
+        <g id="dragGameteA" transform="translate(480, 200)" style="cursor:grab;">
+          <circle cx="0" cy="0" r="22" fill="#1e293b" stroke="#facc15" stroke-width="2"/>
+          <text x="0" y="6" fill="#facc15" font-size="16" font-weight="bold" text-anchor="middle">A</text>
+          <text x="0" y="32" fill="#94a3b8" font-size="10" text-anchor="middle">Giao tử A</text>
+        </g>
+
+        <g id="dragGametea" transform="translate(560, 200)" style="cursor:grab;">
+          <circle cx="0" cy="0" r="22" fill="#1e293b" stroke="#4ade80" stroke-width="2"/>
+          <text x="0" y="6" fill="#4ade80" font-size="16" font-weight="bold" text-anchor="middle">a</text>
+          <text x="0" y="32" fill="#94a3b8" font-size="10" text-anchor="middle">Giao tử a</text>
+        </g>
+
+        <!-- BẢNG TỔNG KẾT TỈ LỆ F2 -->
+        <g id="ratioSummary" transform="translate(240, 360)">
+          <rect x="-10" y="-12" width="360" height="50" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+          <text x="170" y="10" fill="#f8fafc" font-size="12" font-weight="bold" text-anchor="middle">Tỉ lệ kiểu hình F₂: 3 Hạt vàng (75%) : 1 Hạt xanh (25%)</text>
+          <text x="170" y="28" fill="#94a3b8" font-size="11" text-anchor="middle">Tỉ lệ kiểu gen F₂: 1 AA : 2 Aa : 1 aa</text>
+        </g>
+
+        <text id="guideMsg" x="320" y="425" fill="#facc15" font-size="12" font-weight="600" text-anchor="middle">👆 Kéo các giao tử A / a hoặc bấm nút mô phỏng lai F₂</text>
+      </svg>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <h3>🌱 Thao tác phép lai Men-đen</h3>
+        <div class="btn-grid">
+          <button class="btn" id="btnCrossP" data-active="false">1️⃣ Lai P thuần chủng</button>
+          <button class="btn" id="btnSelfF1" data-active="true">2️⃣ Tự thụ phấn F₁</button>
+          <button class="btn" id="btnRandom100" style="grid-column:span 2;">🎲 Mô phỏng lai 100 cây F₂</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Thống kê kiểu gen &amp; kiểu hình F₂</h3>
+        <div class="data-box">
+          <div class="data-line"><span>Số hạt vàng (A-):</span><b id="valYellow" style="color:#facc15;">3 hạt (75%)</b></div>
+          <div class="data-line"><span>Số hạt xanh (aa):</span><b id="valGreen" style="color:#4ade80;">1 hạt (25%)</b></div>
+          <div class="data-line"><span>Tỉ lệ kiểu hình:</span><b id="valRatio">3 Vàng : 1 Xanh</b></div>
+          <div class="data-line"><span>Tỉ lệ kiểu gen:</span><b>1 AA : 2 Aa : 1 aa</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📖 Quy luật phân li của Men-đen</h3>
+        <p style="font-size:12px; line-height:1.6; margin:0; color:var(--ink-soft);">
+          • <b>Tính trạng trội</b> (hạt vàng - A) át hoàn toàn <b>tính trạng lặn</b> (hạt xanh - a).<br>
+          • Trong quá trình phát sinh giao tử, mỗi nhân tố di truyền trong cặp <b>phân li</b> về một giao tử và giữ nguyên bản chất như ở cơ thể thuần chủng P.<br>
+          • Sự tổ hợp tự do của các giao tử đực và cái trong thụ tinh tạo nên tỉ lệ kiểu hình chuẩn <b>3 trội : 1 lặn</b> ở thế hệ F₂.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="quiz-section">
+    <div class="quiz-q">
+      <p>Câu 1: Khi lai hai thứ đậu Hà Lan thuần chủng hạt vàng (trội) và hạt xanh (lặn) với nhau, Men-đen thu được kết quả ở thế hệ lai thứ nhất (F₁) như thế nào?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">A. Đồng tính 100% hạt vàng (mang kiểu gen dị hợp Aa)</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">B. 50% hạt vàng : 50% hạt xanh</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. 75% hạt vàng : 25% hạt xanh</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. 100% hạt xanh</button>
+      </div>
+    </div>
+    <div class="quiz-q">
+      <p>Câu 2: Ở thế hệ F₂ khi cho F₁ tự thụ phấn, tỉ lệ phân li kiểu gen và kiểu hình lần lượt là:</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">A. Kiểu gen 3:1, kiểu hình 1:2:1</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, true)">B. Kiểu gen 1 AA : 2 Aa : 1 aa và kiểu hình 3 Vàng : 1 Xanh</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">C. Kiểu gen 1:1, kiểu hình 1:1</button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)">D. Kiểu gen 1:3:1, kiểu hình 1:1</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="manifest">
+{
+  "id": "sh9-lai-men-den",
+  "subject": "sinh-hoc",
+  "grade": 9,
+  "title": "Thí nghiệm lai một cặp tính trạng của Men-đen",
+  "sgk_ref": "KHTN 9 — KNTT, Bài 36",
+  "objective": "Khám phá quy luật phân li của Men-đen qua phép lai đậu Hà Lan hạt vàng x hạt xanh và bảng Punnett thế hệ F2.",
+  "controls": ["Kéo giao tử A / a", "Nút lai P thuần chủng", "Nút tự thụ phấn F1", "Mô phỏng 100 cây"],
+  "outputs": ["Tỉ lệ kiểu gen 1 AA : 2 Aa : 1 aa", "Tỉ lệ kiểu hình 3 hạt vàng : 1 hạt xanh", "Thống kê mẫu ngẫu nhiên"],
+  "status": "ready"
+}
+</script>
+
+<script>
+  const dragGameteA = document.getElementById('dragGameteA');
+  const dragGametea = document.getElementById('dragGametea');
+  const guideMsg = document.getElementById('guideMsg');
+
+  const valYellow = document.getElementById('valYellow');
+  const valGreen = document.getElementById('valGreen');
+  const valRatio = document.getElementById('valRatio');
+
+  const btnCrossP = document.getElementById('btnCrossP');
+  const btnSelfF1 = document.getElementById('btnSelfF1');
+  const btnRandom100 = document.getElementById('btnRandom100');
+
+  btnCrossP.addEventListener('click', () => {
+    btnCrossP.setAttribute('data-active', 'true');
+    btnSelfF1.setAttribute('data-active', 'false');
+    valYellow.textContent = '100% hạt vàng';
+    valGreen.textContent = '0% hạt xanh';
+    valRatio.textContent = '100% Vàng (Đồng tính F₁)';
+    guideMsg.textContent = '🌿 Thế hệ F₁: 100% Hạt vàng (Aa) do alen A trội hoàn toàn so với a.';
+  });
+
+  btnSelfF1.addEventListener('click', () => {
+    btnCrossP.setAttribute('data-active', 'false');
+    btnSelfF1.setAttribute('data-active', 'true');
+    valYellow.textContent = '3 hạt (75%)';
+    valGreen.textContent = '1 hạt (25%)';
+    valRatio.textContent = '3 Vàng : 1 Xanh';
+    guideMsg.textContent = '🌱 Thế hệ F₂: Phân li theo tỉ lệ 3 hạt vàng : 1 hạt xanh (1 AA : 2 Aa : 1 aa).';
+  });
+
+  btnRandom100.addEventListener('click', () => {
+    let yellowCount = 0;
+    let greenCount = 0;
+    // Mô phỏng 100 phép thụ tinh ngẫu nhiên
+    for (let i = 0; i < 100; i++) {
+      const sperm = Math.random() < 0.5 ? 'A' : 'a';
+      const egg = Math.random() < 0.5 ? 'A' : 'a';
+      if (sperm === 'a' && egg === 'a') {
+        greenCount++;
+      } else {
+        yellowCount++;
+      }
+    }
+    valYellow.textContent = `${yellowCount} cây (${yellowCount}%)`;
+    valGreen.textContent = `${greenCount} cây (${greenCount}%)`;
+    valRatio.textContent = `~ ${(yellowCount / greenCount).toFixed(2)} : 1 (Xấp xỉ 3 : 1)`;
+    guideMsg.textContent = `🎲 Kết quả 100 cây lai F₂ ngẫu nhiên: ${yellowCount} vàng : ${greenCount} xanh (Tỉ lệ ${(yellowCount / greenCount).toFixed(2)}:1 xấp xỉ 3:1)!`;
+  });
+
+  // Direct manipulation Pointer Events
+  const svgScene = document.getElementById('scene');
+  function getSvgPoint(e) {
+    const pt = svgScene.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    return pt.matrixTransform(svgScene.getScreenCTM().inverse());
+  }
+
+  // Kéo giao tử A
+  let isDraggingA = false;
+  let aPos = { x: 480, y: 200 };
+  let aOffset = { x: 0, y: 0 };
+
+  dragGameteA.addEventListener('pointerdown', (e) => {
+    isDraggingA = true;
+    dragGameteA.setPointerCapture(e.pointerId);
+    dragGameteA.style.cursor = 'grabbing';
+    const pt = getSvgPoint(e);
+    aOffset.x = pt.x - aPos.x;
+    aOffset.y = pt.y - aPos.y;
+  });
+
+  dragGameteA.addEventListener('pointermove', (e) => {
+    if (!isDraggingA) return;
+    const pt = getSvgPoint(e);
+    aPos.x = pt.x - aOffset.x;
+    aPos.y = pt.y - aOffset.y;
+    dragGameteA.setAttribute('transform', `translate(${aPos.x}, ${aPos.y})`);
+  });
+
+  dragGameteA.addEventListener('pointerup', (e) => {
+    if (!isDraggingA) return;
+    isDraggingA = false;
+    dragGameteA.releasePointerCapture(e.pointerId);
+    dragGameteA.style.cursor = 'grab';
+    aPos = { x: 480, y: 200 };
+    dragGameteA.setAttribute('transform', `translate(${aPos.x}, ${aPos.y})`);
+    guideMsg.textContent = '✨ Giao tử A mang gen trội quy định màu hạt vàng!';
+  });
+
+  // Kéo giao tử a
+  let isDraggingSmallA = false;
+  let smallAPos = { x: 560, y: 200 };
+  let smallAOffset = { x: 0, y: 0 };
+
+  dragGametea.addEventListener('pointerdown', (e) => {
+    isDraggingSmallA = true;
+    dragGametea.setPointerCapture(e.pointerId);
+    dragGametea.style.cursor = 'grabbing';
+    const pt = getSvgPoint(e);
+    smallAOffset.x = pt.x - smallAPos.x;
+    smallAOffset.y = pt.y - smallAPos.y;
+  });
+
+  dragGametea.addEventListener('pointermove', (e) => {
+    if (!isDraggingSmallA) return;
+    const pt = getSvgPoint(e);
+    smallAPos.x = pt.x - smallAOffset.x;
+    smallAPos.y = pt.y - smallAOffset.y;
+    dragGametea.setAttribute('transform', `translate(${smallAPos.x}, ${smallAPos.y})`);
+  });
+
+  dragGametea.addEventListener('pointerup', (e) => {
+    if (!isDraggingSmallA) return;
+    isDraggingSmallA = false;
+    dragGametea.releasePointerCapture(e.pointerId);
+    dragGametea.style.cursor = 'grab';
+    smallAPos = { x: 560, y: 200 };
+    dragGametea.setAttribute('transform', `translate(${smallAPos.x}, ${smallAPos.y})`);
+    guideMsg.textContent = '✨ Giao tử a mang gen lặn quy định màu hạt xanh!';
+  });
+
+  function checkQuiz(btn, isCorrect) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.quiz-opt').forEach(b => {
+      b.disabled = true;
+      if (b === btn) {
+        b.classList.add(isCorrect ? 'correct' : 'wrong');
+      }
+    });
+  }
+</script>
+</body>
+</html>

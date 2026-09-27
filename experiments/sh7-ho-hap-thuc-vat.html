@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 27: Thực hành hô hấp ở thực vật — KHTN 7 (Kết nối tri thức)</title>
+<meta name="description" content="Thí nghiệm chứng minh quá trình hô hấp ở hạt nảy mầm giải phóng khí carbon dioxide (CO2) làm vẩn đục nước vôi trong trong chuông thủy tinh.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; flex-wrap:wrap; }
+  .crumb{ font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px;
+    font-size:12.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 2px 5px rgba(0,0,0,0.06);
+    transition:all .15s ease;
+  }
+  .home-btn:hover{ border-color:var(--purple-1); color:var(--purple-1); transform:translateY(-1px); }
+  .status-pill{
+    background:var(--chip-bg); color:var(--chip-ink);
+    padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:600;
+  }
+  .banner{
+    background: linear-gradient(125deg, #7b1fa2, #c2185b);
+    border-radius:22px; padding:22px 24px; color:#fff;
+    box-shadow: 0 10px 24px -10px rgba(123,31,162,0.5);
+    margin-bottom:20px;
+  }
+  .banner h1{ margin:0 0 6px; font-size:24px; }
+  .banner p{ margin:0; font-size:13.5px; opacity:.92; }
+
+  .layout{ display:grid; grid-template-columns: 1fr 340px; gap:18px; }
+  @media(max-width:860px){ .layout{ grid-template-columns: 1fr; } }
+
+  .stage{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:20px; padding:16px;
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
+  }
+  .sidebar{ display:flex; flex-direction:column; gap:16px; }
+  .card{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:18px; padding:16px;
+    box-shadow: 0 6px 18px -10px var(--panel-shadow);
+  }
+  .card h3{ margin:0 0 10px; font-size:16px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+  svg#scene{
+    width:100%; height:auto; display:block;
+    background:#1c2430; border-radius:14px;
+    touch-action:none; user-select:none;
+  }
+
+  .ctrl-row{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .ctrl-label{ display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .ctrl-row input[type="range"]{ width:100%; accent-color:var(--purple-1); cursor:pointer; }
+  
+  .btn-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    color:var(--ink); font-weight:600; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; cursor:pointer; font-family:'Inter'; transition:all .15s;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .btn:hover{ border-color:var(--purple-1); color:var(--purple-1); }
+  .btn[data-active="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .data-box{
+    background:var(--paper); border:1.5px solid var(--panel-border);
+    border-radius:12px; padding:12px; font-size:13px;
+  }
+  .data-line{ display:flex; justify-content:space-between; margin-bottom:6px; }
+  .data-line:last-child{ margin-bottom:0; font-weight:700; color:var(--purple-1); }
+
+  .quiz-section{ margin-top:22px; }
+  .quiz-q{
+    background:var(--panel-bg); border:1.5px solid var(--panel-border);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .quiz-q p{ font-weight:700; margin:0 0 10px; font-size:14px; }
+  .quiz-opts{ display:flex; flex-direction:column; gap:6px; }
+  .quiz-opt{
+    background:var(--paper); border:1px solid var(--panel-border);
+    border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer;
+    text-align:left; transition:background .15s;
+  }
+  .quiz-opt:hover{ background:var(--chip-bg); }
+  .quiz-opt.correct{ background:#e8f5e9; border-color:#4caf50; color:#2e7d32; font-weight:700; }
+  .quiz-opt.wrong{ background:#ffebee; border-color:#e53935; color:#c62828; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Sinh học</b> &nbsp;›&nbsp; Lớp 7 &nbsp;›&nbsp; Bài 27</div>
+    <div class="status-pill">KHTN 7 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <h1>Bài 27: Thực hành hô hấp ở thực vật</h1>
+    <p>Khảo sát hiện tượng giải phóng khí Carbon dioxide (CO2) trong quá trình hô hấp của hạt nảy mầm làm vẩn đục nước vôi trong Ca(OH)2 dưới chuông thủy tinh.</p>
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <!-- Bàn thí nghiệm hô hấp thực vật SVG 2.5D -->
+      <svg id="scene" viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bellGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3"/>
+            <stop offset="30%" stop-color="#bae6fd" stop-opacity="0.15"/>
+            <stop offset="70%" stop-color="#ffffff" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#0284c7" stop-opacity="0.4"/>
+          </linearGradient>
+          <radialGradient id="waterClear" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#e0f2fe" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#bae6fd" stop-opacity="0.9"/>
+          </radialGradient>
+        </defs>
+
+        <rect width="640" height="440" fill="#182230"/>
+        <line x1="20" y1="390" x2="620" y2="390" stroke="#334155" stroke-width="2"/>
+
+        <!-- CHUÔNG A: HẠT NẢY MẦM + CỐC NƯỚC VÔI TRONG (Bên trái) -->
+        <g id="bellAGroup" transform="translate(180, 140)">
+          <!-- Đế đĩa phẳng chuông A -->
+          <ellipse cx="0" cy="240" rx="110" ry="16" fill="#334155" stroke="#475569" stroke-width="2"/>
+
+          <!-- Đĩa Petri chứa hạt đậu nảy mầm (nửa bên trái của chuông) -->
+          <g transform="translate(-45, 215)">
+            <ellipse cx="0" cy="15" rx="42" ry="10" fill="#243342" stroke="#475569" stroke-width="1.5"/>
+            <!-- Lớp bông ẩm -->
+            <ellipse cx="0" cy="13" rx="38" ry="8" fill="#e2e8f0" opacity="0.6"/>
+            <!-- Các hạt đậu nảy mầm nhỏ màu xanh lá -->
+            <g fill="#4ade80" stroke="#15803d" stroke-width="1">
+              <ellipse cx="-20" cy="10" rx="6" ry="4"/>
+              <path d="M -20 8 Q -16 2 -12 4" fill="none" stroke="#22c55e" stroke-width="2"/>
+
+              <ellipse cx="-5" cy="14" rx="6" ry="4"/>
+              <path d="M -5 12 Q -2 4 4 6" fill="none" stroke="#22c55e" stroke-width="2"/>
+
+              <ellipse cx="12" cy="9" rx="6" ry="4"/>
+              <path d="M 12 7 Q 16 0 20 2" fill="none" stroke="#22c55e" stroke-width="2"/>
+
+              <ellipse cx="25" cy="13" rx="6" ry="4"/>
+              <path d="M 25 11 Q 28 5 32 8" fill="none" stroke="#22c55e" stroke-width="2"/>
+
+              <ellipse cx="-10" cy="7" rx="5" ry="3.5"/>
+              <ellipse cx="6" cy="15" rx="5" ry="3.5"/>
+            </g>
+            <text x="0" y="38" fill="#cbd5e1" font-size="10.5" font-weight="700" text-anchor="middle">Hạt nảy mầm</text>
+          </g>
+
+          <!-- Cốc thủy tinh chứa nước vôi trong (nửa bên phải chuông A) -->
+          <g transform="translate(45, 175)">
+            <rect x="-24" y="0" width="48" height="60" rx="4" fill="rgba(255,255,255,0.15)" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Dung dịch nước vôi trong (sẽ hóa đục theo thời gian) -->
+            <rect id="limeWaterA" x="-22" y="16" width="44" height="42" fill="url(#waterClear)" rx="2"/>
+            <text x="0" y="78" fill="#cbd5e1" font-size="10.5" font-weight="700" text-anchor="middle">Nước vôi trong</text>
+          </g>
+
+          <!-- Chuông thủy tinh trong suốt úp kín A -->
+          <path d="M -90 230 C -90 60, -50 0, 0 0 C 50 0, 90 60, 90 230 Z" fill="url(#bellGrad)" stroke="#7dd3fc" stroke-width="2"/>
+          <!-- Quai cầm trên đỉnh chuông -->
+          <circle cx="0" cy="-6" r="10" fill="#7dd3fc" opacity="0.6"/>
+
+          <!-- Khí CO2 thoát ra bốc lên trong chuông -->
+          <g id="gasCO2" opacity="0.7">
+            <circle cx="-30" cy="160" r="4" fill="#a7f3d0"/>
+            <text x="-30" y="163" fill="#047857" font-size="6" font-weight="800" text-anchor="middle">CO2</text>
+            <circle cx="-15" cy="110" r="5" fill="#a7f3d0"/>
+            <text x="-15" y="113" fill="#047857" font-size="7" font-weight="800" text-anchor="middle">CO2</text>
+            <circle cx="10" cy="130" r="5" fill="#a7f3d0"/>
+            <text x="10" y="133" fill="#047857" font-size="7" font-weight="800" text-anchor="middle">CO2</text>
+          </g>
+
+          <text x="0" y="275" fill="#38bdf8" font-size="14" font-weight="800" text-anchor="middle">CHUÔNG A (Thí nghiệm)</text>
+          <text id="statusA" x="0" y="293" fill="#4ade80" font-size="12" font-weight="600" text-anchor="middle">Nước vôi chuyển vẩn đục trắng</text>
+        </g>
+
+        <!-- CHUÔNG B: ĐỐI CHỨNG (CHỈ CÓ CỐC NƯỚC VÔI TRONG) (Bên phải) -->
+        <g id="bellBGroup" transform="translate(460, 140)">
+          <!-- Đế đĩa phẳng chuông B -->
+          <ellipse cx="0" cy="240" rx="110" ry="16" fill="#334155" stroke="#475569" stroke-width="2"/>
+
+          <!-- Cốc nước vôi trong ở giữa chuông B -->
+          <g transform="translate(0, 175)">
+            <rect x="-24" y="0" width="48" height="60" rx="4" fill="rgba(255,255,255,0.15)" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Luôn trong suốt không đổi -->
+            <rect x="-22" y="16" width="44" height="42" fill="url(#waterClear)" rx="2"/>
+            <text x="0" y="78" fill="#cbd5e1" font-size="10.5" font-weight="700" text-anchor="middle">Nước vôi trong</text>
+          </g>
+
+          <!-- Chuông thủy tinh B -->
+          <path d="M -90 230 C -90 60, -50 0, 0 0 C 50 0, 90 60, 90 230 Z" fill="url(#bellGrad)" stroke="#7dd3fc" stroke-width="2"/>
+          <circle cx="0" cy="-6" r="10" fill="#7dd3fc" opacity="0.6"/>
+
+          <text x="0" y="275" fill="#94a3b8" font-size="14" font-weight="800" text-anchor="middle">CHUÔNG B (Đối chứng)</text>
+          <text x="0" y="293" fill="#94a3b8" font-size="12" font-weight="600" text-anchor="middle">Nước vôi trong suốt, không đổi</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Bảng điều khiển -->
+    <div class="sidebar">
+      <div class="card">
+        <h3>⏱️ Thời gian quan sát</h3>
+        <div class="ctrl-row">
+          <div class="ctrl-label">
+            <span>Thời gian trôi qua:</span>
+            <b id="valTime">60 phút</b>
+          </div>
+          <input type="range" id="sliderTime" min="0" max="120" value="60" step="5">
+        </div>
+
+        <div class="btn-grid" style="margin-top:6px;">
+          <button class="btn" id="btnPreset0">0 phút (Bắt đầu)</button>
+          <button class="btn" id="btnPreset90">90 phút (Đục hoàn toàn)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Hiện tượng ghi nhận</h3>
+        <div class="data-box">
+          <div class="data-line">
+            <span>Nước vôi ở Chuông A:</span>
+            <span id="resWaterA" style="font-weight:700; color:#ef4444;">Vẩn đục trắng CaCO3</span>
+          </div>
+          <div class="data-line">
+            <span>Nước vôi ở Chuông B:</span>
+            <span id="resWaterB">Trong suốt, không đổi</span>
+          </div>
+          <div class="data-line">
+            <span>Khí sinh ra:</span>
+            <span id="resGas">Carbon dioxide (CO2)</span>
+          </div>
+          <div class="data-line" style="border-top:1px dashed var(--panel-border); padding-top:6px; margin-top:6px;">
+            <span>Phương trình:</span>
+            <span style="font-size:11.5px; color:var(--purple-1);">Ca(OH)2 + CO2 ➜ CaCO3↓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Câu hỏi củng cố SGK -->
+  <div class="quiz-section">
+    <div class="card">
+      <h3>✍️ Câu hỏi củng cố (SGK KHTN 7)</h3>
+      
+      <div class="quiz-q" data-correct="0">
+        <p>1. Tại sao trong chuông A, bề mặt cốc nước vôi trong xuất hiện váng và nước bị vẩn đục?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Hạt nảy mầm hô hấp thải ra khí CO2, tác dụng với Ca(OH)2 tạo kết tủa trắng CaCO3</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Hạt nảy mầm hút hết nước vôi</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Do nhiệt độ trong chuông tăng cao làm nước vôi sôi</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Do bụi từ hạt bay vào cốc</button>
+        </div>
+      </div>
+
+      <div class="quiz-q" data-correct="2">
+        <p>2. Mục đích của việc bố trí thêm chuông B (chỉ có cốc nước vôi trong mà không có hạt) là gì?</p>
+        <div class="quiz-opts">
+          <button class="quiz-opt" onclick="checkAnswer(this, 0)">A. Dự phòng nếu chuông A bị vỡ</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 1)">B. Để tăng thể tích phòng thí nghiệm</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 2)">C. Làm mẫu đối chứng để khẳng định hiện tượng đục nước vôi do chính hạt hô hấp sinh ra, chứ không phải do không khí tự nhiên</button>
+          <button class="quiz-opt" onclick="checkAnswer(this, 3)">D. Để đo độ ẩm không khí</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let minutes = 60;
+
+  const sliderTime = document.getElementById('sliderTime');
+  const valTime = document.getElementById('valTime');
+  const limeWaterA = document.getElementById('limeWaterA');
+  const gasCO2 = document.getElementById('gasCO2');
+  const statusA = document.getElementById('statusA');
+  const resWaterA = document.getElementById('resWaterA');
+  const resWaterB = document.getElementById('resWaterB');
+
+  function updateExperiment(){
+    valTime.textContent = `${minutes} phút`;
+    sliderTime.value = minutes;
+
+    // Tỉ lệ đục từ 0 -> 1
+    const progress = minutes / 120;
+    gasCO2.style.opacity = (progress * 0.9).toFixed(2);
+
+    if (minutes === 0) {
+      limeWaterA.setAttribute('fill', 'url(#waterClear)');
+      statusA.textContent = 'Mới bắt đầu: Nước vôi còn trong';
+      statusA.setAttribute('fill', '#94a3b8');
+      resWaterA.textContent = 'Trong suốt (Chưa phản ứng)';
+      resWaterA.style.color = '#94a3b8';
+    } else if (minutes < 40) {
+      limeWaterA.setAttribute('fill', '#e2e8f0');
+      statusA.textContent = 'Hơi xuất hiện lớp màng mỏng váng trắng';
+      statusA.setAttribute('fill', '#fde047');
+      resWaterA.textContent = 'Bắt đầu vẩn đục nhẹ';
+      resWaterA.style.color = '#eab308';
+    } else {
+      limeWaterA.setAttribute('fill', '#ffffff');
+      statusA.textContent = 'Nước vôi chuyển vẩn đục trắng rõ rệt';
+      statusA.setAttribute('fill', '#4ade80');
+      resWaterA.textContent = 'Vẩn đục trắng kết tủa CaCO3';
+      resWaterA.style.color = '#ef4444';
+    }
+  }
+
+  let isDraggingBell = false;
+  const bellAGroup = document.getElementById('bellAGroup');
+  bellAGroup.style.cursor = 'grab';
+  bellAGroup.addEventListener('pointerdown', (e)=>{
+    isDraggingBell = true;
+    bellAGroup.setPointerCapture(e.pointerId);
+  });
+  bellAGroup.addEventListener('pointermove', ()=>{
+    if (!isDraggingBell) return;
+  });
+  bellAGroup.addEventListener('pointerup', ()=>{
+    isDraggingBell = false;
+  });
+
+  sliderTime.addEventListener('input', (e)=>{
+    minutes = parseInt(e.target.value);
+    updateExperiment();
+  });
+
+  document.getElementById('btnPreset0').addEventListener('click', ()=>{
+    minutes = 0;
+    updateExperiment();
+  });
+
+  document.getElementById('btnPreset90').addEventListener('click', ()=>{
+    minutes = 90;
+    updateExperiment();
+  });
+
+  function checkAnswer(btn, optIdx){
+    const q = btn.closest('.quiz-q');
+    const correctIdx = parseInt(q.dataset.correct);
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(b => b.classList.remove('correct', 'wrong'));
+    if (optIdx === correctIdx) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+    }
+  }
+
+  updateExperiment();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "sh7-ho-hap-thuc-vat",
+  "subject": "sinh-hoc",
+  "grade": 7,
+  "title": "Thực hành hô hấp ở thực vật",
+  "sgk_ref": "KHTN 7 — KNTT, Bài 27",
+  "objective": "Chứng minh sự giải phóng khí carbon dioxide (CO2) của hạt nảy mầm trong quá trình hô hấp tế bào làm vẩn đục nước vôi trong.",
+  "controls": [
+    {"name": "Thời gian (phút)", "type": "range", "range": [0, 120], "unit": "phút"}
+  ],
+  "outputs": [
+    {"name": "Màu sắc nước vôi trong chuông A", "type": "string"},
+    {"name": "Màu sắc nước vôi trong chuông B", "type": "string"}
+  ],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

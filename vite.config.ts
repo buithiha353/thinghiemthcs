@@ -1,9 +1,24 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  const experimentsDir = path.resolve(__dirname, 'experiments');
+  const experimentInputs: Record<string, string> = {
+    main: path.resolve(__dirname, 'index.html'),
+  };
+
+  if (fs.existsSync(experimentsDir)) {
+    fs.readdirSync(experimentsDir).forEach((file) => {
+      if (file.endsWith('.html')) {
+        const key = file.replace(/\.html$/, '').replace(/[^a-zA-Z0-9_]/g, '_');
+        experimentInputs[key] = path.resolve(experimentsDir, file);
+      }
+    });
+  }
+
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
@@ -13,11 +28,7 @@ export default defineConfig(() => {
     },
     build: {
       rollupOptions: {
-        input: {
-          main: path.resolve(__dirname, 'index.html'),
-          vl6_do_chieu_dai: path.resolve(__dirname, 'experiments/vl6-do-chieu-dai.html'),
-          vl6_do_khoi_luong: path.resolve(__dirname, 'experiments/vl6-do-khoi-luong.html'),
-        },
+        input: experimentInputs,
       },
     },
     server: {

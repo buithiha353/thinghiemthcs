@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 42: Biến dạng của lò xo — KHTN 6 (Kết nối tri thức)</title>
+<meta name="description" content="Mô phỏng 2.5D thí nghiệm đo độ dãn của lò xo treo thẳng đứng tỉ lệ với khối lượng quả nặng theo SGK Khoa học tự nhiên 6, bộ Kết nối tri thức với cuộc sống.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1:#a9713f; --wood-2:#7a4c26; --wood-grain:#8f5c30;
+    --paper:#fffdf7; --paper-edge:#efe6d3; --paper-line:#e7ddc4;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --spring-metal:#718093; --spring-highlight:#dcdde1;
+    --weight-brass:#f1c40f; --weight-dark:#d35400;
+    --accent:#1c8c6b; --accent-soft:#e4f4ee;
+    --warn:#c9820f; --warn-soft:#fbeed8;
+    --danger:#c94444; --danger-soft:#fbe7e5;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+      --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+    --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+    --body-bg:#1b1812;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    line-height:1.5;
+  }
+  h1,h2,h3, .display{ font-family:'Baloo 2', 'Inter', sans-serif; }
+  .shell{ max-width: 1120px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap; padding:10px 4px 14px; font-size:13.5px; color:var(--ink-soft);
+  }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px; font-weight:600; font-size:12.5px;
+    text-decoration:none; transition: all .12s ease;
+    box-shadow: 0 2px 6px -2px var(--panel-shadow);
+  }
+  .home-btn:hover{
+    background:var(--purple-1); border-color:var(--purple-1); color:#fff;
+    transform:translateY(-1px); text-decoration:none;
+  }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--warn-soft); color:#8a5c05;
+    border:1px solid rgba(201,130,15,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:600;
+  }
+  .status-pill::before{ content:"●"; font-size:9px; color:#c9820f; }
+
+  .banner{
+    position:relative; background: linear-gradient(120deg, var(--purple-1), var(--purple-2));
+    border-radius: 26px; padding: 26px 26px 40px; color:#fff; overflow:hidden;
+    box-shadow: 0 14px 30px -12px rgba(123,31,162,0.55);
+  }
+  .banner-row{ display:flex; align-items:center; gap:16px; position:relative; z-index:2; flex-wrap:wrap; }
+  .badge{
+    flex:0 0 auto; width:64px; height:64px; border-radius:50%;
+    background:#fff; color:var(--purple-1);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; text-align:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    border: 4px solid rgba(255,255,255,0.55);
+  }
+  .banner-title{ flex:1 1 260px; min-width:200px; }
+  .banner-title h1{ margin:0 0 4px; font-size: clamp(22px,4vw,30px); }
+  .banner-title p{ margin:0; font-size:14px; opacity:0.92; max-width:540px; }
+  .meta-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; position:relative; z-index:2; }
+  .chip{
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(2px);
+    border:1px solid rgba(255,255,255,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:500;
+  }
+
+  .grid{ display:grid; grid-template-columns: 1.55fr 1fr; gap:20px; margin-top:20px; }
+  @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:20px; padding:18px 18px 20px;
+    box-shadow: 0 10px 24px -14px var(--panel-shadow);
+  }
+  .panel h2{ font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  .panel h2 .num{
+    width:24px; height:24px; border-radius:50%; background:var(--purple-1); color:#fff;
+    font-size:12.5px; display:inline-flex; align-items:center; justify-content:center; font-family:'Inter'; font-weight:700;
+  }
+
+  .stage{
+    background:
+      repeating-linear-gradient(100deg, var(--wood-grain) 0px, var(--wood-grain) 2px, transparent 2px, transparent 26px),
+      linear-gradient(160deg, var(--wood-1), var(--wood-2));
+    border-radius:20px; padding:20px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.25), 0 10px 24px -14px var(--panel-shadow);
+  }
+  .worksheet{
+    background: var(--paper); border-radius:14px; padding:14px 10px 6px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.25), 0 2px 0 var(--paper-edge);
+    position:relative;
+  }
+  .worksheet svg{ width:100%; height:auto; display:block; user-select:none; }
+
+  .weight-draggable{ cursor: grab; touch-action: none; }
+  .weight-draggable.dragging{ cursor: grabbing; }
+
+  .steps-note{ font-size:12.5px; color:var(--ink-soft); text-align:center; margin-top:8px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13.5px; font-weight:600; margin-bottom:8px;
+  }
+  .field label .val{ font-family:'Baloo 2'; color:var(--purple-1); font-size:14px; }
+  .field .hint{ font-size:12px; color:var(--ink-faint); margin-top:5px; line-height:1.45; }
+
+  .readout{
+    background: var(--accent-soft); border-radius:14px; padding:14px 16px; margin-top:4px;
+    border:1px solid rgba(28,140,107,0.2);
+  }
+  .readout .big{
+    font-family:'Baloo 2'; font-size:28px; font-weight:700; color:var(--accent);
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .readout .big span{ font-size:14px; font-weight:600; color:var(--ink-soft); font-family:'Inter'; }
+  .readout .msg{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+
+  .kv{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .kv div{ background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px; padding:8px 10px; }
+  .kv .l{ font-size:11px; color:var(--ink-faint); }
+  .kv .v{ font-family:'Baloo 2'; font-size:16px; }
+
+  .checklist{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .checklist li{ display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--ink-soft); }
+  .checklist .box{
+    width:18px; height:18px; border-radius:6px; border:2px solid var(--panel-border);
+    flex:0 0 auto; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:transparent; transition: all .15s ease;
+  }
+  .checklist li.done .box{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .checklist li.done{ color:var(--ink); font-weight:500; }
+
+  .btn-action{
+    border:1.5px solid var(--panel-border); background:var(--panel-bg); color:var(--ink);
+    padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter'; transition: transform .12s ease;
+  }
+  .btn-action:hover{ transform: translateY(-1px); border-color:var(--purple-1); }
+
+  .quiz-q{ margin-bottom:16px; }
+  .quiz-q p.qtext{ font-weight:600; font-size:13.5px; margin:0 0 8px; }
+  .opt{
+    display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:10px;
+    border:1.5px solid var(--panel-border); margin-bottom:6px; cursor:pointer; font-size:13px;
+  }
+  .opt:hover{ border-color: var(--purple-1); }
+  .opt input{ accent-color: var(--purple-1); }
+  .feedback{ font-size:12.5px; margin-top:6px; padding:8px 10px; border-radius:10px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:var(--accent-soft); color:var(--accent); font-weight:500; }
+  .feedback.wrong{ background:var(--danger-soft); color:var(--danger); }
+
+  details.manifest{
+    margin-top:20px; background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:16px; padding:12px 16px;
+  }
+  details.manifest summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  details.manifest pre{
+    font-size:11.5px; overflow-x:auto; background: var(--body-bg); padding:12px; border-radius:10px;
+    margin-top:10px; color: var(--ink-soft); line-height:1.6;
+  }
+  .foot-note{ text-align:center; font-size:12px; color:var(--ink-faint); margin-top:22px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 6 &nbsp;›&nbsp; Bài 42</div>
+    <div class="status-pill">KHTN 6 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-row">
+      <div class="badge">BÀI<br>42</div>
+      <div class="banner-title">
+        <h1>Biến dạng của lò xo</h1>
+        <p>Mô phỏng 2.5D — thí nghiệm khảo sát độ dãn của lò xo treo thẳng đứng tỉ lệ với khối lượng quả nặng theo SGK KHTN 6 (Hình 42.2, tr.152).</p>
+      </div>
+    </div>
+    <div class="meta-chips">
+      <span class="chip">Môn: Vật lí</span>
+      <span class="chip">Lớp 6</span>
+      <span class="chip">SGK KHTN 6 – KNTT, Bài 42, tr.151–154</span>
+      <span class="chip">⏱ ~10 phút</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel" style="padding:16px;">
+        <h2><span class="num">1</span>Bàn thực hành</h2>
+        <div class="stage">
+          <div class="worksheet">
+            <svg id="scene" viewBox="0 0 640 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mô phỏng độ dãn của lò xo treo thẳng đứng">
+              <defs>
+                <linearGradient id="standGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#7f8c8d"/>
+                  <stop offset="100%" stop-color="#2c3e50"/>
+                </linearGradient>
+                <linearGradient id="rulerGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#ffeaa7"/>
+                  <stop offset="100%" stop-color="#fdcb6e"/>
+                </linearGradient>
+                <filter id="weightGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+                </filter>
+              </defs>
+
+              <!-- Base Table -->
+              <rect x="20" y="300" width="600" height="15" rx="3" fill="#2d3436"/>
+
+              <!-- Laboratory Support Stand (Giá đỡ thí nghiệm) -->
+              <!-- Stand Base -->
+              <rect x="60" y="285" width="160" height="20" rx="4" fill="#2c3e50"/>
+              <!-- Vertical Rod -->
+              <rect x="90" y="25" width="14" height="265" rx="2" fill="url(#standGrad)" stroke="#1e272e" stroke-width="1"/>
+              <!-- Horizontal Crossbar -->
+              <rect x="80" y="45" width="220" height="12" rx="2" fill="url(#standGrad)" stroke="#1e272e" stroke-width="1"/>
+              <!-- Hanging Hook at x: 230, y: 55 -->
+              <circle cx="230" cy="55" r="4" fill="#bdc3c7"/>
+              <path d="M 230 57 V 65" stroke="#7f8c8d" stroke-width="2"/>
+
+              <!-- Vertical Ruler with mm / cm scale next to spring (x: 275, y: 65, height: 230) -->
+              <rect x="275" y="65" width="32" height="225" rx="3" fill="url(#rulerGrad)" stroke="#d35400" stroke-width="1.5"/>
+              <!-- Ruler ticks (0 to 45 cm, scale: 5px per cm) -->
+              <g id="rulerTicks">
+                <!-- 0 cm at y=65 -->
+                <line x1="275" y1="65" x2="288" y2="65" stroke="#c0392b" stroke-width="2"/>
+                <text x="292" y="69" font-size="8.5" font-family="Inter" font-weight="700" fill="#c0392b">0</text>
+                <!-- 10 cm at y=115 -->
+                <line x1="275" y1="115" x2="286" y2="115" stroke="#2d3436" stroke-width="1.5"/>
+                <text x="291" y="119" font-size="8" font-family="Inter" font-weight="700" fill="#2d3436">10</text>
+                <!-- 20 cm at y=165 (l0 initial) -->
+                <line x1="275" y1="165" x2="288" y2="165" stroke="#2980b9" stroke-width="2"/>
+                <text x="291" y="169" font-size="8.5" font-family="Inter" font-weight="700" fill="#2980b9">20(l₀)</text>
+                <!-- 24 cm at y=185 -->
+                <line x1="275" y1="185" x2="284" y2="185" stroke="#2d3436" stroke-width="1"/>
+                <text x="291" y="188" font-size="7.5" font-family="Inter" fill="#2d3436">24</text>
+                <!-- 28 cm at y=205 -->
+                <line x1="275" y1="205" x2="284" y2="205" stroke="#2d3436" stroke-width="1"/>
+                <text x="291" y="208" font-size="7.5" font-family="Inter" fill="#2d3436">28</text>
+                <!-- 32 cm at y=225 -->
+                <line x1="275" y1="225" x2="284" y2="225" stroke="#2d3436" stroke-width="1"/>
+                <text x="291" y="228" font-size="7.5" font-family="Inter" fill="#2d3436">32</text>
+                <!-- 40 cm at y=265 -->
+                <line x1="275" y1="265" x2="286" y2="265" stroke="#2d3436" stroke-width="1.5"/>
+                <text x="291" y="268" font-size="8" font-family="Inter" font-weight="700" fill="#2d3436">40</text>
+              </g>
+
+              <!-- Initial length line reference (l0 = 20 cm at y = 165) -->
+              <line x1="210" y1="165" x2="275" y2="165" stroke="#2980b9" stroke-width="1.2" stroke-dasharray="3 2"/>
+
+              <!-- Dynamic Spring (Lò xo xoắn treo từ 230,65 đến bottomY) -->
+              <!-- Base bottomY = 165 (l0 = 20cm, scale: 5px/cm) -->
+              <path id="springPath" d="M 230 65 L 230 75 Q 240 82 230 89 Q 220 96 230 103 Q 240 110 230 117 Q 220 124 230 131 Q 240 138 230 145 Q 220 152 230 159 L 230 165" fill="none" stroke="#2d3436" stroke-width="2.5" stroke-linecap="round"/>
+
+              <!-- Bottom Indicator Needle -->
+              <g id="needleGroup" transform="translate(230, 165)">
+                <!-- Indicator Arrow pointing to ruler -->
+                <line x1="0" y1="0" x2="45" y2="0" stroke="#c0392b" stroke-width="2"/>
+                <polygon points="45,0 40,-3 40,3" fill="#c0392b"/>
+                <!-- Bottom hook -->
+                <circle cx="0" cy="4" r="3.5" fill="none" stroke="#2d3436" stroke-width="2"/>
+
+                <!-- Container for attached weights -->
+                <g id="attachedWeights" transform="translate(0, 8)"></g>
+              </g>
+
+              <!-- Weights Tray (Hộp đựng quả nặng 50g ở góc phải dưới) -->
+              <rect x="360" y="220" width="220" height="75" rx="8" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="1.8"/>
+              <text x="470" y="238" font-size="11.5" font-family="'Baloo 2'" font-weight="700" fill="#7a5a24" text-anchor="middle">Hộp quả nặng (50g mỗi quả)</text>
+
+              <!-- 3 Draggable 50g Weights in Tray -->
+              <!-- Weight 1 -->
+              <g id="weight1" class="weight-draggable" data-id="1" transform="translate(385, 250)" filter="url(#weightGlow)">
+                <rect x="0" y="0" width="34" height="32" rx="4" fill="url(#rulerGrad)" stroke="#d35400" stroke-width="1.5"/>
+                <circle cx="17" cy="-3" r="3.5" fill="none" stroke="#d35400" stroke-width="1.5"/>
+                <text x="17" y="21" font-size="11" font-family="Inter" font-weight="700" fill="#d35400" text-anchor="middle">50g</text>
+              </g>
+
+              <!-- Weight 2 -->
+              <g id="weight2" class="weight-draggable" data-id="2" transform="translate(450, 250)" filter="url(#weightGlow)">
+                <rect x="0" y="0" width="34" height="32" rx="4" fill="url(#rulerGrad)" stroke="#d35400" stroke-width="1.5"/>
+                <circle cx="17" cy="-3" r="3.5" fill="none" stroke="#d35400" stroke-width="1.5"/>
+                <text x="17" y="21" font-size="11" font-family="Inter" font-weight="700" fill="#d35400" text-anchor="middle">50g</text>
+              </g>
+
+              <!-- Weight 3 -->
+              <g id="weight3" class="weight-draggable" data-id="3" transform="translate(515, 250)" filter="url(#weightGlow)">
+                <rect x="0" y="0" width="34" height="32" rx="4" fill="url(#rulerGrad)" stroke="#d35400" stroke-width="1.5"/>
+                <circle cx="17" cy="-3" r="3.5" fill="none" stroke="#d35400" stroke-width="1.5"/>
+                <text x="17" y="21" font-size="11" font-family="Inter" font-weight="700" fill="#d35400" text-anchor="middle">50g</text>
+              </g>
+
+            </svg>
+
+            <p class="steps-note">✋ Kéo trực tiếp các quả nặng 50g từ hộp móc vào đầu dưới của lò xo để đo độ dãn của lò xo!</p>
+          </div>
+        </div>
+      </div>
+
+      <details class="manifest">
+        <summary>ℹ️ Thông tin module (manifest.json)</summary>
+        <pre>{
+  "id": "vl6-bien-dang-lo-xo",
+  "subject": "vat-ly",
+  "grade": 6,
+  "title": "Biến dạng của lò xo",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 42, tr.151-154",
+  "objective": "Thực hiện thí nghiệm chứng minh độ dãn của lò xo treo thẳng đứng tỉ lệ thuận với khối lượng của vật nặng treo vào.",
+  "controls": [
+    { "id": "hook_weights", "label": "Kéo móc các quả nặng vào lò xo", "type": "drag_drop" }
+  ],
+  "outputs": ["chieu_dai_l", "do_dan_delta_l", "khoi_luong_m"],
+  "status": "draft"
+}</pre>
+      </details>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div class="panel">
+        <h2><span class="num">2</span>Số liệu đo & Kết luận</h2>
+
+        <div class="field">
+          <label>Số quả nặng đang treo: <span class="val" id="weightsCount">0 quả (0 g)</span></label>
+          <div class="hint">Chiều dài tự nhiên l₀ = 20 cm. Mỗi quả nặng 50g làm lò xo dãn thêm 4 cm. Bấm nút để gỡ hết quả nặng về hộp.</div>
+          <button type="button" id="btnResetWeights" class="btn-action" style="margin-top:10px;">🔄 Gỡ các quả nặng về hộp</button>
+        </div>
+
+        <div class="readout" id="readoutBox">
+          <div class="big" id="readoutBig">0 <span>cm (Độ dãn Δl)</span></div>
+          <div class="msg" id="readoutMsg">Chưa treo quả nặng: chiều dài lò xo l = l₀ = 20 cm. Độ dãn Δl = 0 cm.</div>
+        </div>
+
+        <div class="kv">
+          <div><div class="l">Chiều dài lò xo l</div><div class="v" id="valLength">20,0 cm</div></div>
+          <div><div class="l">Độ dãn Δl = l - l₀</div><div class="v" id="valDelta">0,0 cm</div></div>
+        </div>
+
+        <ul class="checklist" id="checklist">
+          <li class="done"><span class="box">✓</span> Xác định chiều dài ban đầu l₀ = 20 cm</li>
+          <li id="chkWeight1"><span class="box">✓</span> Móc 1 quả nặng 50g (Δl = 4 cm)</li>
+          <li id="chkWeight2"><span class="box">✓</span> Móc 2 quả nặng 100g (Δl = 8 cm)</li>
+          <li id="chkWeight3"><span class="box">✓</span> Móc 3 quả nặng 150g (Δl = 12 cm)</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2><span class="num">3</span>Kiểm tra nhanh</h2>
+
+        <div class="quiz-q" data-correct="b">
+          <p class="qtext">1. Độ dãn của lò xo treo thẳng đứng có mối quan hệ gì với khối lượng vật treo?</p>
+          <label class="opt"><input type="radio" name="q1" value="a"> Tỉ lệ nghịch với khối lượng</label>
+          <label class="opt"><input type="radio" name="q1" value="b"> Tỉ lệ thuận với khối lượng vật treo</label>
+          <label class="opt"><input type="radio" name="q1" value="c"> Không phụ thuộc vào khối lượng</label>
+          <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-q" data-correct="c">
+          <p class="qtext">2. Một lò xo có chiều dài ban đầu 20 cm. Khi treo quả nặng 50g lò xo dài 24 cm. Khi treo 100g lò xo sẽ dài bao nhiêu?</p>
+          <label class="opt"><input type="radio" name="q2" value="a"> 26 cm</label>
+          <label class="opt"><input type="radio" name="q2" value="b"> 27 cm</label>
+          <label class="opt"><input type="radio" name="q2" value="c"> 28 cm</label>
+          <div class="feedback"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot-note">Chương VIII, Bài 42 · Phong cách 2.5D lấy cảm hứng từ SGK KHTN 6 (Kết nối tri thức với cuộc sống).</p>
+</div>
+
+<script>
+(function(){
+  const initPositions = {
+    weight1: { x: 385, y: 250, hooked: false },
+    weight2: { x: 450, y: 250, hooked: false },
+    weight3: { x: 515, y: 250, hooked: false }
+  };
+
+  const springPath = document.getElementById('springPath');
+  const needleGroup = document.getElementById('needleGroup');
+  const attachedWeights = document.getElementById('attachedWeights');
+  const weightsCount = document.getElementById('weightsCount');
+  const readoutBig = document.getElementById('readoutBig');
+  const readoutMsg = document.getElementById('readoutMsg');
+  const valLength = document.getElementById('valLength');
+  const valDelta = document.getElementById('valDelta');
+  const chkWeight1 = document.getElementById('chkWeight1');
+  const chkWeight2 = document.getElementById('chkWeight2');
+  const chkWeight3 = document.getElementById('chkWeight3');
+  const btnReset = document.getElementById('btnResetWeights');
+
+  const L0_CM = 20;
+  const DELTA_PER_WEIGHT_CM = 4;
+  const PX_PER_CM = 5;
+
+  function countHooked(){
+    return Object.values(initPositions).filter(w => w.hooked).length;
+  }
+
+  function updateSpring(){
+    const n = countHooked();
+    const deltaCm = n * DELTA_PER_WEIGHT_CM;
+    const currentLenCm = L0_CM + deltaCm;
+
+    // Needle Y coordinate: 65 (top of spring) + currentLenCm * 5
+    const needleY = 65 + currentLenCm * PX_PER_CM;
+    needleGroup.setAttribute('transform', `translate(230, ${needleY})`);
+
+    // Dynamically redraw zigzag spring path
+    const segs = 7;
+    const startY = 65;
+    const endY = needleY;
+    const span = (endY - startY) / (segs + 1);
+    let d = `M 230 ${startY} L 230 ${startY + span}`;
+    for(let i=1; i<=segs; i++){
+      const y = startY + span * i;
+      const x = (i % 2 === 1) ? 242 : 218;
+      d += ` Q ${x} ${y + span/2} 230 ${y + span}`;
+    }
+    springPath.setAttribute('d', d);
+
+    // Update UI
+    const totalMass = n * 50;
+    weightsCount.textContent = `${n} quả (${totalMass} g)`;
+    valLength.textContent = `${currentLenCm.toFixed(1).replace('.', ',')} cm`;
+    valDelta.textContent = `${deltaCm.toFixed(1).replace('.', ',')} cm`;
+    readoutBig.innerHTML = `${deltaCm} <span>cm (Δl)</span>`;
+
+    if(n === 0){
+      readoutMsg.textContent = 'Chưa treo quả nặng: chiều dài lò xo l = l₀ = 20 cm. Độ dãn Δl = 0 cm.';
+    } else {
+      readoutMsg.textContent = `Treo ${n} quả nặng (${totalMass}g): Lò xo dãn thêm Δl = ${deltaCm} cm → Khi khối lượng tăng ${n} lần, độ dãn cũng tăng đúng ${n} lần!`;
+    }
+
+    chkWeight1.classList.toggle('done', n >= 1);
+    chkWeight2.classList.toggle('done', n >= 2);
+    chkWeight3.classList.toggle('done', n >= 3);
+
+    // Position attached weights stacked below needle
+    let hookIndex = 0;
+    Object.keys(initPositions).forEach(id => {
+      const el = document.getElementById(id);
+      const w = initPositions[id];
+      if(w.hooked){
+        const stackY = needleY + 12 + hookIndex * 28;
+        el.setAttribute('transform', `translate(213, ${stackY})`);
+        hookIndex++;
+      } else {
+        el.setAttribute('transform', `translate(${w.x}, ${w.y})`);
+      }
+    });
+  }
+
+  // Set up drag for weights
+  Object.keys(initPositions).forEach(id => {
+    const el = document.getElementById(id);
+    let isDragging = false;
+    let startX = 0, startY = 0;
+
+    el.addEventListener('pointerdown', (e)=>{
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('dragging');
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+
+    el.addEventListener('pointermove', (e)=>{
+      if(!isDragging) return;
+      const w = initPositions[id];
+      const orig = w.hooked ? { x: 213, y: 180 } : { x: w.x, y: w.y };
+      const curX = orig.x + (e.clientX - startX);
+      const curY = orig.y + (e.clientY - startY);
+      el.setAttribute('transform', `translate(${curX}, ${curY})`);
+    });
+
+    function finishDrag(e){
+      if(!isDragging) return;
+      isDragging = false;
+      el.classList.remove('dragging');
+
+      const svg = document.getElementById('scene').getBoundingClientRect();
+      const relX = e.clientX - svg.left;
+      const relY = e.clientY - svg.top;
+
+      // Drop zone for spring hook is around x: 180..270, y: 100..260
+      const isNearSpring = relX >= 160 && relX <= 280 && relY >= 100 && relY <= 280;
+      if(isNearSpring){
+        initPositions[id].hooked = true;
+      } else if(relX > 320){
+        initPositions[id].hooked = false;
+      } else {
+        initPositions[id].hooked = !initPositions[id].hooked;
+      }
+      updateSpring();
+    }
+
+    el.addEventListener('pointerup', finishDrag);
+    el.addEventListener('pointercancel', finishDrag);
+  });
+
+  btnReset.addEventListener('click', ()=>{
+    Object.keys(initPositions).forEach(id => {
+      initPositions[id].hooked = false;
+    });
+    updateSpring();
+  });
+
+  updateSpring();
+
+  // Quiz
+  document.querySelectorAll('.quiz-q').forEach(q=>{
+    const correct = q.dataset.correct;
+    const fb = q.querySelector('.feedback');
+    q.querySelectorAll('input[type=radio]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        fb.classList.remove('correct','wrong');
+        if(r.value === correct){
+          fb.textContent = '✅ Rất chính xác! Độ dãn của lò xo treo thẳng đứng tỉ lệ thuận với khối lượng.';
+          fb.classList.add('correct');
+        } else {
+          fb.textContent = '❌ Chưa đúng, hãy xem lại công thức tính độ dãn trong SGK.';
+          fb.classList.add('wrong');
+        }
+        fb.classList.add('show');
+      });
+    });
+  });
+})();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl6-bien-dang-lo-xo",
+  "subject": "vat-ly",
+  "grade": 6,
+  "title": "Biến dạng của lò xo",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 42, tr.151-154",
+  "objective": "Thực hiện thí nghiệm chứng minh độ dãn của lò xo treo thẳng đứng tỉ lệ thuận với khối lượng của vật nặng treo vào.",
+  "controls": [
+    { "id": "hook_weights", "label": "Kéo móc các quả nặng vào lò xo", "type": "drag_drop" }
+  ],
+  "outputs": ["chieu_dai_l", "do_dan_delta_l", "khoi_luong_m"],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

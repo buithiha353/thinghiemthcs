@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 12: Khả năng dẫn điện của vật liệu — KHTN 6 (Kết nối tri thức)</title>
+<meta name="description" content="Mô phỏng 2.5D thí nghiệm xác định khả năng dẫn điện của vật liệu (kim loại, nhựa, gỗ, cao su) theo SGK Khoa học tự nhiên 6, bộ Kết nối tri thức với cuộc sống.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1:#a9713f; --wood-2:#7a4c26; --wood-grain:#8f5c30;
+    --paper:#fffdf7; --paper-edge:#efe6d3; --paper-line:#e7ddc4;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --bulb-off:#dfe6e9; --bulb-on:#ffeaa7; --bulb-glow:#fdcb6e;
+    --accent:#1c8c6b; --accent-soft:#e4f4ee;
+    --warn:#c9820f; --warn-soft:#fbeed8;
+    --danger:#c94444; --danger-soft:#fbe7e5;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+      --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+    --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+    --body-bg:#1b1812;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    line-height:1.5;
+  }
+  h1,h2,h3, .display{ font-family:'Baloo 2', 'Inter', sans-serif; }
+  .shell{ max-width: 1120px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap; padding:10px 4px 14px; font-size:13.5px; color:var(--ink-soft);
+  }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .home-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-bg); color:var(--ink);
+    border:1.5px solid var(--panel-border);
+    padding:4px 11px; border-radius:999px; font-weight:600; font-size:12.5px;
+    text-decoration:none; transition: all .12s ease;
+    box-shadow: 0 2px 6px -2px var(--panel-shadow);
+  }
+  .home-btn:hover{
+    background:var(--purple-1); border-color:var(--purple-1); color:#fff;
+    transform:translateY(-1px); text-decoration:none;
+  }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--warn-soft); color:#8a5c05;
+    border:1px solid rgba(201,130,15,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:600;
+  }
+  .status-pill::before{ content:"●"; font-size:9px; color:#c9820f; }
+
+  .banner{
+    position:relative; background: linear-gradient(120deg, var(--purple-1), var(--purple-2));
+    border-radius: 26px; padding: 26px 26px 40px; color:#fff; overflow:hidden;
+    box-shadow: 0 14px 30px -12px rgba(123,31,162,0.55);
+  }
+  .banner-row{ display:flex; align-items:center; gap:16px; position:relative; z-index:2; flex-wrap:wrap; }
+  .badge{
+    flex:0 0 auto; width:64px; height:64px; border-radius:50%;
+    background:#fff; color:var(--purple-1);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; text-align:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    border: 4px solid rgba(255,255,255,0.55);
+  }
+  .banner-title{ flex:1 1 260px; min-width:200px; }
+  .banner-title h1{ margin:0 0 4px; font-size: clamp(22px,4vw,30px); }
+  .banner-title p{ margin:0; font-size:14px; opacity:0.92; max-width:540px; }
+  .meta-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; position:relative; z-index:2; }
+  .chip{
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(2px);
+    border:1px solid rgba(255,255,255,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:500;
+  }
+
+  .grid{ display:grid; grid-template-columns: 1.55fr 1fr; gap:20px; margin-top:20px; }
+  @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:20px; padding:18px 18px 20px;
+    box-shadow: 0 10px 24px -14px var(--panel-shadow);
+  }
+  .panel h2{ font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  .panel h2 .num{
+    width:24px; height:24px; border-radius:50%; background:var(--purple-1); color:#fff;
+    font-size:12.5px; display:inline-flex; align-items:center; justify-content:center; font-family:'Inter'; font-weight:700;
+  }
+
+  .stage{
+    background:
+      repeating-linear-gradient(100deg, var(--wood-grain) 0px, var(--wood-grain) 2px, transparent 2px, transparent 26px),
+      linear-gradient(160deg, var(--wood-1), var(--wood-2));
+    border-radius:20px; padding:20px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.25), 0 10px 24px -14px var(--panel-shadow);
+  }
+  .worksheet{
+    background: var(--paper); border-radius:14px; padding:14px 10px 6px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.25), 0 2px 0 var(--paper-edge);
+    position:relative;
+  }
+  .worksheet svg{ width:100%; height:auto; display:block; user-select:none; }
+
+  .sample-draggable{ cursor: grab; touch-action: none; }
+  .sample-draggable.dragging{ cursor: grabbing; }
+
+  .steps-note{ font-size:12.5px; color:var(--ink-soft); text-align:center; margin-top:8px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13.5px; font-weight:600; margin-bottom:8px;
+  }
+  .field label .val{ font-family:'Baloo 2'; color:var(--purple-1); font-size:14px; }
+  .field .hint{ font-size:12px; color:var(--ink-faint); margin-top:5px; line-height:1.45; }
+
+  .readout{
+    background: var(--accent-soft); border-radius:14px; padding:14px 16px; margin-top:4px;
+    border:1px solid rgba(28,140,107,0.2);
+  }
+  .readout.warn{ background:var(--warn-soft); border-color: rgba(201,130,15,0.3); }
+  .readout .big{
+    font-family:'Baloo 2'; font-size:28px; font-weight:700; color:var(--accent);
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .readout.warn .big{ color:#8a5c05; }
+  .readout .msg{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+
+  .kv{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .kv div{ background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px; padding:8px 10px; }
+  .kv .l{ font-size:11px; color:var(--ink-faint); }
+  .kv .v{ font-family:'Baloo 2'; font-size:16px; }
+
+  .checklist{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .checklist li{ display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--ink-soft); }
+  .checklist .box{
+    width:18px; height:18px; border-radius:6px; border:2px solid var(--panel-border);
+    flex:0 0 auto; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:transparent; transition: all .15s ease;
+  }
+  .checklist li.done .box{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .checklist li.done{ color:var(--ink); font-weight:500; }
+
+  .btn-action{
+    border:1.5px solid var(--panel-border); background:var(--panel-bg); color:var(--ink);
+    padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter'; transition: transform .12s ease;
+  }
+  .btn-action:hover{ transform: translateY(-1px); border-color:var(--purple-1); }
+
+  .quiz-q{ margin-bottom:16px; }
+  .quiz-q p.qtext{ font-weight:600; font-size:13.5px; margin:0 0 8px; }
+  .opt{
+    display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:10px;
+    border:1.5px solid var(--panel-border); margin-bottom:6px; cursor:pointer; font-size:13px;
+  }
+  .opt:hover{ border-color: var(--purple-1); }
+  .opt input{ accent-color: var(--purple-1); }
+  .feedback{ font-size:12.5px; margin-top:6px; padding:8px 10px; border-radius:10px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:var(--accent-soft); color:var(--accent); font-weight:500; }
+  .feedback.wrong{ background:var(--danger-soft); color:var(--danger); }
+
+  details.manifest{
+    margin-top:20px; background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:16px; padding:12px 16px;
+  }
+  details.manifest summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  details.manifest pre{
+    font-size:11.5px; overflow-x:auto; background: var(--body-bg); padding:12px; border-radius:10px;
+    margin-top:10px; color: var(--ink-soft); line-height:1.6;
+  }
+  .foot-note{ text-align:center; font-size:12px; color:var(--ink-faint); margin-top:22px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html" class="home-btn" title="Về trang chủ">🏠 Home</a> &nbsp;›&nbsp; <b>Hoá học</b> &nbsp;›&nbsp; Lớp 6 &nbsp;›&nbsp; Bài 12</div>
+    <div class="status-pill">KHTN 6 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-row">
+      <div class="badge">BÀI<br>12</div>
+      <div class="banner-title">
+        <h1>Khả năng dẫn điện của vật liệu</h1>
+        <p>Mô phỏng 2.5D — kiểm tra độ dẫn điện của kim loại, nhựa, gỗ, cao su qua mạch pin và bóng đèn theo SGK KHTN 6 (Hình 12.3, tr.43).</p>
+      </div>
+    </div>
+    <div class="meta-chips">
+      <span class="chip">Môn: Hoá học</span>
+      <span class="chip">Lớp 6</span>
+      <span class="chip">SGK KHTN 6 – KNTT, Bài 12, tr.42–45</span>
+      <span class="chip">⏱ ~8 phút</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel" style="padding:16px;">
+        <h2><span class="num">1</span>Bàn thực hành</h2>
+        <div class="stage">
+          <div class="worksheet">
+            <svg id="scene" viewBox="0 0 640 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mô phỏng kiểm tra tính dẫn điện của vật liệu">
+              <defs>
+                <linearGradient id="batteryGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#2c3e50"/>
+                  <stop offset="50%" stop-color="#34495e"/>
+                  <stop offset="100%" stop-color="#1e272e"/>
+                </linearGradient>
+                <filter id="bulbGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#f1c40f" flood-opacity="0.9"/>
+                </filter>
+              </defs>
+
+              <!-- Bench board -->
+              <rect x="20" y="275" width="600" height="15" rx="4" fill="#2d3436"/>
+
+              <!-- Battery 1.5V (x: 100, y: 120) -->
+              <g transform="translate(80, 100)">
+                <rect x="0" y="0" width="70" height="38" rx="4" fill="url(#batteryGrad)" stroke="#f39c12" stroke-width="2"/>
+                <rect x="70" y="10" width="8" height="18" rx="2" fill="#bdc3c7"/>
+                <text x="35" y="24" font-size="12" font-family="'Baloo 2'" font-weight="700" fill="#f1c40f" text-anchor="middle">PIN 1.5V</text>
+              </g>
+
+              <!-- Light Bulb in Center Top (x: 280, y: 50) -->
+              <g id="bulbGroup" transform="translate(280, 60)">
+                <!-- Base socket -->
+                <rect x="-14" y="28" width="28" height="18" rx="3" fill="#7f8c8d" stroke="#2c3e50" stroke-width="1.5"/>
+                <!-- Glass bulb -->
+                <circle id="bulbGlass" cx="0" cy="10" r="22" fill="#dfe6e9" stroke="#bdc3c7" stroke-width="1.8"/>
+                <!-- Filament -->
+                <path id="filament" d="M -7 22 L -4 10 L 4 10 L 7 22" stroke="#7f8c8d" stroke-width="1.5" fill="none"/>
+                <circle id="bulbAura" cx="0" cy="10" r="28" fill="#ffeaa7" opacity="0" filter="url(#bulbGlowFilter)"/>
+              </g>
+
+              <!-- Circuit Wires -->
+              <!-- From Battery (+) to Bulb -->
+              <path d="M 158 119 H 266 V 78" stroke="#e74c3c" stroke-width="3" fill="none"/>
+              <!-- From Bulb to Right Clip (x: 350, y: 180) -->
+              <path d="M 294 78 V 180 H 330" stroke="#e74c3c" stroke-width="3" fill="none"/>
+              <!-- From Battery (-) to Left Clip (x: 220, y: 180) -->
+              <path d="M 80 119 H 40 V 220 H 180 V 180 H 200" stroke="#2c3e50" stroke-width="3" fill="none"/>
+
+              <!-- Metal Test Clips A & B (Gap between 200 and 330) -->
+              <!-- Clip A -->
+              <g transform="translate(195, 172)">
+                <rect x="0" y="0" width="25" height="16" rx="2" fill="#bdc3c7" stroke="#7f8c8d" stroke-width="1.5"/>
+                <polygon points="25,2 35,8 25,14" fill="#e67e22"/>
+                <text x="8" y="28" font-size="10" font-family="Inter" font-weight="700" fill="#2c3e50">Kẹp A</text>
+              </g>
+              <!-- Clip B -->
+              <g transform="translate(310, 172)">
+                <polygon points="0,8 10,2 10,14" fill="#e67e22"/>
+                <rect x="10" y="0" width="25" height="16" rx="2" fill="#bdc3c7" stroke="#7f8c8d" stroke-width="1.5"/>
+                <text x="14" y="28" font-size="10" font-family="Inter" font-weight="700" fill="#2c3e50">Kẹp B</text>
+              </g>
+
+              <!-- Test Target Zone Indicator (between 230 and 310) -->
+              <rect x="230" y="170" width="80" height="20" rx="3" fill="none" stroke="#bdc3c7" stroke-dasharray="3 2"/>
+
+              <!-- Samples in Tray Box (bottom area x: 80 to 560, y: 220) -->
+              <rect x="70" y="228" width="500" height="42" rx="8" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="1.5"/>
+              <text x="320" y="222" font-size="11" font-family="'Baloo 2'" font-weight="700" fill="#7a5a24" text-anchor="middle">Khay mẫu vật liệu (Kéo thả vào giữa 2 kẹp A và B)</text>
+
+              <!-- Sample 1: Metal rod (Dong) -->
+              <g id="sampleMetal" class="sample-draggable" data-type="metal" transform="translate(90, 238)">
+                <rect x="0" y="0" width="85" height="22" rx="4" fill="#f39c12" stroke="#d35400" stroke-width="1.5"/>
+                <text x="42" y="15" font-size="11" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">Thanh Đồng</text>
+              </g>
+
+              <!-- Sample 2: Plastic rod (Nhua) -->
+              <g id="samplePlastic" class="sample-draggable" data-type="plastic" transform="translate(190, 238)">
+                <rect x="0" y="0" width="85" height="22" rx="4" fill="#0984e3" stroke="#74b9ff" stroke-width="1.5"/>
+                <text x="42" y="15" font-size="11" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">Thước Nhựa</text>
+              </g>
+
+              <!-- Sample 3: Wood rod (Go) -->
+              <g id="sampleWood" class="sample-draggable" data-type="wood" transform="translate(290, 238)">
+                <rect x="0" y="0" width="85" height="22" rx="4" fill="#a9713f" stroke="#7a4c26" stroke-width="1.5"/>
+                <text x="42" y="15" font-size="11" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">Đũa Gỗ</text>
+              </g>
+
+              <!-- Sample 4: Rubber eraser (Cao su) -->
+              <g id="sampleRubber" class="sample-draggable" data-type="rubber" transform="translate(390, 238)">
+                <rect x="0" y="0" width="85" height="22" rx="4" fill="#636e72" stroke="#2d3436" stroke-width="1.5"/>
+                <text x="42" y="15" font-size="11" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">Gôm Cao su</text>
+              </g>
+
+              <!-- Sample 5: Glass rod (Thuy tinh) -->
+              <g id="sampleGlass" class="sample-draggable" data-type="glass" transform="translate(490, 238)">
+                <rect x="0" y="0" width="70" height="22" rx="4" fill="#dfe6e9" stroke="#0984e3" stroke-width="1.5"/>
+                <text x="35" y="15" font-size="10.5" font-family="Inter" font-weight="700" fill="#0984e3" text-anchor="middle">Thuỷ tinh</text>
+              </g>
+
+            </svg>
+
+            <p class="steps-note">✋ Dùng chuột hoặc ngón tay kéo các mẫu vật từ khay đặt vào giữa 2 đầu kẹp A & B để kiểm tra bóng đèn có sáng hay không!</p>
+          </div>
+        </div>
+      </div>
+
+      <details class="manifest">
+        <summary>ℹ️ Thông tin module (manifest.json)</summary>
+        <pre>{
+  "id": "hh6-tinh-chat-vat-lieu",
+  "subject": "hoa-hoc",
+  "grade": 6,
+  "title": "Khả năng dẫn điện của vật liệu",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 12, tr.42-45",
+  "objective": "Lắp ráp mạch điện thử nghiệm để phân biệt vật liệu dẫn điện (kim loại) và vật liệu cách điện (nhựa, gỗ, cao su, thuỷ tinh).",
+  "controls": [
+    { "id": "placed_sample", "label": "Kéo thả mẫu vật liệu vào giữa 2 đầu kẹp", "type": "drag_drop" }
+  ],
+  "outputs": ["trang_thai_den", "ket_luan_dan_dien"],
+  "status": "draft"
+}</pre>
+      </details>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:18px;">
+      <div class="panel">
+        <h2><span class="num">2</span>Điều khiển & Kết quả</h2>
+
+        <div class="field">
+          <label>Mẫu vật đang kẹp: <span class="val" id="currSampleLabel">Chưa kẹp mẫu nào</span></label>
+          <div class="hint">Thao tác: Kéo từng mẫu vật lên kẹp giữa 2 đầu kẹp kim loại. Bấm nút đặt lại để tháo mẫu về khay.</div>
+          <button type="button" id="btnResetCircuit" class="btn-action" style="margin-top:10px;">🔄 Tháo mẫu vật về khay</button>
+        </div>
+
+        <div class="readout" id="readoutBox">
+          <div class="big" id="readoutBig">TẮT <span>(Mạch hở)</span></div>
+          <div class="msg" id="readoutMsg">Chưa có vật liệu nối giữa hai đầu kẹp — bóng đèn không sáng.</div>
+        </div>
+
+        <div class="kv">
+          <div><div class="l">Trạng thái bóng đèn</div><div class="v" id="valBulb">Không sáng</div></div>
+          <div><div class="l">Tính dẫn điện</div><div class="v" id="valConduct">Chưa xác định</div></div>
+        </div>
+
+        <ul class="checklist" id="checklist">
+          <li id="chkConnect"><span class="box">✓</span> Đã kẹp mẫu vật liệu vào mạch</li>
+          <li id="chkMetal"><span class="box">✓</span> Thử nghiệm kim loại (đèn sáng)</li>
+          <li id="chkInsulator"><span class="box">✓</span> Thử nghiệm vật liệu cách điện (nhựa/gỗ/cao su)</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2><span class="num">3</span>Kiểm tra nhanh</h2>
+
+        <div class="quiz-q" data-correct="a">
+          <p class="qtext">1. Vật liệu nào sau đây dẫn điện tốt?</p>
+          <label class="opt"><input type="radio" name="q1" value="a"> Kim loại (đồng, nhôm, sắt)</label>
+          <label class="opt"><input type="radio" name="q1" value="b"> Nhựa (plastic)</label>
+          <label class="opt"><input type="radio" name="q1" value="c"> Gỗ khô</label>
+          <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-q" data-correct="b">
+          <p class="qtext">2. Vì sao vỏ ngoài của phích cắm và dây dẫn điện lại làm bằng nhựa hoặc cao su?</p>
+          <label class="opt"><input type="radio" name="q2" value="a"> Để dòng điện chạy nhanh hơn</label>
+          <label class="opt"><input type="radio" name="q2" value="b"> Vì chúng cách điện, giúp an toàn khi chạm vào</label>
+          <label class="opt"><input type="radio" name="q2" value="c"> Để trang trí cho đẹp</label>
+          <div class="feedback"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot-note">Chương III, Bài 12 · Phong cách 2.5D lấy cảm hứng từ SGK KHTN 6 (Kết nối tri thức với cuộc sống).</p>
+</div>
+
+<script>
+(function(){
+  const initPositions = {
+    sampleMetal: { x: 90, y: 238, type: 'metal', name: 'Thanh Đồng' },
+    samplePlastic: { x: 190, y: 238, type: 'plastic', name: 'Thước Nhựa' },
+    sampleWood: { x: 290, y: 238, type: 'wood', name: 'Đũa Gỗ' },
+    sampleRubber: { x: 390, y: 238, type: 'rubber', name: 'Gôm Cao su' },
+    sampleGlass: { x: 490, y: 238, type: 'glass', name: 'Ống Thuỷ tinh' }
+  };
+
+  const CLAMP_X = 228, CLAMP_Y = 169;
+  let activeSample = null;
+
+  const bulbGlass = document.getElementById('bulbGlass');
+  const bulbAura = document.getElementById('bulbAura');
+  const filament = document.getElementById('filament');
+  const currSampleLabel = document.getElementById('currSampleLabel');
+  const readoutBig = document.getElementById('readoutBig');
+  const readoutMsg = document.getElementById('readoutMsg');
+  const readoutBox = document.getElementById('readoutBox');
+  const valBulb = document.getElementById('valBulb');
+  const valConduct = document.getElementById('valConduct');
+  const chkConnect = document.getElementById('chkConnect');
+  const chkMetal = document.getElementById('chkMetal');
+  const chkInsulator = document.getElementById('chkInsulator');
+  const btnReset = document.getElementById('btnResetCircuit');
+
+  function updateCircuit(){
+    if(!activeSample){
+      bulbGlass.setAttribute('fill', '#dfe6e9');
+      bulbAura.setAttribute('opacity', '0');
+      filament.setAttribute('stroke', '#7f8c8d');
+      currSampleLabel.textContent = 'Chưa kẹp mẫu nào';
+      valBulb.textContent = 'Không sáng';
+      valConduct.textContent = 'Mạch hở';
+      readoutBig.innerHTML = 'TẮT <span>(Mạch hở)</span>';
+      readoutMsg.textContent = 'Chưa có vật liệu nối giữa hai đầu kẹp — bóng đèn không sáng.';
+      readoutBox.classList.remove('warn');
+      chkConnect.classList.remove('done');
+      return;
+    }
+
+    chkConnect.classList.add('done');
+    const info = initPositions[activeSample];
+    currSampleLabel.textContent = info.name;
+
+    if(info.type === 'metal'){
+      // Lights up
+      bulbGlass.setAttribute('fill', '#f1c40f');
+      bulbAura.setAttribute('opacity', '1');
+      filament.setAttribute('stroke', '#d35400');
+      valBulb.textContent = 'Sáng rực rỡ';
+      valConduct.textContent = 'DẪN ĐIỆN TỐT';
+      readoutBig.innerHTML = '💡 SÁNG <span>(Dẫn điện)</span>';
+      readoutMsg.textContent = '🎉 Mạch kín! Kim loại dẫn điện tốt → dòng điện chạy qua làm bóng đèn phát sáng!';
+      readoutBox.classList.remove('warn');
+      chkMetal.classList.add('done');
+    } else {
+      // Insulator
+      bulbGlass.setAttribute('fill', '#dfe6e9');
+      bulbAura.setAttribute('opacity', '0');
+      filament.setAttribute('stroke', '#7f8c8d');
+      valBulb.textContent = 'Không sáng';
+      valConduct.textContent = 'CÁCH ĐIỆN';
+      readoutBig.innerHTML = 'TẮT <span>(Cách điện)</span>';
+      readoutMsg.textContent = `${info.name} là chất cách điện, không cho dòng điện chạy qua → đèn không sáng.`;
+      readoutBox.classList.add('warn');
+      chkInsulator.classList.add('done');
+    }
+  }
+
+  // Set up drag for each sample
+  Object.keys(initPositions).forEach(id => {
+    const el = document.getElementById(id);
+    let isDragging = false;
+    let startX = 0, startY = 0;
+
+    el.addEventListener('pointerdown', (e)=>{
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('dragging');
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+
+    el.addEventListener('pointermove', (e)=>{
+      if(!isDragging) return;
+      const init = (activeSample === id) ? { x: CLAMP_X, y: CLAMP_Y } : initPositions[id];
+      const curX = init.x + (e.clientX - startX);
+      const curY = init.y + (e.clientY - startY);
+      el.setAttribute('transform', `translate(${curX}, ${curY})`);
+    });
+
+    function finishDrag(e){
+      if(!isDragging) return;
+      isDragging = false;
+      el.classList.remove('dragging');
+      const rect = el.getBoundingClientRect();
+      const svg = document.getElementById('scene').getBoundingClientRect();
+      const relX = rect.left - svg.left;
+      const relY = rect.top - svg.top;
+
+      // Drop zone for Clamps is around x: 200..340, y: 140..210
+      const isOverClamps = relY < svg.height * 0.65;
+      if(isOverClamps){
+        // Return previously active sample to tray
+        if(activeSample && activeSample !== id){
+          const prev = document.getElementById(activeSample);
+          prev.setAttribute('transform', `translate(${initPositions[activeSample].x}, ${initPositions[activeSample].y})`);
+        }
+        activeSample = id;
+        el.setAttribute('transform', `translate(${CLAMP_X}, ${CLAMP_Y})`);
+      } else {
+        if(activeSample === id) activeSample = null;
+        el.setAttribute('transform', `translate(${initPositions[id].x}, ${initPositions[id].y})`);
+      }
+      updateCircuit();
+    }
+
+    el.addEventListener('pointerup', finishDrag);
+    el.addEventListener('pointercancel', finishDrag);
+  });
+
+  btnReset.addEventListener('click', ()=>{
+    if(activeSample){
+      const el = document.getElementById(activeSample);
+      el.setAttribute('transform', `translate(${initPositions[activeSample].x}, ${initPositions[activeSample].y})`);
+      activeSample = null;
+    }
+    updateCircuit();
+  });
+
+  updateCircuit();
+
+  // Quiz
+  document.querySelectorAll('.quiz-q').forEach(q=>{
+    const correct = q.dataset.correct;
+    const fb = q.querySelector('.feedback');
+    q.querySelectorAll('input[type=radio]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        fb.classList.remove('correct','wrong');
+        if(r.value === correct){
+          fb.textContent = '✅ Chính xác!';
+          fb.classList.add('correct');
+        } else {
+          fb.textContent = '❌ Chưa đúng, xem lại tính chất vật liệu trong SGK.';
+          fb.classList.add('wrong');
+        }
+        fb.classList.add('show');
+      });
+    });
+  });
+})();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "hh6-tinh-chat-vat-lieu",
+  "subject": "hoa-hoc",
+  "grade": 6,
+  "title": "Khả năng dẫn điện của vật liệu",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 12, tr.42-45",
+  "objective": "Lắp ráp mạch điện thử nghiệm để phân biệt vật liệu dẫn điện (kim loại) và vật liệu cách điện (nhựa, gỗ, cao su, thuỷ tinh).",
+  "controls": [
+    { "id": "placed_sample", "label": "Kéo thả mẫu vật liệu vào giữa 2 đầu kẹp", "type": "drag_drop" }
+  ],
+  "outputs": ["trang_thai_den", "ket_luan_dan_dien"],
+  "status": "draft"
+}
+</script>
+</body>
+</html>
