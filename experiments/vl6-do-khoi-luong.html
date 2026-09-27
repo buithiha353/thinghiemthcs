@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bài 6: Đo khối lượng — KHTN 6 (Kết nối tri thức)</title>
+<meta name="description" content="Mô phỏng 2.5D thực hành đo khối lượng bằng cân Robecvan và hộp quả cân theo SGK Khoa học tự nhiên 6, bộ Kết nối tri thức với cuộc sống.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1:#a9713f; --wood-2:#7a4c26; --wood-grain:#8f5c30;
+    --paper:#fffdf7; --paper-edge:#efe6d3; --paper-line:#e7ddc4;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --brass-1:#f6d365; --brass-2:#fda085; --brass-dark:#996515;
+    --metal-1:#dcdde1; --metal-2:#718093; --metal-dark:#2f3640;
+    --accent:#1c8c6b; --accent-soft:#e4f4ee;
+    --warn:#c9820f; --warn-soft:#fbeed8;
+    --danger:#c94444; --danger-soft:#fbe7e5;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+      --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --wood-1:#5c3c22; --wood-2:#3c2614; --wood-grain:#4a2f19;
+    --paper:#26221c; --paper-edge:#3a352b; --paper-line:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --accent-soft:#183d31; --warn-soft:#3d2f12; --danger-soft:#3d2320;
+    --body-bg:#1b1812;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg);
+    color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    line-height:1.5;
+  }
+  h1,h2,h3, .display{ font-family:'Baloo 2', 'Inter', sans-serif; }
+
+  .shell{ max-width: 1120px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap;
+    padding:10px 4px 14px;
+    font-size:13.5px; color:var(--ink-soft);
+  }
+  .crumb b{ color:var(--ink); font-weight:600; }
+  .crumb a{ color:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:500; }
+  .crumb a:hover{ color:var(--purple-1); text-decoration:underline; }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--warn-soft); color:#8a5c05;
+    border:1px solid rgba(201,130,15,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:600;
+  }
+  .status-pill::before{ content:"●"; font-size:9px; color:#c9820f; }
+
+  .banner{
+    position:relative;
+    background: linear-gradient(120deg, var(--purple-1), var(--purple-2));
+    border-radius: 26px;
+    padding: 26px 26px 40px;
+    color:#fff;
+    overflow:hidden;
+    box-shadow: 0 14px 30px -12px rgba(123,31,162,0.55);
+  }
+  .banner::before{
+    content:""; position:absolute; right:-60px; top:-80px;
+    width:260px; height:260px; border-radius:50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .banner::after{
+    content:""; position:absolute; left:-40px; bottom:-100px;
+    width:220px; height:220px; border-radius:50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .banner-row{ display:flex; align-items:center; gap:16px; position:relative; z-index:2; flex-wrap:wrap; }
+  .badge{
+    flex:0 0 auto; width:64px; height:64px; border-radius:50%;
+    background:#fff; color:var(--purple-1);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; text-align:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    border: 4px solid rgba(255,255,255,0.55);
+  }
+  .banner-title{ flex:1 1 260px; min-width:200px; }
+  .banner-title h1{ margin:0 0 4px; font-size: clamp(22px,4vw,30px); letter-spacing:0.3px; }
+  .banner-title p{ margin:0; font-size:14px; opacity:0.92; max-width:520px; }
+  .meta-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; position:relative; z-index:2; }
+  .chip{
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(2px);
+    border:1px solid rgba(255,255,255,0.35);
+    padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:500;
+  }
+
+  .grid{
+    display:grid; grid-template-columns: 1.55fr 1fr; gap:20px;
+    margin-top:20px;
+  }
+  @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+  .panel{
+    background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:20px; padding:18px 18px 20px;
+    box-shadow: 0 10px 24px -14px var(--panel-shadow);
+  }
+  .panel h2{ font-size:16px; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  .panel h2 .num{
+    width:24px; height:24px; border-radius:50%; background:var(--purple-1); color:#fff;
+    font-size:12.5px; display:inline-flex; align-items:center; justify-content:center; font-family:'Inter'; font-weight:700;
+  }
+
+  .stage{
+    background:
+      repeating-linear-gradient(100deg, var(--wood-grain) 0px, var(--wood-grain) 2px, transparent 2px, transparent 26px),
+      linear-gradient(160deg, var(--wood-1), var(--wood-2));
+    border-radius:20px; padding:20px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.25), 0 10px 24px -14px var(--panel-shadow);
+  }
+  .worksheet{
+    background: var(--paper);
+    border-radius:14px; padding:14px 10px 6px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.25), 0 2px 0 var(--paper-edge);
+    position:relative;
+  }
+  .worksheet svg{ width:100%; height:auto; display:block; user-select:none; }
+
+  .draggable-weight{ cursor: grab; touch-action: none; }
+  .draggable-weight.dragging{ cursor: grabbing; }
+
+  .steps-note{
+    font-size:12.5px; color:var(--ink-soft); text-align:center; margin-top:8px;
+  }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13.5px; font-weight:600; margin-bottom:8px;
+  }
+  .field label .val{ font-family:'Baloo 2'; color:var(--purple-1); font-size:14px; }
+  .field .hint{ font-size:12px; color:var(--ink-faint); margin-top:5px; line-height:1.45; }
+
+  .readout{
+    background: var(--accent-soft); border-radius:14px; padding:14px 16px; margin-top:4px;
+    border:1px solid rgba(28,140,107,0.2);
+    transition: background .2s ease, border-color .2s ease;
+  }
+  .readout.warn{ background:var(--warn-soft); border-color: rgba(201,130,15,0.3); }
+  .readout.danger{ background:var(--danger-soft); border-color: rgba(201,68,68,0.3); }
+  .readout .big{
+    font-family:'Baloo 2'; font-size:28px; font-weight:700; color:var(--accent);
+    display:flex; align-items:baseline; gap:6px;
+  }
+  .readout.warn .big{ color:#8a5c05; }
+  .readout.danger .big{ color:var(--danger); }
+  .readout .big span{ font-size:14px; font-weight:600; color:var(--ink-soft); font-family:'Inter'; }
+  .readout .msg{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+
+  .kv{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .kv div{ background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px; padding:8px 10px; }
+  .kv .l{ font-size:11px; color:var(--ink-faint); text-transform:none; }
+  .kv .v{ font-family:'Baloo 2'; font-size:16px; }
+
+  .checklist{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .checklist li{
+    display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--ink-soft);
+  }
+  .checklist .box{
+    width:18px; height:18px; border-radius:6px; border:2px solid var(--panel-border);
+    flex:0 0 auto; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:transparent; transition: all .15s ease;
+  }
+  .checklist li.done .box{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .checklist li.done{ color:var(--ink); font-weight:500; }
+
+  .quiz-q{ margin-bottom:16px; }
+  .quiz-q p.qtext{ font-weight:600; font-size:13.5px; margin:0 0 8px; }
+  .opt{
+    display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:10px;
+    border:1.5px solid var(--panel-border); margin-bottom:6px; cursor:pointer; font-size:13px;
+    transition: border-color .15s ease;
+  }
+  .opt:hover{ border-color: var(--purple-1); }
+  .opt input{ accent-color: var(--purple-1); }
+  .feedback{ font-size:12.5px; margin-top:6px; padding:8px 10px; border-radius:10px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:var(--accent-soft); color:var(--accent); font-weight:500; }
+  .feedback.wrong{ background:var(--danger-soft); color:var(--danger); }
+
+  details.manifest{
+    margin-top:20px; background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:16px; padding:12px 16px;
+  }
+  details.manifest summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--ink-soft); }
+  details.manifest pre{
+    font-size:11.5px; overflow-x:auto; background: var(--body-bg); padding:12px; border-radius:10px;
+    margin-top:10px; color: var(--ink-soft); line-height:1.6;
+  }
+
+  .btn-action{
+    border:1.5px solid var(--panel-border); background:var(--panel-bg); color:var(--ink);
+    padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter'; transition: transform .12s ease;
+  }
+  .btn-action:hover{ transform: translateY(-1px); border-color:var(--purple-1); }
+  .foot-note{ text-align:center; font-size:12px; color:var(--ink-faint); margin-top:22px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="crumb"><a href="../index.html">📚 Thư viện thí nghiệm</a> &nbsp;›&nbsp; <b>Vật lí</b> &nbsp;›&nbsp; Lớp 6 &nbsp;›&nbsp; Bài 6</div>
+    <div class="status-pill">KHTN 6 — KNTT</div>
+  </div>
+
+  <div class="banner">
+    <div class="banner-row">
+      <div class="badge">BÀI<br>6</div>
+      <div class="banner-title">
+        <h1>Đo khối lượng</h1>
+        <p>Mô phỏng 2.5D — thực hành đo khối lượng vật thể bằng cân Rô-béc-van và hộp quả cân theo SGK Khoa học tự nhiên 6, bộ Kết nối tri thức với cuộc sống.</p>
+      </div>
+    </div>
+    <div class="meta-chips">
+      <span class="chip">Môn: Vật lí</span>
+      <span class="chip">Lớp 6</span>
+      <span class="chip">SGK KHTN 6 – KNTT, tr.20–23</span>
+      <span class="chip">⏱ ~10 phút</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- ================= STAGE ================= -->
+    <div>
+      <div class="panel" style="padding:16px;">
+        <h2><span class="num">1</span>Bàn thực hành</h2>
+        <div class="stage">
+          <div class="worksheet">
+            <svg id="scene" viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mô phỏng cân Robecvan và hộp quả cân">
+              <defs>
+                <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#95a5a6"/>
+                  <stop offset="50%" stop-color="#ecf0f1"/>
+                  <stop offset="100%" stop-color="#7f8c8d"/>
+                </linearGradient>
+                <linearGradient id="brassGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#ffeaa7"/>
+                  <stop offset="50%" stop-color="#e17055"/>
+                  <stop offset="100%" stop-color="#d63031"/>
+                </linearGradient>
+                <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#f9ca24"/>
+                  <stop offset="50%" stop-color="#f0932b"/>
+                  <stop offset="100%" stop-color="#b71540"/>
+                </linearGradient>
+                <linearGradient id="panGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#dfe6e9"/>
+                  <stop offset="100%" stop-color="#b2bec3"/>
+                </linearGradient>
+                <filter id="shadowLift" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#000" flood-opacity="0.35"/>
+                </filter>
+              </defs>
+
+              <!-- Base & Column of scale -->
+              <rect x="250" y="270" width="140" height="24" rx="6" fill="#2d3436" stroke="#636e72" stroke-width="2"/>
+              <rect x="308" y="120" width="24" height="150" rx="3" fill="url(#metalGrad)" stroke="#636e72" stroke-width="1.5"/>
+
+              <!-- Dial/Scale indicator board in center -->
+              <path d="M 290 85 Q 320 70 350 85 L 345 125 L 295 125 Z" fill="#fff" stroke="#636e72" stroke-width="1.5"/>
+              <line x1="320" y1="75" x2="320" y2="105" stroke="#c0392b" stroke-width="2"/>
+              <line x1="305" y1="79" x2="307" y2="89" stroke="#7f8c8d" stroke-width="1.5"/>
+              <line x1="335" y1="79" x2="333" y2="89" stroke="#7f8c8d" stroke-width="1.5"/>
+              <text x="320" y="118" font-size="10" font-family="Inter, sans-serif" font-weight="700" fill="#c0392b" text-anchor="middle">0</text>
+
+              <!-- Weight Tray Box on Table (bottom area) -->
+              <rect x="40" y="272" width="200" height="48" rx="8" fill="#d35400" stroke="#a04000" stroke-width="2"/>
+              <rect x="45" y="277" width="190" height="38" rx="6" fill="#ba4a00" opacity="0.6"/>
+              <text x="140" y="265" font-size="11.5" font-family="'Baloo 2', sans-serif" font-weight="700" fill="#7a5a24" text-anchor="middle">Hộp quả cân (kéo lên đĩa phải)</text>
+
+              <!-- Beam Group (tilts around center pivot 320, 120) -->
+              <g id="scaleBeam" transform="rotate(0, 320, 120)">
+                <!-- Main lever beam -->
+                <rect x="150" y="115" width="340" height="10" rx="3" fill="url(#metalGrad)" stroke="#636e72" stroke-width="1.5"/>
+                <circle cx="320" cy="120" r="7" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+
+                <!-- Pointer needle pointing UP to scale mark -->
+                <polygon points="318,120 322,120 320.8,72 319.2,72" fill="#c0392b"/>
+
+                <!-- Left Pan Hook Point: 160, 120 -->
+                <!-- Right Pan Hook Point: 480, 120 -->
+              </g>
+
+              <!-- Pans Group (translate according to beam tilt) -->
+              <g id="leftPanGroup" transform="translate(160, 120)">
+                <line x1="0" y1="0" x2="-35" y2="50" stroke="#7f8c8d" stroke-width="1.5"/>
+                <line x1="0" y1="0" x2="35" y2="50" stroke="#7f8c8d" stroke-width="1.5"/>
+                <path d="M -50 50 Q 0 62 50 50 Z" fill="url(#panGrad)" stroke="#7f8c8d" stroke-width="1.5"/>
+                <text x="0" y="74" font-size="11" font-family="Inter, sans-serif" font-weight="600" fill="#7f8c8d" text-anchor="middle">Đĩa trái (vật)</text>
+
+                <!-- Target sample object: Quả táo / khối kim loại -->
+                <g id="sampleObject" transform="translate(0, 16)">
+                  <!-- 2.5D Apple -->
+                  <circle cx="0" cy="18" r="22" fill="#e74c3c"/>
+                  <path d="M -6 18 Q 0 8 6 18 Q 12 36 -6 36 Z" fill="#c0392b" opacity="0.3"/>
+                  <path d="M 0 0 Q 3 -10 10 -12" stroke="#27ae60" stroke-width="3" fill="none"/>
+                  <ellipse cx="6" cy="-8" rx="6" ry="3" fill="#2ecc71" transform="rotate(-30, 6, -8)"/>
+                  <text x="0" y="22" font-size="10.5" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">VẬT</text>
+                </g>
+              </g>
+
+              <g id="rightPanGroup" transform="translate(480, 120)">
+                <line x1="0" y1="0" x2="-35" y2="50" stroke="#7f8c8d" stroke-width="1.5"/>
+                <line x1="0" y1="0" x2="35" y2="50" stroke="#7f8c8d" stroke-width="1.5"/>
+                <path d="M -50 50 Q 0 62 50 50 Z" fill="url(#panGrad)" stroke="#7f8c8d" stroke-width="1.5"/>
+                <text x="0" y="74" font-size="11" font-family="Inter, sans-serif" font-weight="600" fill="#7f8c8d" text-anchor="middle">Đĩa phải (quả cân)</text>
+
+                <!-- Container where placed weights appear stacked or seated -->
+                <g id="placedWeightsOnPan" transform="translate(0, 48)"></g>
+              </g>
+
+              <!-- Draggable Weights in Tray -->
+              <!-- 100g, 50g, 20g, 10g, 5g -->
+              <g id="weightsTray">
+                <!-- Weight 100g -->
+                <g class="draggable-weight" id="w100" data-mass="100" transform="translate(56, 282)">
+                  <rect x="0" y="0" width="30" height="26" rx="4" fill="url(#brassGrad)" stroke="#996515" stroke-width="1.5"/>
+                  <circle cx="15" cy="-3" r="4.5" fill="#f6d365" stroke="#996515" stroke-width="1.2"/>
+                  <text x="15" y="17" font-size="11" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">100</text>
+                </g>
+                <!-- Weight 50g -->
+                <g class="draggable-weight" id="w50" data-mass="50" transform="translate(94, 284)">
+                  <rect x="0" y="0" width="26" height="24" rx="4" fill="url(#brassGrad)" stroke="#996515" stroke-width="1.5"/>
+                  <circle cx="13" cy="-3" r="4" fill="#f6d365" stroke="#996515" stroke-width="1.2"/>
+                  <text x="13" y="16" font-size="10.5" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">50</text>
+                </g>
+                <!-- Weight 20g (1) -->
+                <g class="draggable-weight" id="w20a" data-mass="20" transform="translate(128, 286)">
+                  <rect x="0" y="0" width="22" height="22" rx="3.5" fill="url(#brassGrad)" stroke="#996515" stroke-width="1.5"/>
+                  <circle cx="11" cy="-3" r="3.5" fill="#f6d365" stroke="#996515" stroke-width="1.2"/>
+                  <text x="11" y="15" font-size="10" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">20</text>
+                </g>
+                <!-- Weight 10g -->
+                <g class="draggable-weight" id="w10" data-mass="10" transform="translate(158, 288)">
+                  <rect x="0" y="0" width="18" height="20" rx="3" fill="url(#brassGrad)" stroke="#996515" stroke-width="1.5"/>
+                  <circle cx="9" cy="-3" r="3" fill="#f6d365" stroke="#996515" stroke-width="1.2"/>
+                  <text x="9" y="14" font-size="9" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">10</text>
+                </g>
+                <!-- Weight 5g -->
+                <g class="draggable-weight" id="w5" data-mass="5" transform="translate(184, 290)">
+                  <rect x="0" y="0" width="16" height="18" rx="2.5" fill="url(#brassGrad)" stroke="#996515" stroke-width="1.5"/>
+                  <circle cx="8" cy="-2.5" r="2.5" fill="#f6d365" stroke="#996515" stroke-width="1"/>
+                  <text x="8" y="13" font-size="8.5" font-family="Inter" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+                </g>
+              </g>
+
+            </svg>
+
+            <p class="steps-note">✋ Kéo các quả cân bằng chuột / ngón tay đặt lên đĩa cân bên phải cho đến khi kim chỉ đúng vạch số 0.</p>
+          </div>
+        </div>
+      </div>
+
+      <details class="manifest">
+        <summary>ℹ️ Thông tin module (manifest.json) — dùng để kiểm tra khớp chuẩn khung app</summary>
+        <pre>{
+  "id": "vl6-do-khoi-luong",
+  "subject": "vat-ly",
+  "grade": 6,
+  "title": "Đo khối lượng",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 6, tr.20-23",
+  "objective": "Đo được khối lượng của vật bằng cân Rô-béc-van; hiểu nguyên lý thăng bằng và cách đọc kết quả.",
+  "controls": [
+    { "id": "placed_weights", "label": "Các quả cân đặt lên đĩa", "type": "drag_drop" },
+    { "id": "tare_screw", "label": "Ốc điều chỉnh thăng bằng", "type": "slider", "min": -5, "max": 5, "step": 1 }
+  ],
+  "outputs": ["khoi_luong_vat", "tong_khoi_luong_qua_can", "trang_thai_can"],
+  "status": "draft"
+}</pre>
+      </details>
+    </div>
+
+    <!-- ================= CONTROLS ================= -->
+    <div style="display:flex; flex-direction:column; gap:18px;">
+
+      <div class="panel">
+        <h2><span class="num">2</span>Điều khiển & Kết quả</h2>
+
+        <div class="field">
+          <label>Vật mẫu: Quả táo <span class="val" id="targetLabel">? g</span></label>
+          <div class="hint">Đĩa trái: vật mẫu (175 g). Đĩa phải: kéo thả các quả cân từ hộp vào để đạt thăng bằng. Bấm vào quả cân trên đĩa để nhấc về hộp.</div>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button type="button" id="btnResetWeights" class="btn-action">🔄 Thu hồi các quả cân về hộp</button>
+          </div>
+        </div>
+
+        <div class="readout" id="readoutBox">
+          <div class="big" id="readoutBig">0 <span>g</span></div>
+          <div class="msg" id="readoutMsg">Đĩa cân bên phải chưa có quả cân — cân đang lệch sang trái.</div>
+        </div>
+
+        <div class="kv">
+          <div><div class="l">GHĐ cân</div><div class="v">500 g</div></div>
+          <div><div class="l">ĐCNN quả cân</div><div class="v">5 g</div></div>
+        </div>
+
+        <ul class="checklist" id="checklist">
+          <li id="chkTare" class="done"><span class="box">✓</span> Cân đã chỉnh về mốc 0 khi chưa có vật</li>
+          <li id="chkPlaced"><span class="box">✓</span> Đã đặt quả cân lên đĩa cân</li>
+          <li id="chkBalanced"><span class="box">✓</span> Kim chỉ đúng chính giữa (cân thăng bằng)</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2><span class="num">3</span>Kiểm tra nhanh</h2>
+
+        <div class="quiz-q" data-correct="c">
+          <p class="qtext">1. Khi cân Rô-béc-van thăng bằng, khối lượng của vật cần đo bằng:</p>
+          <label class="opt"><input type="radio" name="q1" value="a"> Khối lượng của quả cân lớn nhất trên đĩa</label>
+          <label class="opt"><input type="radio" name="q1" value="b"> Khối lượng của đĩa cân cộng thêm quả cân</label>
+          <label class="opt"><input type="radio" name="q1" value="c"> Tổng khối lượng của các quả cân đặt trên đĩa cân bên kia</label>
+          <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-q" data-correct="a">
+          <p class="qtext">2. Đơn vị đo khối lượng hợp pháp trong hệ SI của nước ta là:</p>
+          <label class="opt"><input type="radio" name="q2" value="a"> Ki-lô-gam (kg)</label>
+          <label class="opt"><input type="radio" name="q2" value="b"> Gam (g)</label>
+          <label class="opt"><input type="radio" name="q2" value="c"> Tấn (t)</label>
+          <div class="feedback"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="foot-note">Chương I, Bài 6 · Phong cách 2.5D lấy cảm hứng từ SGK KHTN 6 (Kết nối tri thức với cuộc sống).</p>
+</div>
+
+<script>
+(function(){
+  const TARGET_MASS = 175; // g (apple mass)
+  const initialPositions = {
+    w100: { x: 56, y: 282 },
+    w50:  { x: 94, y: 284 },
+    w20a: { x: 128, y: 286 },
+    w10:  { x: 158, y: 288 },
+    w5:   { x: 184, y: 290 }
+  };
+
+  const weightsState = {
+    w100: { mass: 100, onPan: false, el: document.getElementById('w100') },
+    w50:  { mass: 50,  onPan: false, el: document.getElementById('w50') },
+    w20a: { mass: 20,  onPan: false, el: document.getElementById('w20a') },
+    w10:  { mass: 10,  onPan: false, el: document.getElementById('w10') },
+    w5:   { mass: 5,   onPan: false, el: document.getElementById('w5') }
+  };
+
+  const svg = document.getElementById('scene');
+  const scaleBeam = document.getElementById('scaleBeam');
+  const leftPanGroup = document.getElementById('leftPanGroup');
+  const rightPanGroup = document.getElementById('rightPanGroup');
+  const readoutBig = document.getElementById('readoutBig');
+  const readoutMsg = document.getElementById('readoutMsg');
+  const readoutBox = document.getElementById('readoutBox');
+  const chkPlaced = document.getElementById('chkPlaced');
+  const chkBalanced = document.getElementById('chkBalanced');
+  const btnReset = document.getElementById('btnResetWeights');
+
+  function getTotalPanMass(){
+    let total = 0;
+    for(const key in weightsState){
+      if(weightsState[key].onPan) total += weightsState[key].mass;
+    }
+    return total;
+  }
+
+  function updateBalance(){
+    const panMass = getTotalPanMass();
+    const massDiff = panMass - TARGET_MASS; // < 0 => tilts left, > 0 => tilts right
+    
+    // Tilt angle max ±12 deg
+    let angle = (massDiff / 100) * 12;
+    angle = Math.max(-12, Math.min(12, angle));
+
+    scaleBeam.setAttribute('transform', `rotate(${angle}, 320, 120)`);
+    // Pans move vertically: dy = R * sin(angle)
+    const rad = angle * Math.PI / 180;
+    const dy = 160 * Math.sin(rad);
+    leftPanGroup.setAttribute('transform', `translate(160, ${120 - dy})`);
+    rightPanGroup.setAttribute('transform', `translate(480, ${120 + dy})`);
+
+    readoutBig.innerHTML = panMass + ' <span>g</span>';
+    readoutBox.classList.remove('warn', 'danger');
+
+    chkPlaced.classList.toggle('done', panMass > 0);
+
+    if(panMass === TARGET_MASS){
+      readoutBox.classList.remove('warn', 'danger');
+      readoutMsg.textContent = '🎉 Cân thăng bằng tuyệt đối! Kim chỉ đúng vạch số 0. Khối lượng vật = ' + panMass + ' g.';
+      chkBalanced.classList.add('done');
+    } else if(panMass === 0){
+      readoutBox.classList.add('danger');
+      readoutMsg.textContent = 'Đĩa cân bên phải chưa có quả cân — cân đang nghiêng hẳn sang trái.';
+      chkBalanced.classList.remove('done');
+    } else if(panMass < TARGET_MASS){
+      readoutBox.classList.add('warn');
+      readoutMsg.textContent = 'Khối lượng quả cân (' + panMass + ' g) còn nhẹ hơn vật — thêm quả cân vào đĩa phải.';
+      chkBalanced.classList.remove('done');
+    } else {
+      readoutBox.classList.add('warn');
+      readoutMsg.textContent = 'Khối lượng quả cân (' + panMass + ' g) nặng hơn vật — hãy bớt quả cân.';
+      chkBalanced.classList.remove('done');
+    }
+
+    arrangeWeights();
+  }
+
+  function arrangeWeights(){
+    let panSlots = 0;
+    for(const key in weightsState){
+      const w = weightsState[key];
+      if(w.onPan){
+        // Place neatly onto right pan (around x: 480, y: 155 + dy)
+        const panMass = getTotalPanMass();
+        const angle = Math.max(-12, Math.min(12, (panMass - TARGET_MASS)/100 * 12));
+        const dy = 160 * Math.sin(angle * Math.PI / 180);
+        const slotX = 460 + (panSlots % 3) * 22;
+        const slotY = 158 + dy - Math.floor(panSlots / 3) * 18;
+        w.el.setAttribute('transform', `translate(${slotX}, ${slotY})`);
+        panSlots++;
+      } else {
+        const init = initialPositions[key];
+        w.el.setAttribute('transform', `translate(${init.x}, ${init.y})`);
+      }
+    }
+  }
+
+  function svgPoint(evt){
+    const pt = svg.createSVGPoint();
+    pt.x = evt.clientX; pt.y = evt.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+
+  // Set up Pointer drag and drop for each weight
+  Object.keys(weightsState).forEach(id => {
+    const w = weightsState[id];
+    let dragState = null;
+
+    w.el.addEventListener('pointerdown', (e)=>{
+      w.el.setPointerCapture(e.pointerId);
+      w.el.classList.add('dragging');
+      w.el.setAttribute('filter', 'url(#shadowLift)');
+      const pt = svgPoint(e);
+      dragState = {
+        startX: pt.x,
+        startY: pt.y,
+        origX: w.onPan ? 480 : initialPositions[id].x,
+        origY: w.onPan ? 160 : initialPositions[id].y
+      };
+    });
+
+    w.el.addEventListener('pointermove', (e)=>{
+      if(!dragState) return;
+      const pt = svgPoint(e);
+      const dx = pt.x - dragState.startX;
+      const dy = pt.y - dragState.startY;
+      w.el.setAttribute('transform', `translate(${dragState.origX + dx}, ${dragState.origY + dy})`);
+    });
+
+    function finishDrag(e){
+      if(!dragState) return;
+      w.el.classList.remove('dragging');
+      w.el.removeAttribute('filter');
+      const pt = svgPoint(e);
+      // Drop zone for Right Pan is roughly x: 420..540, y: 110..220
+      const isOverPan = pt.x >= 410 && pt.x <= 550 && pt.y >= 100 && pt.y <= 240;
+
+      if(isOverPan){
+        w.onPan = true;
+      } else if(pt.y > 240 || pt.x < 350){
+        // Dropped back in tray
+        w.onPan = false;
+      } else {
+        // Toggle on/off if clicked
+        w.onPan = !w.onPan;
+      }
+      dragState = null;
+      updateBalance();
+    }
+
+    w.el.addEventListener('pointerup', finishDrag);
+    w.el.addEventListener('pointercancel', finishDrag);
+  });
+
+  btnReset.addEventListener('click', ()=>{
+    for(const key in weightsState){
+      weightsState[key].onPan = false;
+    }
+    updateBalance();
+  });
+
+  updateBalance();
+
+  // Mini quiz
+  document.querySelectorAll('.quiz-q').forEach(q=>{
+    const correct = q.dataset.correct;
+    const fb = q.querySelector('.feedback');
+    q.querySelectorAll('input[type=radio]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        fb.classList.remove('correct','wrong');
+        if(r.value === correct){
+          fb.textContent = '✅ Chính xác!';
+          fb.classList.add('correct');
+        } else {
+          fb.textContent = '❌ Chưa đúng, hãy nhớ lại nguyên lý cân đòn thăng bằng trong SGK.';
+          fb.classList.add('wrong');
+        }
+        fb.classList.add('show');
+      });
+    });
+  });
+})();
+</script>
+
+<script type="application/json" id="manifest">
+{
+  "id": "vl6-do-khoi-luong",
+  "subject": "vat-ly",
+  "grade": 6,
+  "title": "Đo khối lượng",
+  "sgk_ref": "KHTN 6 - KNTT, Bài 6, tr.20-23",
+  "objective": "Đo được khối lượng của vật bằng cân Rô-béc-van; hiểu nguyên lý thăng bằng và cách đọc kết quả.",
+  "controls": [
+    { "id": "placed_weights", "label": "Các quả cân đặt lên đĩa", "type": "drag_drop" },
+    { "id": "tare_screw", "label": "Ốc điều chỉnh thăng bằng", "type": "slider", "min": -5, "max": 5, "step": 1 }
+  ],
+  "outputs": ["khoi_luong_vat", "tong_khoi_luong_qua_can", "trang_thai_can"],
+  "status": "draft"
+}
+</script>
+</body>
+</html>

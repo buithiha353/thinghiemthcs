@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thư viện thí nghiệm ảo KHTN THCS</title>
+<meta name="description" content="Mô phỏng 2.5D các thí nghiệm trong SGK Khoa học tự nhiên THCS, bộ Kết nối tri thức với cuộc sống — thực hành trực tiếp trên trình duyệt.">
+<meta property="og:title" content="Thư viện thí nghiệm ảo KHTN THCS">
+<meta property="og:description" content="Mô phỏng 2.5D các thí nghiệm trong SGK Khoa học tự nhiên THCS, bộ Kết nối tri thức với cuộc sống — thực hành trực tiếp trên trình duyệt.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffdf7; --paper-edge:#efe6d3;
+    --ink:#2c2419; --ink-soft:#6f6552; --ink-faint:#9a8f78;
+    --purple-1:#7b1fa2; --purple-2:#c2185b;
+    --panel-bg:#ffffff; --panel-border:#ece3cf; --panel-shadow: rgba(60,40,10,0.12);
+    --chip-bg:#f4ecd8; --chip-ink:#7a5a24;
+    --body-bg:#f2ece0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#26221c; --paper-edge:#3a352b;
+      --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+      --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+      --chip-bg:#3a3324; --chip-ink:#e2c98a;
+      --body-bg:#1b1812;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#26221c; --paper-edge:#3a352b;
+    --ink:#f1ead9; --ink-soft:#c9bea6; --ink-faint:#8c8270;
+    --panel-bg:#2c2820; --panel-border:#423c30; --panel-shadow: rgba(0,0,0,0.4);
+    --chip-bg:#3a3324; --chip-ink:#e2c98a;
+    --body-bg:#1b1812;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--body-bg); color: var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2{ font-family:'Baloo 2', sans-serif; }
+  .shell{ max-width:1120px; margin:0 auto; padding:18px 18px 60px; }
+
+  .banner{
+    position:relative; overflow:hidden;
+    background: linear-gradient(120deg, var(--purple-1), var(--purple-2));
+    border-radius:26px; padding:30px 26px; color:#fff;
+    box-shadow: 0 14px 30px -12px rgba(123,31,162,0.55);
+  }
+  .banner h1{ margin:0 0 6px; font-size:clamp(22px,4vw,30px); }
+  .banner p{ margin:0; font-size:14px; opacity:.92; max-width:560px; }
+
+  .filters{ display:flex; gap:8px; flex-wrap:wrap; margin:22px 0 18px; }
+  .filter-btn{
+    border:1.5px solid var(--panel-border); background:var(--panel-bg); color:var(--ink);
+    padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter';
+  }
+  .filter-btn[aria-pressed="true"]{ background:var(--purple-1); border-color:var(--purple-1); color:#fff; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; }
+  .card{
+    display:block; text-decoration:none; color:inherit;
+    background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:18px;
+    padding:16px; box-shadow: 0 10px 22px -14px var(--panel-shadow);
+    transition: transform .12s ease;
+  }
+  .card:hover{ transform: translateY(-2px); }
+  .card .icon{ font-size:26px; }
+  .card h3{ margin:10px 0 4px; font-size:15.5px; font-family:'Baloo 2'; }
+  .card .ref{ font-size:12px; color:var(--ink-faint); margin:0 0 10px; }
+  .card .tags{ display:flex; gap:6px; flex-wrap:wrap; }
+  .card .tag{ background:var(--chip-bg); color:var(--chip-ink); font-size:11.5px; padding:3px 9px; border-radius:999px; font-weight:600; }
+  .empty{ text-align:center; color:var(--ink-faint); padding:40px 0; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="banner">
+    <h1>Thư viện thí nghiệm ảo KHTN THCS</h1>
+    <p>Mô phỏng 2.5D các thí nghiệm trong SGK Khoa học tự nhiên, bộ Kết nối tri thức với cuộc sống — thực hành trực tiếp trên trình duyệt.</p>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn" data-filter="all" aria-pressed="true">Tất cả</button>
+    <button class="filter-btn" data-filter="vat-ly" aria-pressed="false">Vật lí</button>
+    <button class="filter-btn" data-filter="hoa-hoc" aria-pressed="false">Hoá học</button>
+    <button class="filter-btn" data-filter="sinh-hoc" aria-pressed="false">Sinh học</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="emptyMsg" style="display:none;">Chưa có thí nghiệm nào ở mục này.</p>
+</div>
+
+<script>
+  /*
+   * === DANH SÁCH THÍ NGHIỆM ===
+   * Mỗi khi thêm 1 thí nghiệm mới, CHỈ thêm 1 phần tử vào mảng này.
+   * Không sửa/xoá các phần tử đã có, không sửa phần code phía dưới.
+   */
+  const EXPERIMENTS = [
+    {
+      id: "vl6-do-chieu-dai",
+      title: "Đo chiều dài",
+      subject: "vat-ly",
+      icon: "📏",
+      grade: 6,
+      sgk_ref: "KHTN 6 - KNTT, Bài 5",
+      file: "experiments/vl6-do-chieu-dai.html"
+    },
+    {
+      id: "vl6-do-khoi-luong",
+      title: "Đo khối lượng",
+      subject: "vat-ly",
+      icon: "⚖️",
+      grade: 6,
+      sgk_ref: "KHTN 6 - KNTT, Bài 6",
+      file: "experiments/vl6-do-khoi-luong.html"
+    }
+  ];
+
+  const SUBJECT_LABEL = { "vat-ly":"Vật lí", "hoa-hoc":"Hoá học", "sinh-hoc":"Sinh học" };
+
+  const grid = document.getElementById('grid');
+  const emptyMsg = document.getElementById('emptyMsg');
+
+  function renderCards(filter){
+    const list = filter === 'all' ? EXPERIMENTS : EXPERIMENTS.filter(e => e.subject === filter);
+    grid.innerHTML = '';
+    list.forEach(e=>{
+      const a = document.createElement('a');
+      a.className = 'card'; a.href = e.file;
+      a.innerHTML = `
+        <div class="icon">${e.icon || '🧪'}</div>
+        <h3>${e.title}</h3>
+        <p class="ref">${e.sgk_ref}</p>
+        <div class="tags">
+          <span class="tag">${SUBJECT_LABEL[e.subject] || e.subject}</span>
+          <span class="tag">Lớp ${e.grade}</span>
+        </div>`;
+      grid.appendChild(a);
+    });
+    emptyMsg.style.display = list.length ? 'none' : 'block';
+  }
+
+  document.getElementById('filters').addEventListener('click', (ev)=>{
+    const btn = ev.target.closest('.filter-btn');
+    if(!btn) return;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.setAttribute('aria-pressed','false'));
+    btn.setAttribute('aria-pressed','true');
+    renderCards(btn.dataset.filter);
+  });
+
+  renderCards('all');
+</script>
+</body>
+</html>

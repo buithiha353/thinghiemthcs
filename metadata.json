@@ -1,0 +1,6 @@
+{
+  "name": "Thư viện thí nghiệm ảo KHTN THCS",
+  "description": "Mô phỏng 2.5D các thí nghiệm trong SGK Khoa học tự nhiên THCS, bộ Kết nối tri thức với cuộc sống.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
